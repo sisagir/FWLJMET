@@ -170,9 +170,8 @@ void DileptonEventSelector::BeginJob( const edm::ParameterSet& iConfig, edm::Con
     SetHistogram("Min electron", 2, 0,2);
     SetHistogram("Max electron", 2, 0,2);
     SetHistogram("Min lepton", 2, 0,2); 
-    // if(jet_cuts){
-    //     SetHistogram("Jet Selection", 2, 0,2); // keeping it simple for now
-    // }
+    SetHistogram("Min jet multiplicity", 2, 0,2); 
+    SetHistogram("Max jet multiplicity", 2, 0,2); 
     // SetHistogram("MET", 2, 0,2);
     SetHistogram("All cuts", 2, 0,2);
 
