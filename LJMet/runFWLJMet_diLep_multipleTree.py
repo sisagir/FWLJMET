@@ -400,12 +400,11 @@ DileptonSelector_cfg = cms.PSet(
             flag_tag        = cms.InputTag(MET_filt_flag_tag),
             METfilter_extra = cms.InputTag("ecalBadCalibReducedMINIAODFilter"),
 
-            # MET cuts
-#             met_cuts       = cms.bool(True),
-#             min_met        = cms.double(20.0),
-#             max_met        = cms.double(99999999999.0),
-#             met_collection = cms.InputTag('slimmedMETs'),
-# 
+            # MET
+            met_collection = cms.InputTag('slimmedMETs'),
+            met_cuts                 = cms.bool(False),
+            min_met                  = cms.double(0.0),
+
             #Muon
             muon_cuts                = cms.bool(True),
             muonsCollection          = cms.InputTag("slimmedMuons"),
@@ -464,7 +463,7 @@ DileptonSelector_cfg = cms.PSet(
             DataL2JetParAK8          = cms.FileInPath(DataL2JetParAK8),
             DataL3JetParAK8          = cms.FileInPath(DataL3JetParAK8),
             DataResJetParAK8         = cms.FileInPath(DataResJetParAK8),
-
+            
 			#Misc
             PFparticlesCollection  = cms.InputTag("packedPFCandidates"),
             rhoJetsNCInputTag            = cms.InputTag("fixedGridRhoFastjetCentralNeutral",""),
@@ -483,7 +482,6 @@ DileptonSelector_cfg = cms.PSet(
 #             max_jet                  = cms.int32(9999),
 #             leading_jet_pt           = cms.double(30.0),
 #             # Jet corrections are read from txt files
-#             doAllJetSyst             = cms.bool(doAllJetSyst),
 
 
             #Btag

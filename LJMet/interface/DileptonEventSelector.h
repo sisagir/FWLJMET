@@ -134,33 +134,18 @@ private:
     int min_jet;
     int max_jet;
     JetMETCorrHelper JetMETCorr;
-
-    // bool met_cuts;
-
-    // flag_tag;
-    // trigger_collection;
-    // pv_collection;
-    // jet_collection;
-    // muon_collection;
-    // electron_collection;
-    // met_collection;
-
-    // bool doNewJEC;
-    // bool doLepJetCleaning;
-
-
+    
+    //MET
+    bool met_cuts;
+    bool min_met;
 
     edm::Handle<edm::TriggerResults >           TriggerHandle;
     edm::Handle<std::vector<pat::Muon> >        muonsHandle;
     edm::Handle<std::vector<pat::Electron> >    electronsHandle;
     edm::Handle<std::vector<pat::Jet> >         jetsHandle;
-    // edm::Handle<std::vector<pat::MET> >         mhMet;
-    // edm::Handle<double>                         h_rho;
-    // edm::Handle<std::vector<reco::Vertex> >     h_primVtx;
+    edm::Handle<std::vector<pat::MET> >         mhMet;
 
-    // std::vector<edm::Ptr<reco::Vertex> >  good_pvs_;
-
-    // //Tokens
+    // Tokens
     edm::EDGetTokenT<edm::TriggerResults>            triggersToken;
     edm::EDGetTokenT<reco::VertexCollection>         PVToken;
     edm::EDGetTokenT<edm::TriggerResults>            METfilterToken;
@@ -169,12 +154,11 @@ private:
     edm::EDGetTokenT<pat::ElectronCollection>        electronsToken;
     edm::EDGetTokenT<pat::JetCollection>             jetsToken;
     edm::EDGetTokenT<double>                         rhoJetsToken;
-    // edm::EDGetTokenT<std::vector<pat::MET> >         METtoken;
-    // edm::EDGetTokenT<edm::TriggerResults>            METfilterToken;
+    edm::EDGetTokenT<std::vector<pat::MET> >         METtoken;
     edm::EDGetTokenT<pat::PackedCandidateCollection> PFCandToken;
     edm::EDGetTokenT<double>                         rhoJetsNC_Token;
 
-    // //Separate methods for each selction for organization
+    // Separate methods for each selction for organization
     bool TriggerSelection  (edm::Event const & event);
     bool PVSelection       (edm::Event const & event);
     bool METfilter         (edm::Event const & event);
@@ -182,7 +166,7 @@ private:
     bool ElectronSelection (edm::Event const & event, pat::strbitset & ret);
     bool LeptonsSelection  (edm::Event const & event, pat::strbitset & ret);
     bool JetSelection      (edm::Event const & event, pat::strbitset & ret);
-    // bool METSelection      (edm::Event const & event);
+    bool METSelection      (edm::Event const & event);
 
 };
 

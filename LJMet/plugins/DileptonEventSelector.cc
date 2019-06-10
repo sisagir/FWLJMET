@@ -82,33 +82,17 @@ void DileptonEventSelector::BeginJob( const edm::ParameterSet& iConfig, edm::Con
     PFCandToken = iC.consumes<pat::PackedCandidateCollection>(selectorConfig.getParameter<edm::InputTag>("PFparticlesCollection"));
     rhoJetsNC_Token = iC.consumes<double>(selectorConfig.getParameter<edm::InputTag>("rhoJetsNCInputTag"));
     rhoJetsToken = iC.consumes<double>(selectorConfig.getParameter<edm::InputTag>("rhoJetsInputTag"));
+    
+    //MET
+    METtoken           = iC.consumes<std::vector<pat::MET> >(selectorConfig.getParameter<edm::InputTag>("met_collection"));
+    met_cuts           = selectorConfig.getParameter<bool>("met_cuts");
+    min_met            = selectorConfig.getParameter<double>("min_met");
 
-    // hbhe_cut                 = selectorConfig.getParameter<bool>         ("hbhe_cut");
-    // metfilters                   = selectorConfig.getParameter<bool>         ("metfilters");
-    // hbhe_cut_value           = selectorConfig.getParameter<std::string>  ("hbhe_cut_value");
-    // hbheiso_cut              = selectorConfig.getParameter<bool>         ("hbheiso_cut");
-    // cscHalo_cut              = selectorConfig.getParameter<bool>         ("cscHalo_cut");
-    // eesc_cut                 = selectorConfig.getParameter<bool>         ("eesc_cut");
-    // ecalTP_cut               = selectorConfig.getParameter<bool>         ("ecalTP_cut");
-    // goodVtx_cut              = selectorConfig.getParameter<bool>         ("goodVtx_cut");
-    // badMuon_cut              = selectorConfig.getParameter<bool>         ("badMuon_cut");
-    // badChargedHadron_cut     = selectorConfig.getParameter<bool>         ("badChargedHadron_cut");
-
-
-    // METfilterToken = iC.consumes<edm::TriggerResults>(selectorConfig.getParameter<edm::InputTag>("flag_tag"));
-    // jet_cuts                 = selectorConfig.getParameter<bool>         ("jet_cuts");
-    // jet_minpt                = selectorConfig.getParameter<double>       ("jet_minpt");
-    // jet_maxeta               = selectorConfig.getParameter<double>       ("jet_maxeta");
-    // min_jet                  = selectorConfig.getParameter<int>          ("min_jet");
-    // max_jet                  = selectorConfig.getParameter<int>          ("max_jet");
-
-
-    // met_cuts                 = selectorConfig.getParameter<bool>         ("met_cuts");
-
-    // met_collection           = selectorConfig.getParameter<edm::InputTag>("met_collection");
-
-
-
+    //-----------------------
+    // Define and Set cuts
+    //-----------------------
+    
+    //Reference: "PhysicsTools/SelectorUtils/interface/EventSelector.h"
     push_back("No selection");
     push_back("Trigger");
     push_back("Primary Vertex");
@@ -120,7 +104,7 @@ void DileptonEventSelector::BeginJob( const edm::ParameterSet& iConfig, edm::Con
     push_back("Min lepton");
     push_back("Min jet multiplicity");
     push_back("Max jet multiplicity");
-    // push_back("Min MET");
+    push_back("Min MET");
     push_back("All cuts");          // sanity check
 
 
@@ -154,8 +138,8 @@ void DileptonEventSelector::BeginJob( const edm::ParameterSet& iConfig, edm::Con
         set("Min jet multiplicity", false);
         set("Max jet multiplicity", false);
     }
-
-    // if (met_cuts) set("Min MET", min_met);
+    if(met_cuts) set("Min MET", min_met);
+    else set("Min MET", false);
 
     set("All cuts", true);
 
@@ -172,11 +156,11 @@ void DileptonEventSelector::BeginJob( const edm::ParameterSet& iConfig, edm::Con
     SetHistogram("Min lepton", 2, 0,2); 
     SetHistogram("Min jet multiplicity", 2, 0,2); 
     SetHistogram("Max jet multiplicity", 2, 0,2); 
-    // SetHistogram("MET", 2, 0,2);
+    SetHistogram("Min MET", 2, 0,2);
     SetHistogram("All cuts", 2, 0,2);
 
 
-} // initialize()
+} 
 
 
 
@@ -215,26 +199,9 @@ bool DileptonEventSelector::operator()( edm::Event const & event, pat::strbitset
 	
 	if (! JetSelection(event, ret)) break; //FillHist and passCut for this are in the method.
 
-
-/*
-    //
-    //_____ MET cuts __________________________________
-    //
-    event.getByLabel( met_collection, mhMet );
-    mpMet = edm::Ptr<pat::MET>( mhMet, 0);
-
-    if ( met_cuts ) {
-
-
-      // pfMet
-            if ( mpMet.isNonnull() && mpMet.isAvailable() ) {
-
-              pat::MET const & met = mhMet->at(0);
-              if ( ignoreCut("Min MET") || met.et()>cut("Min MET", double()) ) passCut(ret, "Min MET");
-            }
-    } // end of MET cuts
-
-*/
+    if( ! METSelection(event) ) break;
+    passCut(ret, "Min MET");
+    FillHist("Min MET", 1);
 
 
 /*
@@ -965,6 +932,41 @@ bool DileptonEventSelector::JetSelection(edm::Event const & event, pat::strbitse
 
 
   return true;
+}
+
+bool DileptonEventSelector::METSelection(edm::Event const & event)
+{
+
+	bool pass = false;
+	
+	// WHY ISNT JET CORRECTION APPLIED HERE LIKE IN MultiLepEventSelector??? Is this fine??! --June 10, 2019
+
+    //
+    //_____ MET cuts __________________________________
+    //
+    event.getByToken( METtoken, mhMet );
+    pMet = edm::Ptr<pat::MET>( mhMet, 0);
+
+    if ( met_cuts ) {
+
+      if (debug) std::cout<<"\t" <<"MET Selection:"<< std::endl;
+      
+      // pfMet
+            if ( pMet.isNonnull() && pMet.isAvailable() ) {
+
+              pat::MET const & met = mhMet->at(0);
+              if ( ignoreCut("Min MET") || met.et()>cut("Min MET", double()) ) pass = true; 
+            }
+    } 
+    else{
+        if(debug)std::cout << "\t" <<"IGNORING MET selection"<< std::endl;
+        pass = true;
+    
+    }
+    // end of MET cuts
+    
+    return pass;
+
 }
 
 void DileptonEventSelector::AnalyzeEvent( edm::EventBase const & event,
