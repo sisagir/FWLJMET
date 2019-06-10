@@ -80,10 +80,6 @@ protected:
     std::string legend;
     bool bFirstEntry;
 
-
-    boost::shared_ptr<PFJetIDSelectionFunctor> jetSel_;
-
-
 private:
 
     void initialize(std::map<std::string, edm::ParameterSet const> par);
@@ -124,12 +120,20 @@ private:
     //nLepton
     int min_lepton;
 
-    // bool jet_cuts;
-    // bool jet_minpt;
-    // double jet_maxeta;
-    // int min_jet;
-    // int max_jet;
-    // JetMETCorrHelper JetMETCorr;
+    //Jets
+    boost::shared_ptr<PFJetIDSelectionFunctor> jetSel_;
+    bool   JECup;
+    bool   JECdown;
+    bool   JERup;
+    bool   JERdown;
+    bool   doNewJEC;
+    bool   doLepJetCleaning;
+    bool jet_cuts;
+    bool jet_minpt;
+    double jet_maxeta;
+    int min_jet;
+    int max_jet;
+    JetMETCorrHelper JetMETCorr;
 
     // bool met_cuts;
 
@@ -149,7 +153,7 @@ private:
     edm::Handle<edm::TriggerResults >           TriggerHandle;
     edm::Handle<std::vector<pat::Muon> >        muonsHandle;
     edm::Handle<std::vector<pat::Electron> >    electronsHandle;
-    // edm::Handle<std::vector<pat::Jet> >         mhJets;
+    edm::Handle<std::vector<pat::Jet> >         jetsHandle;
     // edm::Handle<std::vector<pat::MET> >         mhMet;
     // edm::Handle<double>                         h_rho;
     // edm::Handle<std::vector<reco::Vertex> >     h_primVtx;
@@ -163,9 +167,9 @@ private:
     edm::EDGetTokenT<bool>                           METfilterToken_extra;
     edm::EDGetTokenT<pat::MuonCollection>            muonsToken;
     edm::EDGetTokenT<pat::ElectronCollection>        electronsToken;
-    // edm::EDGetTokenT<pat::JetCollection>             jetsToken;
+    edm::EDGetTokenT<pat::JetCollection>             jetsToken;
+    edm::EDGetTokenT<double>                         rhoJetsToken;
     // edm::EDGetTokenT<std::vector<pat::MET> >         METtoken;
-    // edm::EDGetTokenT<double>                         rhoJetsToken;
     // edm::EDGetTokenT<edm::TriggerResults>            METfilterToken;
     edm::EDGetTokenT<pat::PackedCandidateCollection> PFCandToken;
     edm::EDGetTokenT<double>                         rhoJetsNC_Token;
@@ -177,7 +181,7 @@ private:
     bool MuonSelection     (edm::Event const & event, pat::strbitset & ret);
     bool ElectronSelection (edm::Event const & event, pat::strbitset & ret);
     bool LeptonsSelection  (edm::Event const & event, pat::strbitset & ret);
-    // bool JetSelection      (edm::Event const & event, pat::strbitset & ret);
+    bool JetSelection      (edm::Event const & event, pat::strbitset & ret);
     // bool METSelection      (edm::Event const & event);
 
 };

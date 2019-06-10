@@ -17,13 +17,6 @@ void DileptonEventSelector::BeginJob( const edm::ParameterSet& iConfig, edm::Con
     std::string thisSelectorName = GetName();
     const edm::ParameterSet& selectorConfig = iConfig.getParameterSet( thisSelectorName ) ;
 
-    PFCandToken = iC.consumes<pat::PackedCandidateCollection>(selectorConfig.getParameter<edm::InputTag>("PFparticlesCollection"));
-    rhoJetsNC_Token = iC.consumes<double>(selectorConfig.getParameter<edm::InputTag>("rhoJetsNCInputTag"));
-
-    // //PFJetID
-    // const edm::ParameterSet& PFJetIFconfig = selectorConfig.getParameterSet("pfJetIDSelector") ;
-    // jetSel_ = boost::shared_ptr<PFJetIDSelectionFunctor>( new PFJetIDSelectionFunctor(PFJetIFconfig) );
-
     debug               = selectorConfig.getParameter<bool>         ("debug");
     isMc                = selectorConfig.getParameter<bool>("isMc");
     bFirstEntry         = true; //in case anything needs a first entry bool.
@@ -68,6 +61,27 @@ void DileptonEventSelector::BeginJob( const edm::ParameterSet& iConfig, edm::Con
     //nLepton
     min_lepton               = selectorConfig.getParameter<int>          ("min_lepton");
 
+    //Jets
+    jetsToken                = iC.consumes<pat::JetCollection>(selectorConfig.getParameter<edm::InputTag>("jet_collection"));
+    const edm::ParameterSet& PFJetIFconfig = selectorConfig.getParameterSet("pfJetIDSelector") ;
+    jetSel_                                = boost::shared_ptr<PFJetIDSelectionFunctor>( new PFJetIDSelectionFunctor(PFJetIFconfig) );
+    jet_cuts                 = selectorConfig.getParameter<bool>("jet_cuts");
+    jet_minpt                = selectorConfig.getParameter<double>("jet_minpt");
+    jet_maxeta               = selectorConfig.getParameter<double>("jet_maxeta");
+    min_jet                  = selectorConfig.getParameter<int>("min_jet");
+    max_jet                  = selectorConfig.getParameter<int>("max_jet");
+    JECup                    = selectorConfig.getParameter<bool>("JECup");
+    JECdown                  = selectorConfig.getParameter<bool>("JECdown");
+    JERup                    = selectorConfig.getParameter<bool>("JERup");
+    JERdown                  = selectorConfig.getParameter<bool>("JERdown");
+    doNewJEC                 = selectorConfig.getParameter<bool>("doNewJEC");
+    doLepJetCleaning         = selectorConfig.getParameter<bool>("doLepJetCleaning");
+    JetMETCorr.Initialize(selectorConfig); // REMINDER: THIS NEEDS --if(!isMc)JetMETCorr.SetFacJetCorr(event)-- somewhere before correcting jets for data, since data JEC is era dependent. !!
+    
+    // Misc
+    PFCandToken = iC.consumes<pat::PackedCandidateCollection>(selectorConfig.getParameter<edm::InputTag>("PFparticlesCollection"));
+    rhoJetsNC_Token = iC.consumes<double>(selectorConfig.getParameter<edm::InputTag>("rhoJetsNCInputTag"));
+    rhoJetsToken = iC.consumes<double>(selectorConfig.getParameter<edm::InputTag>("rhoJetsInputTag"));
 
     // hbhe_cut                 = selectorConfig.getParameter<bool>         ("hbhe_cut");
     // metfilters                   = selectorConfig.getParameter<bool>         ("metfilters");
@@ -91,11 +105,7 @@ void DileptonEventSelector::BeginJob( const edm::ParameterSet& iConfig, edm::Con
 
     // met_cuts                 = selectorConfig.getParameter<bool>         ("met_cuts");
 
-    // jet_collection           = selectorConfig.getParameter<edm::InputTag>("jet_collection");
     // met_collection           = selectorConfig.getParameter<edm::InputTag>("met_collection");
-    // doLepJetCleaning         = selectorConfig.getParameter<bool>         ("doLepJetCleaning");
-    // doNewJEC                 = selectorConfig.getParameter<bool>         ("doNewJEC");
-    // isMc                     = selectorConfig.getParameter<bool>         ("isMc");
 
 
 
@@ -108,11 +118,8 @@ void DileptonEventSelector::BeginJob( const edm::ParameterSet& iConfig, edm::Con
     push_back("Min electron");
     push_back("Max electron");
     push_back("Min lepton");
-    // push_back("One jet or more");
-    // push_back("Two jets or more");
-    // push_back("Three jets or more");
-    // push_back("Min jet multiplicity");
-    // push_back("Max jet multiplicity");
+    push_back("Min jet multiplicity");
+    push_back("Max jet multiplicity");
     // push_back("Min MET");
     push_back("All cuts");          // sanity check
 
@@ -139,20 +146,14 @@ void DileptonEventSelector::BeginJob( const edm::ParameterSet& iConfig, edm::Con
     }
     set("Min lepton", min_lepton);
 
-    // if (jet_cuts){
-    //     set("One jet or more", true);
-    //     set("Two jets or more", true);
-    //     set("Three jets or more", true);
-    //     set("Min jet multiplicity", min_jet);
-    //     set("Max jet multiplicity", max_jet);
-    // }
-    // else{
-    //     set("One jet or more", false);
-    //     set("Two jets or more", false);
-    //     set("Three jets or more", false);
-    //     set("Min jet multiplicity", false);
-    //     set("Max jet multiplicity", false);
-    // }
+    if (jet_cuts){
+        set("Min jet multiplicity", min_jet);
+        set("Max jet multiplicity", max_jet);
+    }
+    else{
+        set("Min jet multiplicity", false);
+        set("Max jet multiplicity", false);
+    }
 
     // if (met_cuts) set("Min MET", min_met);
 
@@ -173,7 +174,7 @@ void DileptonEventSelector::BeginJob( const edm::ParameterSet& iConfig, edm::Con
     //     SetHistogram("Jet Selection", 2, 0,2); // keeping it simple for now
     // }
     // SetHistogram("MET", 2, 0,2);
-    // SetHistogram("All cuts", 2, 0,2);
+    SetHistogram("All cuts", 2, 0,2);
 
 
 } // initialize()
@@ -189,19 +190,6 @@ bool DileptonEventSelector::operator()( edm::Event const & event, pat::strbitset
   if(debug)std::cout << "=====================================" <<std::endl;
   if(debug)std::cout << "Event = " << event.id().event() << ", Lumi Block = " << event.id().luminosityBlock() << std::endl;
   if(debug)std::cout << "=====================================" <<std::endl;
-
-  //if(!isMc) JetMETCorr.SetFacJetCorr(event);
-
-  // pat::strbitset retJet       = jetSel_->getBitTemplate();
-
-  // //packed pf candidates and rho source needed miniIso
-  // edm::Handle<pat::PackedCandidateCollection> packedPFCands;
-  // event.getByToken(PFCandToken, packedPFCands);
-
-  // //rho isolation from susy recommendation
-  // edm::Handle<double> rhoJetsNC;
-  // event.getByToken(rhoJetsNC_Token , rhoJetsNC);
-  // double myRhoJetsNC = *rhoJetsNC;
 
 
   while(1){ // standard infinite while loop trick to avoid nested ifs
@@ -225,193 +213,8 @@ bool DileptonEventSelector::operator()( edm::Event const & event, pat::strbitset
 	if (! ElectronSelection(event, ret)) break; //FillHist and passCut for this are in the method.
 
 	if (! LeptonsSelection(event, ret)) break; //FillHist and passCut for this are in the method.
-
-
-/*
-
-    //======================================================
-    //
-    // jet loop
-    //
-    //
-
-    int _n_good_jets = 0;
-    int _n_good_uncleaned_jets=0;
-    int _n_jets = 0;
-    //int njetsPF = 0;
-
-    mvSelJets.clear();
-    mvSelJetsCleaned.clear();
-    mvAllJets.clear();
-    
-    std::vector<edm::Ptr<pat::Electron>> electronsForCleaning;
-    electronsForCleaning = vSelElectrons;
-
-    event.getByLabel( jet_collection, mhJets );
-    for (std::vector<pat::Jet>::const_iterator _ijet = mhJets->begin();_ijet != mhJets->end(); ++_ijet){
-
-      retJet.set(false);
-      // jet cuts for uncleaned jets
-      bool pfID_barrel = (fabs(_ijet->correctedJet(0).eta()) < 2.7 && (*jetSel_)( *_ijet, retJet ) );
-      bool pfID_endcap = (fabs(_ijet->correctedJet(0).eta()) >= 2.7 && fabs(_ijet->correctedJet(0).eta()) < 3.0 &&
-                          (_ijet->correctedJet(0).neutralEmEnergyFraction() < 0.9 || _ijet->correctedJet(0).neutralMultiplicity() > 2));
-      bool pfID_forward = (fabs(_ijet->correctedJet(0).eta()) >= 3.0 && (_ijet->correctedJet(0).neutralEmEnergyFraction() < 0.9 || _ijet->correctedJet(0).neutralMultiplicity() > 10));
-      bool passPFID = pfID_barrel || pfID_endcap || pfID_forward;
-      if ( passPFID){
-        mvAllJets.push_back(edm::Ptr<pat::Jet>(mhJets, _n_jets));
-        //cut on corrected jet quantities
-        TLorentzVector corJetP4 = correctJet(*_ijet,event,false,false,0);
-        if (( corJetP4.Pt()>jet_minpt ) && ( fabs(corJetP4.Eta())<jet_maxeta )){
-          ++_n_good_uncleaned_jets;
-          mvSelJets.push_back(edm::Ptr<pat::Jet>(mhJets, _n_jets));
-        }
-      }
-
-      //lepton jet cleaning
-      bool _cleaned = false;
-      pat::Jet cleanedJet = *_ijet;
-      TLorentzVector jetP4;
-      pat::Jet tmpJet = _ijet->correctedJet(0);
-
-      if ( doLepJetCleaning ){
-
-        if (debug) std::cout << "Checking Overlap" << std::endl;
-        //clean of muons
-        for(unsigned int ilep=0; ilep < mvSelMuons.size(); ilep++){
-          bool looseMuon; //bool to loop over only loose muons can easily do here since loose muon id so easy to implement
-          //get muon isolation
-          //new definition of iso based on muon pog page
-          const reco::MuonPFIsolation pfIsolationR04 = mvSelMuons[ilep]->pfIsolationR04();
-          double chIso  = pfIsolationR04.sumChargedHadronPt;
-          double nhIso  = pfIsolationR04.sumNeutralHadronEt;
-          double gIso   = pfIsolationR04.sumPhotonEt;
-          double puIso  = pfIsolationR04.sumPUPt;
-          double relIso = (chIso + std::max(0.,nhIso + gIso - 0.5*puIso)) / mvSelMuons[ilep]->pt();
-          //get miniIso
-          pat::Muon* muptr = new pat::Muon(mvSelMuons[ilep]);
-          float miniIso = getPFMiniIsolation_EffectiveArea(packedPFCands, dynamic_cast<const reco::Candidate* > (muptr), 0.05, 0.2, 10., false, false,myRhoJetsNC);
-
-          if(miniIso > 0.4) looseMuon=false;
-          else if(!(mvSelMuons[ilep]->isPFMuon())) looseMuon=false;
-          else if(!( mvSelMuons[ilep]->isGlobalMuon() || mvSelMuons[ilep]->isTrackerMuon())) looseMuon=false;
-          else looseMuon=true;
-          if(!looseMuon) continue;
-          if ( deltaR(mvSelMuons[ilep]->p4(),_ijet->p4()) < 0.4 ){
-            if (debug) {
-              std::cout << "Jet Overlaps with the Muon... Cleaning jet..." << std::endl;
-              std::cout << "Lepton : pT = " << mvSelMuons[ilep]->pt() << " eta = " << mvSelMuons[ilep]->eta() << " phi = " << mvSelMuons[ilep]->phi() << std::endl;
-              std::cout << "      Raw Jet : pT = " << _ijet->pt() << " eta = " << _ijet->eta() << " phi = " << _ijet->phi() << std::endl;
-            }
-            //get the daughters of the muons
-            std::vector<reco::CandidatePtr> muDaughters;
-            for ( unsigned int isrc = 0; isrc < mvSelMuons[ilep]->numberOfSourceCandidatePtrs(); ++isrc ){
-              if (mvSelMuons[ilep]->sourceCandidatePtr(isrc).isAvailable()) muDaughters.push_back( mvSelMuons[ilep]->sourceCandidatePtr(isrc) );
-            }
-            const std::vector<edm::Ptr<reco::Candidate> > _ijet_consts = _ijet->daughterPtrVector();
-            for ( std::vector<edm::Ptr<reco::Candidate> >::const_iterator _i_const = _ijet_consts.begin(); _i_const != _ijet_consts.end(); ++_i_const){
-              for (unsigned int muI = 0; muI < muDaughters.size(); muI++) {
-                if ( (*_i_const).key() == muDaughters[muI].key() ) {
-
-
-                  tmpJet.setP4( tmpJet.p4() - muDaughters[muI]->p4() );
-
-                  if (debug) std::cout << "Corrected Jet : pT = " << tmpJet.pt() << " eta = " << tmpJet.eta() << " phi = " << tmpJet.phi() << std::endl;
-                  _cleaned = true;
-                  muDaughters.erase( muDaughters.begin()+muI );
-                  break; //breaks out of mu daughters loop
-                }// end of if muon ref == jet ref
-              }//end loop over mu daughters
-
-            }//end loop over jet constituents
-          }//end check of muons being inside jet
-
-          delete muptr;
-        }// end loop over muons for cleaning
-
-
-        //clean for electrons
-        for (unsigned int ilep=0; ilep <electronsForCleaning.size();ilep++){
-          if ( deltaR(electronsForCleaning.at(ilep).p4(),_ijet->p4()) < 0.4 ){
-            //get the daughters of the electron
-            std::vector<reco::CandidatePtr> elDaughters;
-            for ( unsigned int isrc = 0; isrc < electronsForCleaning.at(ilep).numberOfSourceCandidatePtrs(); ++isrc ){
-              if (electronsForCleaning.at(ilep).sourceCandidatePtr(isrc).isAvailable()) elDaughters.push_back( electronsForCleaning.at(ilep).sourceCandidatePtr(isrc) );
-            }
-            if (debug) {
-              std::cout << "Jet Overlaps with the Electron... Cleaning jet..." << std::endl;
-              std::cout << "Lepton : pT = " << electronsForCleaning.at(ilep).pt() << " eta = " << electronsForCleaning.at(ilep).eta() << " phi = " << electronsForCleaning.at(ilep).phi() << std::endl;
-              std::cout << "      Raw Jet : pT = " << _ijet->pt() << " eta = " << _ijet->eta() << " phi = " << _ijet->phi() << std::endl;
-            }
-            const std::vector<edm::Ptr<reco::Candidate> > _ijet_consts = _ijet->daughterPtrVector();
-            for ( std::vector<edm::Ptr<reco::Candidate> >::const_iterator _i_const = _ijet_consts.begin(); _i_const != _ijet_consts.end(); ++_i_const){
-              for (unsigned int elI = 0; elI < elDaughters.size(); elI++) {
-                if ( (*_i_const).key() == elDaughters[elI].key() ) {
-                  tmpJet.setP4( tmpJet.p4() - elDaughters[elI]->p4() );
-
-                  if (debug) std::cout << "Corrected Jet : pT = " << tmpJet.pt() << " eta = " << tmpJet.eta() << " phi = " << tmpJet.phi() << std::endl;
-                  _cleaned = true;
-                  elDaughters.erase( elDaughters.begin()+elI );
-                  break;
-                }
-              }
-            }
-          }
-        }//end electron cleaning
-
-
-
-        //if not cleaned just use first jet (remember if no cleaning then cleanedJet==*_ijet) to get corrected four std::vector and set the cleaned jet to have it
-        if (!_cleaned) {
-          jetP4 = correctJet(cleanedJet, event,false,false,0);
-          //annoying thing to convert our tlorentzstd::vector to root::math::lorentzstd::vector
-          ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double > > rlv;
-          rlv.SetXYZT(jetP4.X(),jetP4.Y(),jetP4.Z(),jetP4.T());
-          cleanedJet.setP4(rlv);
-        }
-        else{
-          //get the correct 4std::vector
-          jetP4 = correctJet(tmpJet, event);
-          //annoying thing to convert our tlorentzstd::vector to root::math::lorentzstd::vector
-          ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double > > rlv;
-          rlv.SetXYZT(jetP4.X(),jetP4.Y(),jetP4.Z(),jetP4.T());
-          cleanedJet.setP4(rlv);
-
-        }
-
-
-        //now do kinematic cuts and save them, cleaning and JEC could only mess up pfID so use original jet for it (though probably do nothing)
-        if (passPFID ){
-
-          if (( cleanedJet.pt()>jet_minpt ) && ( fabs(cleanedJet.eta())<jet_maxeta )){
-            ++_n_good_jets;
-            mvSelJetsCleaned.push_back(cleanedJet);
-          }
-        }
-
-      }//end lepton jet cleaning
-      ++_n_jets;
-    } // end of loop over jets
-
-    if ( jet_cuts ) {
-
-      if ( ignoreCut("One jet or more") || _n_good_jets >= 1 ) passCut(ret, "One jet or more");
-      else break;
-
-      if ( ignoreCut("Two jets or more") || _n_good_jets >= 2 ) passCut(ret, "Two jets or more");
-      else break;
-
-      if ( ignoreCut("Three jets or more") || _n_good_jets >= 3 ) passCut(ret, "Three jets or more");
-      else break;
-
-      if ( ignoreCut("Min jet multiplicity") || _n_good_jets >= cut("Min jet multiplicity",int()) ) passCut(ret, "Min jet multiplicity");
-      else break;
-
-      if ( ignoreCut("Max jet multiplicity") || _n_good_jets <= cut("Max jet multiplicity",int()) ) passCut(ret, "Max jet multiplicity");
-      else break;
-
-    } // end of jet cuts
-
-*/
+	
+	if (! JetSelection(event, ret)) break; //FillHist and passCut for this are in the method.
 
 
 /*
@@ -829,13 +632,13 @@ bool DileptonEventSelector::ElectronSelection(edm::Event const & event, pat::str
 
     int _n_electrons  = 0;
     int nSelElectrons = 0;
-    int nSelLooseElectrons = 0; //--> collection of electrons for lepton-jet cleaning. MISLEADING NAME. ITS NOT REALLY LOOSE ELECTRONS. ITS ACTUALLY TIGHTER THAN vSelElectrons. Check Below!!!! Need to tidy up and rename things at some point -- May 31, 2019. 
+    int nSelElectronsForJetLepClean = 0; //--> collection of electrons for lepton-jet cleaning.  
 
     //get electrons
     event.getByToken(electronsToken, electronsHandle );
 
     vSelElectrons.clear();
-    vSelLooseElectrons.clear();
+    vSelElectronsForJetLepClean.clear();
 
     if ( electron_cuts ) {
 
@@ -882,8 +685,8 @@ bool DileptonEventSelector::ElectronSelection(edm::Event const & event, pat::str
         //store electron for lepton-jet cleaning
         if(passForLepJetCleaning){
           if(debug)std::cout<< "\t\t\t" << "pass_electron_mvaLoose_miniIso_forLepJetCleaning"<< std::endl;
-          vSelLooseElectrons.push_back( edm::Ptr<pat::Electron>( electronsHandle, _n_electrons) );
-          ++nSelLooseElectrons;
+          vSelElectronsForJetLepClean.push_back( *_iel );
+          ++nSelElectronsForJetLepClean;
         }
 
         if ( pass ){
@@ -915,8 +718,8 @@ bool DileptonEventSelector::ElectronSelection(edm::Event const & event, pat::str
           // save ALL electrons if muon_cuts is false
           vSelElectrons.push_back( edm::Ptr<pat::Electron>( electronsHandle, _n_electrons) );
           ++nSelElectrons;
-          vSelLooseElectrons.push_back( edm::Ptr<pat::Electron>( electronsHandle, _n_electrons) );
-          ++nSelLooseElectrons;
+          vSelElectronsForJetLepClean.push_back( *_iel );
+          ++nSelElectronsForJetLepClean;
           _n_electrons++;
       	}
 
@@ -924,7 +727,7 @@ bool DileptonEventSelector::ElectronSelection(edm::Event const & event, pat::str
 
 	if (debug)std::cout<< "\t\t"<< "++++++++++++++++++++++++++++++++++++++++++++++++ " <<std::endl; // DEBUG - rizki
 	if (debug)std::cout<< "\t\t"<< "nSelElectrons                         = " << nSelElectrons << " out of " << electronsHandle->size() <<std::endl; // DEBUG - rizki
-	if (debug)std::cout<< "\t\t"<< "Electrons (for lepton-jet cleaning)   = " << nSelLooseElectrons << " out of " << electronsHandle->size() <<std::endl; // DEBUG - rizki
+	if (debug)std::cout<< "\t\t"<< "Electrons (for lepton-jet cleaning)   = " << nSelElectronsForJetLepClean << " out of " << electronsHandle->size() <<std::endl; // DEBUG - rizki
 	if (debug)std::cout<< "\t\t"<< "++++++++++++++++++++++++++++++++++++++++++++++++ " <<std::endl; // DEBUG - rizki
 
     return true;
@@ -957,6 +760,212 @@ bool DileptonEventSelector::LeptonsSelection(edm::Event const & event, pat::strb
     
     return true;
 
+}
+
+bool DileptonEventSelector::JetSelection(edm::Event const & event, pat::strbitset & ret)
+{
+
+    if(debug)std::cout << "\t" <<"Jet Selection:"<< std::endl;
+
+    if(!isMc) JetMETCorr.SetFacJetCorr(event);
+
+    pat::strbitset retJet       = jetSel_->getBitTemplate();
+
+	//packed pf candidates and rho source needed miniIso
+	edm::Handle<pat::PackedCandidateCollection> packedPFCandsHandle;
+	event.getByToken(PFCandToken, packedPFCandsHandle);
+
+	//rho isolation from susy recommendation
+	edm::Handle<double> rhoJetsNC_Handle;
+	event.getByToken(rhoJetsNC_Token, rhoJetsNC_Handle);
+	double myRhoJetsNC = *rhoJetsNC_Handle;
+
+
+    //======================================================
+    //
+    // jet loop
+    //
+    //
+
+    int _n_good_jets = 0;
+    int _n_good_uncleaned_jets=0;
+    int _n_jets = 0;
+    //int njetsPF = 0;
+
+    vSelJets.clear();
+    vSelCleanedJets.clear();
+    vAllJets.clear();
+    
+    std::vector<pat::Electron> electronsForCleaning = vSelElectronsForJetLepClean;
+    
+    //for jet correction
+    bool isAK8 = false;
+    bool reCorrectJet = doNewJEC;
+    unsigned int syst;
+    if (JECup){syst=1;}
+    else if (JECdown){syst=2;}
+    else if (JERup){syst=3;}
+    else if (JERdown){syst=4;}
+    else syst = 0; //nominal
+
+    event.getByToken( jetsToken, jetsHandle );
+    for (std::vector<pat::Jet>::const_iterator _ijet = jetsHandle->begin();_ijet != jetsHandle->end(); ++_ijet){
+
+      retJet.set(false);
+      // jet cuts for uncleaned jets
+      bool pfID_barrel = (fabs(_ijet->correctedJet(0).eta()) < 2.7 && (*jetSel_)( *_ijet, retJet ) );
+      bool pfID_endcap = (fabs(_ijet->correctedJet(0).eta()) >= 2.7 && fabs(_ijet->correctedJet(0).eta()) < 3.0 &&
+                          (_ijet->correctedJet(0).neutralEmEnergyFraction() < 0.9 || _ijet->correctedJet(0).neutralMultiplicity() > 2));
+      bool pfID_forward = (fabs(_ijet->correctedJet(0).eta()) >= 3.0 && (_ijet->correctedJet(0).neutralEmEnergyFraction() < 0.9 || _ijet->correctedJet(0).neutralMultiplicity() > 10));
+      bool passPFID = pfID_barrel || pfID_endcap || pfID_forward;
+      if ( passPFID){
+        vAllJets.push_back(edm::Ptr<pat::Jet>(jetsHandle, _n_jets));
+        //cut on corrected jet quantities
+        TLorentzVector corJetP4 = JetMETCorr.correctJet(*_ijet,event, rhoJetsToken, isAK8, reCorrectJet, syst);
+        if (( corJetP4.Pt()>jet_minpt ) && ( fabs(corJetP4.Eta())<jet_maxeta )){
+          ++_n_good_uncleaned_jets;
+          vSelJets.push_back(edm::Ptr<pat::Jet>(jetsHandle, _n_jets));
+        }
+      }
+
+      //lepton jet cleaning
+      bool _cleaned = false;
+      pat::Jet cleanedJet = *_ijet;
+      TLorentzVector jetP4;
+      pat::Jet tmpJet = _ijet->correctedJet(0);
+
+      if ( doLepJetCleaning ){
+
+        //clean of muons
+        for(unsigned int ilep=0; ilep < vSelMuons.size(); ilep++){
+          bool looseMuon; //bool to loop over only loose muons can easily do here since loose muon id so easy to implement
+          //get miniIso
+          pat::Muon* muptr = new pat::Muon(vSelMuons[ilep]);
+          float miniIso = getPFMiniIsolation_EffectiveArea(packedPFCandsHandle, dynamic_cast<const reco::Candidate* > (muptr), 0.05, 0.2, 10., false, false,myRhoJetsNC);
+
+          if(miniIso > 0.4) looseMuon=false;
+          else if(!(vSelMuons[ilep]->isPFMuon())) looseMuon=false;
+          else if(!( vSelMuons[ilep]->isGlobalMuon() || vSelMuons[ilep]->isTrackerMuon())) looseMuon=false;
+          else looseMuon=true;
+          if(!looseMuon) continue;
+          if ( deltaR(vSelMuons[ilep]->p4(),_ijet->p4()) < 0.4 ){
+            if (debug) {
+              std::cout << "\t\t" <<"Jet Overlaps with the Muon... Cleaning jet..." << std::endl;
+              std::cout << "\t\t" <<"Lepton : pT = " << vSelMuons[ilep]->pt() << " eta = " << vSelMuons[ilep]->eta() << " phi = " << vSelMuons[ilep]->phi() << std::endl;
+              std::cout << "\t\t" <<"      Raw Jet : pT = " << _ijet->pt() << " eta = " << _ijet->eta() << " phi = " << _ijet->phi() << std::endl;
+            }
+            //get the daughters of the muons
+            std::vector<reco::CandidatePtr> muDaughters;
+            for ( unsigned int isrc = 0; isrc < vSelMuons[ilep]->numberOfSourceCandidatePtrs(); ++isrc ){
+              if (vSelMuons[ilep]->sourceCandidatePtr(isrc).isAvailable()) muDaughters.push_back( vSelMuons[ilep]->sourceCandidatePtr(isrc) );
+            }
+            const std::vector<edm::Ptr<reco::Candidate> > _ijet_consts = _ijet->daughterPtrVector();
+            for ( std::vector<edm::Ptr<reco::Candidate> >::const_iterator _i_const = _ijet_consts.begin(); _i_const != _ijet_consts.end(); ++_i_const){
+              for (unsigned int muI = 0; muI < muDaughters.size(); muI++) {
+                if ( (*_i_const).key() == muDaughters[muI].key() ) {
+
+
+                  tmpJet.setP4( tmpJet.p4() - muDaughters[muI]->p4() );
+
+                  if (debug) std::cout << "\t\t" <<"Corrected Jet : pT = " << tmpJet.pt() << " eta = " << tmpJet.eta() << " phi = " << tmpJet.phi() << std::endl;
+                  _cleaned = true;
+                  muDaughters.erase( muDaughters.begin()+muI );
+                  break; //breaks out of mu daughters loop
+                }// end of if muon ref == jet ref
+              }//end loop over mu daughters
+
+            }//end loop over jet constituents
+          }//end check of muons being inside jet
+
+          delete muptr;
+        }// end loop over muons for cleaning
+
+
+        //clean for electrons
+        for (unsigned int ilep=0; ilep <electronsForCleaning.size();ilep++){
+          if ( deltaR(electronsForCleaning.at(ilep).p4(),_ijet->p4()) < 0.4 ){
+            //get the daughters of the electron
+            std::vector<reco::CandidatePtr> elDaughters;
+            for ( unsigned int isrc = 0; isrc < electronsForCleaning.at(ilep).numberOfSourceCandidatePtrs(); ++isrc ){
+              if (electronsForCleaning.at(ilep).sourceCandidatePtr(isrc).isAvailable()) elDaughters.push_back( electronsForCleaning.at(ilep).sourceCandidatePtr(isrc) );
+            }
+            if (debug) {
+              std::cout << "\t\t" <<"Jet Overlaps with the Electron... Cleaning jet..." << std::endl;
+              std::cout << "\t\t" <<"Lepton : pT = " << electronsForCleaning.at(ilep).pt() << " eta = " << electronsForCleaning.at(ilep).eta() << " phi = " << electronsForCleaning.at(ilep).phi() << std::endl;
+              std::cout << "\t\t" <<"      Raw Jet : pT = " << _ijet->pt() << " eta = " << _ijet->eta() << " phi = " << _ijet->phi() << std::endl;
+            }
+            const std::vector<edm::Ptr<reco::Candidate> > _ijet_consts = _ijet->daughterPtrVector();
+            for ( std::vector<edm::Ptr<reco::Candidate> >::const_iterator _i_const = _ijet_consts.begin(); _i_const != _ijet_consts.end(); ++_i_const){
+              for (unsigned int elI = 0; elI < elDaughters.size(); elI++) {
+                if ( (*_i_const).key() == elDaughters[elI].key() ) {
+                  tmpJet.setP4( tmpJet.p4() - elDaughters[elI]->p4() );
+
+                  if (debug) std::cout << "\t\t" <<"Corrected Jet : pT = " << tmpJet.pt() << " eta = " << tmpJet.eta() << " phi = " << tmpJet.phi() << std::endl;
+                  _cleaned = true;
+                  elDaughters.erase( elDaughters.begin()+elI );
+                  break;
+                }
+              }
+            }
+          }
+        }//end electron cleaning
+
+
+
+        //if not cleaned just use first jet (remember if no cleaning then cleanedJet==*_ijet) to get corrected four std::vector and set the cleaned jet to have it
+        if (!_cleaned) {
+          jetP4 = JetMETCorr.correctJet(cleanedJet, event, rhoJetsToken, isAK8, reCorrectJet, syst);
+          //annoying thing to convert our tlorentzstd::vector to root::math::lorentzstd::vector
+          ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double > > rlv;
+          rlv.SetXYZT(jetP4.X(),jetP4.Y(),jetP4.Z(),jetP4.T());
+          cleanedJet.setP4(rlv);
+        }
+        else{
+          //get the correct 4std::vector
+          jetP4 = JetMETCorr.correctJet(tmpJet, event, rhoJetsToken, isAK8, reCorrectJet, syst);
+          //annoying thing to convert our tlorentzstd::vector to root::math::lorentzstd::vector
+          ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double > > rlv;
+          rlv.SetXYZT(jetP4.X(),jetP4.Y(),jetP4.Z(),jetP4.T());
+          cleanedJet.setP4(rlv);
+
+        }
+
+
+        //now do kinematic cuts and save them, cleaning and JEC could only mess up pfID so use original jet for it (though probably do nothing)
+        if (passPFID ){
+
+          if (( cleanedJet.pt()>jet_minpt ) && ( fabs(cleanedJet.eta())<jet_maxeta )){
+            ++_n_good_jets;
+            vSelCleanedJets.push_back(cleanedJet);
+          }
+        }
+
+      }//end lepton jet cleaning
+      ++_n_jets;
+    } // end of loop over jets
+
+
+	//---------
+	//nJets cut
+	//---------
+    if ( jet_cuts ) {
+
+      if ( ignoreCut("Min jet multiplicity") || _n_good_jets >= cut("Min jet multiplicity",int()) ){
+          passCut(ret, "Min jet multiplicity");
+          FillHist("Min jet multiplicity", 1);
+      }
+      else return false;
+
+      if ( ignoreCut("Max jet multiplicity") || _n_good_jets <= cut("Max jet multiplicity",int()) ){
+          passCut(ret, "Max jet multiplicity");
+          FillHist("Max jet multiplicity", 1);
+      }
+      else return false;
+
+    } // end of jet cuts
+
+
+  return true;
 }
 
 void DileptonEventSelector::AnalyzeEvent( edm::EventBase const & event,

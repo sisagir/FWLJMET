@@ -405,7 +405,6 @@ DileptonSelector_cfg = cms.PSet(
 #             min_met        = cms.double(20.0),
 #             max_met        = cms.double(99999999999.0),
 #             met_collection = cms.InputTag('slimmedMETs'),
-#             rhoJetsInputTag = cms.InputTag("fixedGridRhoFastjetAll"), #for jetmetcorrection
 # 
             #Muon
             muon_cuts                = cms.bool(True),
@@ -414,10 +413,6 @@ DileptonSelector_cfg = cms.PSet(
             max_muon                 = cms.int32(10), 
             muon_minpt               = cms.double(10.0),
             muon_maxeta              = cms.double(2.4),
-
-			#Misc
-            PFparticlesCollection  = cms.InputTag("packedPFCandidates"),
-            rhoJetsNCInputTag            = cms.InputTag("fixedGridRhoFastjetCentralNeutral",""),
 
             # Electon
             electronsCollection      = cms.InputTag("slimmedElectrons::LJMET"), #slimmedElectrons::LJMET" #for Egamma ID V2
@@ -430,16 +425,52 @@ DileptonSelector_cfg = cms.PSet(
 
             #nLeptons
             min_lepton          = cms.int32(2),
-
+            
+            
             # Jets
-#             jet_collection           = cms.InputTag('slimmedJets'),
-#             # jet_collection           = cms.InputTag('updatedPatJets::LJMET'), #if using updated jets
-#             AK8jet_collection        = cms.InputTag('slimmedJetsAK8'),
-#             JECup                    = cms.bool(JECup),
-#             JECdown                  = cms.bool(JECdown),
-#             JERup                    = cms.bool(JERup),
-#             JERdown                  = cms.bool(JERdown),
-#             doLepJetCleaning         = cms.bool(True),
+            jet_collection           = cms.InputTag('slimmedJets'),
+            pfJetIDSelector = cms.PSet( # taken from https://github.com/cms-sw/cmssw/blob/CMSSW_9_4_X/PhysicsTools/SelectorUtils/python/pfJetIDSelector_cfi.py
+                    #version = cms.string('WINTER17'), ## Is this correct? why was it "FIRSTDATA" before?? -- June 4th, 2019.
+                    version = cms.string('FIRSTDATA'), ## Is this correct?
+                    quality = cms.string('LOOSE'),
+            ),
+            jet_cuts                 = cms.bool(True),
+            jet_minpt                = cms.double(30.0),
+            jet_maxeta               = cms.double(5.0),
+            min_jet                  = cms.int32(4),
+            max_jet                  = cms.int32(4000),
+
+            JECup                    = cms.bool(JECup),
+            JECdown                  = cms.bool(JECdown),
+            JERup                    = cms.bool(JERup),
+            JERdown                  = cms.bool(JERdown),
+            doLepJetCleaning         = cms.bool(True),
+            doNewJEC                 = cms.bool(doNewJEC),
+            JEC_txtfile              = cms.FileInPath(JEC_txtfile),
+            JERSF_txtfile            = cms.FileInPath(JERSF_txtfile),
+            JER_txtfile              = cms.FileInPath(JER_txtfile),
+            JERAK8_txtfile           = cms.FileInPath(JERAK8_txtfile),
+            MCL1JetPar               = cms.FileInPath(MCL1JetPar),
+            MCL2JetPar               = cms.FileInPath(MCL2JetPar),
+            MCL3JetPar               = cms.FileInPath(MCL3JetPar),
+            MCL1JetParAK8            = cms.FileInPath(MCL1JetParAK8),
+            MCL2JetParAK8            = cms.FileInPath(MCL2JetParAK8),
+            MCL3JetParAK8            = cms.FileInPath(MCL3JetParAK8),
+            DataL1JetPar             = cms.FileInPath(DataL1JetPar),
+            DataL2JetPar             = cms.FileInPath(DataL2JetPar),
+            DataL3JetPar             = cms.FileInPath(DataL3JetPar),
+            DataResJetPar            = cms.FileInPath(DataResJetPar),
+            DataL1JetParAK8          = cms.FileInPath(DataL1JetParAK8),
+            DataL2JetParAK8          = cms.FileInPath(DataL2JetParAK8),
+            DataL3JetParAK8          = cms.FileInPath(DataL3JetParAK8),
+            DataResJetParAK8         = cms.FileInPath(DataResJetParAK8),
+
+			#Misc
+            PFparticlesCollection  = cms.InputTag("packedPFCandidates"),
+            rhoJetsNCInputTag            = cms.InputTag("fixedGridRhoFastjetCentralNeutral",""),
+            rhoJetsInputTag = cms.InputTag("fixedGridRhoFastjetAll"), #for jetmetcorrection
+
+
 #             CleanLooseLeptons        = cms.bool(True), #This needs to be well thought of depending on saving loose leptons or not and make sure treatment is the same for MC/Data!!
 #             LepJetDR                 = cms.double(0.4),
 #             LepJetDRAK8              = cms.double(0.8),
@@ -452,26 +483,7 @@ DileptonSelector_cfg = cms.PSet(
 #             max_jet                  = cms.int32(9999),
 #             leading_jet_pt           = cms.double(30.0),
 #             # Jet corrections are read from txt files
-#             doNewJEC                 = cms.bool(doNewJEC),
 #             doAllJetSyst             = cms.bool(doAllJetSyst),
-#             JEC_txtfile              = cms.FileInPath(JEC_txtfile),
-#             JERSF_txtfile            = cms.FileInPath(JERSF_txtfile),
-#             JER_txtfile              = cms.FileInPath(JER_txtfile),
-#             JERAK8_txtfile           = cms.FileInPath(JERAK8_txtfile),
-#             MCL1JetPar               = cms.FileInPath(MCL1JetPar),
-#             MCL2JetPar               = cms.FileInPath(MCL2JetPar),
-#             MCL3JetPar               = cms.FileInPath(MCL3JetPar),
-#             MCL1JetParAK8            = cms.FileInPath(MCL1JetParAK8),
-#             MCL2JetParAK8            = cms.FileInPath(MCL2JetParAK8),
-#             MCL3JetParAK8            = cms.FileInPath(MCL3JetParAK8),
-#             DataL1JetPar             = cms.FileInPath(DataL1JetPar),
-#             DataL2JetPar             = cms.FileInPath(DataL2JetPar),
-#             DataL3JetPar             = cms.FileInPath(DataL3JetPar),
-#             DataResJetPar            = cms.FileInPath(DataResJetPar),
-#             DataL1JetParAK8          = cms.FileInPath(DataL1JetParAK8),
-#             DataL2JetParAK8          = cms.FileInPath(DataL2JetParAK8),
-#             DataL3JetParAK8          = cms.FileInPath(DataL3JetParAK8),
-#             DataResJetParAK8         = cms.FileInPath(DataResJetParAK8),
 
 
             #Btag

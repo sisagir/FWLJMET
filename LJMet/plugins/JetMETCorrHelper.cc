@@ -134,7 +134,7 @@ void JetMETCorrHelper::Initialize(const edm::ParameterSet& iConfig){
           mEraVParAK8[era].push_back(*mEra_mStrJetCorPar[era]["ResJetParAK8"]);
 
           mEraFacJetCorr[era] = std::shared_ptr<FactorizedJetCorrector>( new FactorizedJetCorrector(mEraVPar[era]) );
-	  mEraFacJetCorrAK8[era] = std::shared_ptr<FactorizedJetCorrector> (new FactorizedJetCorrector(mEraVParAK8[era]) );
+          mEraFacJetCorrAK8[era] = std::shared_ptr<FactorizedJetCorrector> (new FactorizedJetCorrector(mEraVParAK8[era]) );
 
       }
 
