@@ -45,6 +45,7 @@
 #include "DataFormats/METReco/interface/HcalNoiseSummary.h"
 
 #include "FWLJMET/LJMet/interface/JetMETCorrHelper.h"
+#include "FWLJMET/LJMet/interface/BTagSFUtil.h"
 
 using trigger::TriggerObject;
 
@@ -138,6 +139,9 @@ private:
     //MET
     bool met_cuts;
     bool min_met;
+    
+    //Btag
+    BTagSFUtil btagSfUtil;
 
     edm::Handle<edm::TriggerResults >           TriggerHandle;
     edm::Handle<std::vector<pat::Muon> >        muonsHandle;

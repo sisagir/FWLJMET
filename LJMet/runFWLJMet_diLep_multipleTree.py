@@ -470,31 +470,16 @@ DileptonSelector_cfg = cms.PSet(
             rhoJetsInputTag = cms.InputTag("fixedGridRhoFastjetAll"), #for jetmetcorrection
 
 
-#             CleanLooseLeptons        = cms.bool(True), #This needs to be well thought of depending on saving loose leptons or not and make sure treatment is the same for MC/Data!!
-#             LepJetDR                 = cms.double(0.4),
-#             LepJetDRAK8              = cms.double(0.8),
-#             jet_cuts                 = cms.bool(True),
-#             jet_minpt                = cms.double(30.0),
-#             jet_maxeta               = cms.double(2.5),
-#             jet_minpt_AK8            = cms.double(200.0),
-#             jet_maxeta_AK8           = cms.double(2.4),
-#             min_jet                  = cms.int32(1),
-#             max_jet                  = cms.int32(9999),
-#             leading_jet_pt           = cms.double(30.0),
-#             # Jet corrections are read from txt files
-
-
             #Btag
-#             btag_cuts                = cms.bool(False), #not implemented
-#             btagOP                   = cms.string('MEDIUM'),
-#             bdisc_min                = cms.double(0.4941), # THIS HAS TO MATCH btagOP !
-#             applyBtagSF              = cms.bool(True), #This is implemented by BTagSFUtil.cc
-#             DeepCSVfile              = cms.FileInPath('FWLJMET/LJMet/data/DeepCSV_94XSF_V3_B_F.csv'),
-#             DeepCSVSubjetfile        = cms.FileInPath('FWLJMET/LJMet/data/subjet_DeepCSV_94XSF_V3_B_F.csv'),
-#             BTagUncertUp             = cms.bool(False), # no longer needed, but can still be utilized. Keep false as default.
-#             BTagUncertDown           = cms.bool(False), # no longer needed, but can still be utilized. Keep false as default.
-#             MistagUncertUp           = cms.bool(False), # no longer needed, but can still be utilized. Keep false as default.
-#             MistagUncertDown          = cms.bool(False), # no longer needed, but can still be utilized. Keep false as default.
+            btagOP                   = cms.string('MEDIUM'),
+            bdisc_min                = cms.double(0.4941), # THIS HAS TO MATCH btagOP !
+            applyBtagSF              = cms.bool(True), #This is implemented by BTagSFUtil.cc
+            DeepCSVfile              = cms.FileInPath('FWLJMET/LJMet/data/DeepCSV_94XSF_V3_B_F.csv'),
+            DeepCSVSubjetfile        = cms.FileInPath('FWLJMET/LJMet/data/subjet_DeepCSV_94XSF_V3_B_F.csv'),
+            BTagUncertUp             = cms.bool(False), # no longer needed, but can still be utilized. Keep false as default.
+            BTagUncertDown           = cms.bool(False), # no longer needed, but can still be utilized. Keep false as default.
+            MistagUncertUp           = cms.bool(False), # no longer needed, but can still be utilized. Keep false as default.
+            MistagUncertDown          = cms.bool(False), # no longer needed, but can still be utilized. Keep false as default.
 
             )
 #For DileptonEventSelectorCan use same trigger paths for data and MC since MC is always one of the data versions

@@ -87,6 +87,9 @@ void DileptonEventSelector::BeginJob( const edm::ParameterSet& iConfig, edm::Con
     METtoken           = iC.consumes<std::vector<pat::MET> >(selectorConfig.getParameter<edm::InputTag>("met_collection"));
     met_cuts           = selectorConfig.getParameter<bool>("met_cuts");
     min_met            = selectorConfig.getParameter<double>("min_met");
+    
+    //BTAG parameter initialization
+    btagSfUtil.Initialize(selectorConfig);
 
     //-----------------------
     // Define and Set cuts
@@ -203,23 +206,6 @@ bool DileptonEventSelector::operator()( edm::Event const & event, pat::strbitset
     passCut(ret, "Min MET");
     FillHist("Min MET", 1);
 
-
-/*
-    //
-    //_____ Btagging selection _____________________
-    //
-    mvSelBtagJets.clear();
-    bool _isTagged;
-
-    for (std::vector<edm::Ptr<pat::Jet> >::const_iterator _ijet = mvSelJets.begin();
-         _ijet != mvSelJets.end(); ++_ijet){
-
-      _isTagged = isJetTagged(**_ijet, event);
-
-      if (_isTagged) mvSelBtagJets.push_back(*_ijet);
-    }
-
-    */
 
     passCut(ret, "All cuts");
 
@@ -756,7 +742,6 @@ bool DileptonEventSelector::JetSelection(edm::Event const & event, pat::strbitse
     int _n_good_jets = 0;
     int _n_good_uncleaned_jets=0;
     int _n_jets = 0;
-    //int njetsPF = 0;
 
     vSelJets.clear();
     vSelCleanedJets.clear();
@@ -773,6 +758,11 @@ bool DileptonEventSelector::JetSelection(edm::Event const & event, pat::strbitse
     else if (JERup){syst=3;}
     else if (JERdown){syst=4;}
     else syst = 0; //nominal
+    
+    //for btagging
+    vSelBtagJets.clear();
+    bool _isTagged;
+    
 
     event.getByToken( jetsToken, jetsHandle );
     for (std::vector<pat::Jet>::const_iterator _ijet = jetsHandle->begin();_ijet != jetsHandle->end(); ++_ijet){
@@ -907,8 +897,19 @@ bool DileptonEventSelector::JetSelection(edm::Event const & event, pat::strbitse
         }
 
       }//end lepton jet cleaning
+
+
+      //
+      //_____ Btagging  _____________________
+      //
+      _isTagged = btagSfUtil.isJetTagged(*_ijet, jetP4, event, isMc);
+      if (_isTagged) vSelBtagJets.push_back(edm::Ptr<pat::Jet>( jetsHandle, _n_jets));
+
+
       ++_n_jets;
+      
     } // end of loop over jets
+
 
 
 	//---------
