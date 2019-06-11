@@ -132,7 +132,6 @@ void DileptonEventSelector::BeginJob( const edm::ParameterSet& iConfig, edm::Con
         set("Max electron", false);
     }
     set("Min lepton", min_lepton);
-
     if (jet_cuts){
         set("Min jet multiplicity", min_jet);
         set("Max jet multiplicity", max_jet);
@@ -143,9 +142,7 @@ void DileptonEventSelector::BeginJob( const edm::ParameterSet& iConfig, edm::Con
     }
     if(met_cuts) set("Min MET", min_met);
     else set("Min MET", false);
-
     set("All cuts", true);
-
 
 
     //Record cut flow information - will be saved under folder named after the selector name.
