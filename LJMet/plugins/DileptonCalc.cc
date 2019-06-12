@@ -48,6 +48,10 @@ int DileptonCalc::BeginJob(edm::ConsumesCollector && iC)
 
 	//BTAG parameter initialization
 	btagSfUtil.Initialize(mPset);
+	
+	//MET
+	METnoHFtoken        = iC.consumes<std::vector<pat::MET>>(mPset.getParameter<edm::InputTag>("metnohf_collection"));
+	METmodToken         = iC.consumes<std::vector<pat::MET>>(mPset.getParameter<edm::InputTag>("metmod_collection"));
 
 
 //     //NewPDF stuff    
@@ -74,7 +78,7 @@ int DileptonCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * sel
 
     if(debug)std::cout << "Processing Event in DileptonCalc::AnalyzeEvent" << std::endl;    
     
-    //if(!isMc)JetMETCorr.SetFacJetCorr(event);
+    if(!isMc)JetMETCorr.SetFacJetCorr(event); // FOR JET CORRECTION INITIALIZATION
 
     AnalyzeDataType(event, selector);
     
@@ -90,38 +94,10 @@ int DileptonCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * sel
 
     AnalyzeJets(event, selector);
 
-    //
-    // _____ Get objects from the selector _____________________
-    //
-    edm::Ptr<pat::MET>                    const & pMet             = selector->GetMet();
-            
+    AnalyzeAK8Jets(event, selector);
 
-    //
-    //_____ MET ______________________________
-    //
-/*    
-    double _met = -9999.0;
-    double _met_phi = -9999.0;
-    // Corrected MET
-    double _corr_met = -9999.0;
-    double _corr_met_phi = -9999.0;
-    
-    if(pMet.isNonnull() && pMet.isAvailable()) {
-        _met = pMet->p4().pt();
-        _met_phi = pMet->p4().phi();
-        
-        TLorentzVector corrMET = selector->correctMet(*pMet, event, vSelCleanedJets);
-        if(corrMET.Pt()>0) {
-            _corr_met = corrMET.Pt();
-            _corr_met_phi = corrMET.Phi();
-        }
-        
-    }
-    SetValue("met", _met);
-    SetValue("met_phi", _met_phi);
-    SetValue("corr_met", _corr_met);
-    SetValue("corr_met_phi", _corr_met_phi);
-*/    
+    AnalyzeMET(event, selector);
+
     
     //
     //_____ Gen Info ______________________________
@@ -1476,6 +1452,17 @@ void DileptonCalc::AnalyzeJets(edm::Event const & event, BaseEventSelector * sel
     SetValue("cleanedAK4JetTBag"   , cleanedAK4JetTBag);
     SetValue("cleanedAK4JetRCN"    , cleanedAK4JetRCN);
 
+}
+
+void DileptonCalc::AnalyzeAK8Jets(edm::Event const & event, BaseEventSelector * selector)
+{
+
+
+    //
+    //_____ AK8 Jets ______________________________
+    //
+
+
     //Get AK8 jets for W's
     edm::Handle<std::vector<pat::Jet> > AK8Jets;
     event.getByToken(AK8jetsToken, AK8Jets);
@@ -1487,7 +1474,6 @@ void DileptonCalc::AnalyzeJets(edm::Event const & event, BaseEventSelector * sel
     std::vector <double> AK8JetEnergy;
     
     std::vector <double> AK8JetCSV;
-    //   std::vector <double> AK8JetRCN;
     
     //Identity
     std::vector <int> AK8JetIndex;
@@ -1523,7 +1509,7 @@ void DileptonCalc::AnalyzeJets(edm::Event const & event, BaseEventSelector * sel
         AK8JetPhi    . push_back(ijet->phi());
         AK8JetEnergy . push_back(ijet->energy());
         
-        AK8JetCSV    . push_back(ijet->bDiscriminator( "combinedSecondaryVertexBJetTags"));
+        AK8JetCSV    . push_back(ijet->bDiscriminator( "combinedSecondaryVertexBJetTags")); // Does this need to be updated??
         
         //Identity
         AK8JetIndex      . push_back(index);
@@ -1555,7 +1541,6 @@ void DileptonCalc::AnalyzeJets(edm::Event const & event, BaseEventSelector * sel
     SetValue("AK8JetEnergy" , AK8JetEnergy);
     
     SetValue("AK8JetCSV"    , AK8JetCSV);
-    //   SetValue("AK8JetRCN"    , AK8JetRCN);
     
     //Identity
     SetValue("AK8JetIndex"      , AK8JetIndex);
@@ -1579,8 +1564,114 @@ void DileptonCalc::AnalyzeJets(edm::Event const & event, BaseEventSelector * sel
 
 }
 
+void DileptonCalc::AnalyzeMET(edm::Event const & event, BaseEventSelector * selector)
+{
 
-int DileptonCalc::findMatch(const reco::GenParticleCollection & genParticles, int idToMatch, double eta, double phi){
+    //
+    // _____ Get objects from the selector _____________________
+    //
+    std::vector<edm::Ptr<pat::Jet>> const & vAllJets = selector->GetAllJets();
+    edm::Ptr<pat::MET>              const & pMet     = selector->GetMet();
+            
+
+    //
+    //_____ MET ______________________________
+    //
+
+	//for jet correction
+	bool reCorrectJet = doNewJEC;
+	unsigned int syst;
+	if (JECup){syst=1;}
+	else if (JECdown){syst=2;}
+	else if (JERup){syst=3;}
+	else if (JERdown){syst=4;}
+	else syst = 0; //nominal
+
+
+    double _met = -9999.0;
+    double _met_phi = -9999.0;
+    // Corrected MET
+    double _corr_met = -9999.0;
+    double _corr_met_phi = -9999.0;
+    
+    if(pMet.isNonnull() && pMet.isAvailable()) {
+        _met = pMet->p4().pt();
+        _met_phi = pMet->p4().phi();
+        TLorentzVector corrMET = JetMETCorr.correctMet(*pMet, event, rhoJetsToken, vAllJets, reCorrectJet, syst); // Clint Richardson used vSelCleanedJets??? June 12, 2019 
+        if(corrMET.Pt()>0) {
+            _corr_met = corrMET.Pt();
+            _corr_met_phi = corrMET.Phi();
+        }
+        
+    }
+    SetValue("met", _met);
+    SetValue("met_phi", _met_phi);
+    SetValue("corr_met", _corr_met);
+    SetValue("corr_met_phi", _corr_met_phi);
+
+
+    //METNOHF
+    bool useHF;
+    useHF = false;
+    double _metnohf = -9999.0;
+    double _metnohf_phi = -9999.0;
+    double _corr_metnohf = -9999.0;
+    double _corr_metnohf_phi = -9999.0;
+    edm::Handle<std::vector<pat::MET> > METnoHF;
+    if(event.getByToken(METnoHFtoken, METnoHF)){
+      edm::Ptr<pat::MET> metnohf = edm::Ptr<pat::MET>( METnoHF, 0);
+
+      if(metnohf.isNonnull() && metnohf.isAvailable()) {
+        _metnohf = metnohf->p4().pt();
+        _metnohf_phi = metnohf->p4().phi();
+
+        TLorentzVector corrMETNOHF = JetMETCorr.correctMet(*metnohf, event, rhoJetsToken, vAllJets, doNewJEC, syst, useHF); // Clint Richardson used vSelCleanedJets??? June 12, 2019
+        if(corrMETNOHF.Pt()>0) {
+	  _corr_metnohf = corrMETNOHF.Pt();
+	  _corr_metnohf_phi = corrMETNOHF.Phi();
+        }
+      }
+    }
+    SetValue("metnohf", _metnohf);
+    SetValue("metnohf_phi", _metnohf_phi);
+    SetValue("corr_metnohf", _corr_metnohf);
+    SetValue("corr_metnohf_phi", _corr_metnohf_phi);
+
+    //METMOD
+    useHF = false;
+    double _metmod = -9999.0;
+    double _metmod_phi = -9999.0;
+    double _corr_metmod = -9999.0;
+    double _corr_metmod_phi = -9999.0;
+    edm::Handle<std::vector<pat::MET> > METmod;
+    if(event.getByToken(METmodToken, METmod)){
+      edm::Ptr<pat::MET> metmod = edm::Ptr<pat::MET>( METmod, 0);
+
+      if(metmod.isNonnull() && metmod.isAvailable()) {
+        _metmod = metmod->p4().pt();
+        _metmod_phi = metmod->p4().phi();
+
+        TLorentzVector corrMETMOD = JetMETCorr.correctMet(*metmod, event, rhoJetsToken, vAllJets, doNewJEC, syst, useHF); // Clint Richardson used vSelCleanedJets??? June 12, 2019
+        if(corrMETMOD.Pt()>0) {
+	  _corr_metmod = corrMETMOD.Pt();
+	  _corr_metmod_phi = corrMETMOD.Phi();
+        }
+      }
+    }
+
+    SetValue("metmod", _metmod);
+    SetValue("metmod_phi", _metmod_phi);
+    SetValue("corr_metmod", _corr_metmod);
+    SetValue("corr_metmod_phi", _corr_metmod_phi);
+
+}
+
+// ----------------
+// Helper functions
+// ----------------
+
+int DileptonCalc::findMatch(const reco::GenParticleCollection & genParticles, int idToMatch, double eta, double phi)
+{
     float dRtmp = 1000;
     float closestDR = 10000.;
     int closestGenPart = -1;
@@ -1596,7 +1687,8 @@ int DileptonCalc::findMatch(const reco::GenParticleCollection & genParticles, in
     return closestGenPart;
 }
 
-double DileptonCalc::mdeltaR(double eta1, double phi1, double eta2, double phi2) {
+double DileptonCalc::mdeltaR(double eta1, double phi1, double eta2, double phi2)
+{
     return std::sqrt(deltaR2 (eta1, phi1, eta2, phi2));
 }
 

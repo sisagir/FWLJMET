@@ -71,7 +71,8 @@ private:
     void AnalyzeMuon(edm::Event const & event, BaseEventSelector * selector);
     void AnalyzeGenJets(edm::Event const & event, BaseEventSelector * selector);
     void AnalyzeJets(edm::Event const & event, BaseEventSelector * selector);
-//     void AnalyzeMET(edm::Event const & event, BaseEventSelector * selector);
+    void AnalyzeAK8Jets(edm::Event const & event, BaseEventSelector * selector);
+    void AnalyzeMET(edm::Event const & event, BaseEventSelector * selector);
     
     bool                      debug;
     bool                      isMc;
@@ -101,6 +102,7 @@ private:
 
     //Btag
     BTagSFUtil btagSfUtil;
+        
 
         
 //     bool orlhew;
@@ -116,11 +118,11 @@ private:
     edm::EDGetTokenT<pat::PackedCandidateCollection>   PFCandToken;
     edm::EDGetTokenT<reco::GenParticleCollection>      genParticlesToken;
     edm::EDGetTokenT<std::vector< reco::GenJet> >      genJetsToken;
-    edm::EDGetTokenT<pat::JetCollection>             AK8jetsToken;
+    edm::EDGetTokenT<pat::JetCollection>               AK8jetsToken;
+    edm::EDGetTokenT<std::vector<pat::MET> >           METnoHFtoken;
+    edm::EDGetTokenT<std::vector<pat::MET> >           METmodToken;
 //     edm::EDGetTokenT<std::vector<PileupSummaryInfo>>   PupInfoToken;
 //     edm::EDGetTokenT<edm::TriggerResults >             muflagtagToken;
-//     edm::EDGetTokenT<std::vector<pat::MET> >           METnoHFtoken;
-//     edm::EDGetTokenT<std::vector<pat::MET> >           METmodToken;
 //     edm::EDGetTokenT<GenEventInfoProduct>              genToken;
 //     edm::EDGetTokenT<LHEEventProduct>                  LHEToken;
 
