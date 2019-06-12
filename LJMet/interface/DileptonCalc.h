@@ -32,6 +32,10 @@
 
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 
+#include "FWLJMET/LJMet/interface/JetMETCorrHelper.h"
+#include "FWLJMET/LJMet/interface/BTagSFUtil.h"
+
+
 #include "LHAPDF/LHAPDF.h"
 #include "LHAPDF/GridPDF.h"
 #include "LHAPDF/Info.h"
@@ -65,12 +69,9 @@ private:
     void AnalyzePV(edm::Event const & event, BaseEventSelector * selector);
     void AnalyzeElectron(edm::Event const & event, BaseEventSelector * selector);
     void AnalyzeMuon(edm::Event const & event, BaseEventSelector * selector);
-//     void AnalyzePU(edm::Event const & event, BaseEventSelector * selector);
-//     void AnalyzeBadDupMu(edm::Event const & event, BaseEventSelector * selector);
-//     void AnalyzeJets(edm::Event const & event, BaseEventSelector * selector);
-//     void AnalyzeAK8Jets(edm::Event const & event, BaseEventSelector * selector);
+    void AnalyzeGenJets(edm::Event const & event, BaseEventSelector * selector);
+    void AnalyzeJets(edm::Event const & event, BaseEventSelector * selector);
 //     void AnalyzeMET(edm::Event const & event, BaseEventSelector * selector);
-//     void AnalyzeGenInfo(edm::Event const & event, BaseEventSelector * selector);
     
     bool                      debug;
     bool                      isMc;
@@ -89,6 +90,18 @@ private:
     //Misc
     bool keepFullMChistory;
     double rhoIso;
+    
+    //Jet
+    bool doNewJEC;
+    bool   JECup;
+    bool   JECdown;
+    bool   JERup;
+    bool   JERdown;
+    JetMETCorrHelper JetMETCorr;
+
+    //Btag
+    BTagSFUtil btagSfUtil;
+
         
 //     bool orlhew;
 //     std::string basePDFname;
@@ -102,13 +115,14 @@ private:
     edm::EDGetTokenT<double>                           rhoJetsToken;
     edm::EDGetTokenT<pat::PackedCandidateCollection>   PFCandToken;
     edm::EDGetTokenT<reco::GenParticleCollection>      genParticlesToken;
+    edm::EDGetTokenT<std::vector< reco::GenJet> >      genJetsToken;
+    edm::EDGetTokenT<pat::JetCollection>             AK8jetsToken;
 //     edm::EDGetTokenT<std::vector<PileupSummaryInfo>>   PupInfoToken;
 //     edm::EDGetTokenT<edm::TriggerResults >             muflagtagToken;
 //     edm::EDGetTokenT<std::vector<pat::MET> >           METnoHFtoken;
 //     edm::EDGetTokenT<std::vector<pat::MET> >           METmodToken;
 //     edm::EDGetTokenT<GenEventInfoProduct>              genToken;
 //     edm::EDGetTokenT<LHEEventProduct>                  LHEToken;
-//     edm::EDGetTokenT<std::vector< reco::GenJet> >      genJetsToken;
 
 
     int findMatch(const reco::GenParticleCollection & genParticles, int idToMatch, double eta, double phi);

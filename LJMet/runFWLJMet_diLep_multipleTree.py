@@ -510,15 +510,14 @@ DileptonCalc_cfg = cms.PSet(
             rhoJetsInputTag        = cms.InputTag("fixedGridRhoFastjetAll"), #this is for electron. Why is it different compared to muon?
             rhoJetsNCInputTag      = cms.InputTag("fixedGridRhoFastjetCentralNeutral",""), #this is for muon
             PFparticlesCollection  = cms.InputTag("packedPFCandidates"),
-            genParticlesCollection = cms.InputTag("prunedGenParticles"),
-
+            
             # Jet corrections needs to be passed here again if Calc uses jet correction
+            AK8jet_collection           = cms.InputTag('slimmedJetsAK8'),
             doNewJEC                 = cms.bool(doNewJEC),
             JECup                    = cms.bool(JECup),
             JECdown                  = cms.bool(JECdown),
             JERup                    = cms.bool(JERup),
             JERdown                  = cms.bool(JERdown),
-            doAllJetSyst             = cms.bool(doAllJetSyst),
             JEC_txtfile              = cms.FileInPath(JEC_txtfile),
             JERSF_txtfile            = cms.FileInPath(JERSF_txtfile),
             JER_txtfile              = cms.FileInPath(JER_txtfile),
@@ -543,8 +542,9 @@ DileptonCalc_cfg = cms.PSet(
             metmod_collection = cms.InputTag('slimmedMETsModifiedMET'),
 
             #Gen stuff
+            genParticlesCollection = cms.InputTag("prunedGenParticles"),
+            genJetsCollection      = cms.InputTag("slimmedGenJets"),
             saveGenHT          = cms.bool(False),
-            genJetsCollection  = cms.InputTag("slimmedGenJets"),
             OverrideLHEWeights = cms.bool(isVLQsignal), #TRUE FOR SIGNALS, False otherwise
             basePDFname        = cms.string('NNPDF31_nnlo_as_0118_nf_4'),
             newPDFname         = cms.string('NNPDF31_nnlo_as_0118_nf_4_mc_hessian'),

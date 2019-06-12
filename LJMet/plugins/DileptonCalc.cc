@@ -32,9 +32,23 @@ int DileptonCalc::BeginJob(edm::ConsumesCollector && iC)
     keepFullMChistory = mPset.getParameter<bool>("keepFullMChistory");
     if(debug) cout << "["+GetName()+"]: "<< "keepFullMChistory : " <<    keepFullMChistory << endl;
     genParticlesToken = iC.consumes<reco::GenParticleCollection>(mPset.getParameter<edm::InputTag>("genParticlesCollection"));
+    genJetsToken = iC.consumes<std::vector< reco::GenJet> >(mPset.getParameter<edm::InputTag>("genJetsCollection"));
     
     //Electron    
     UseElMVA = mPset.getParameter<bool>("UseElMVA");
+    
+    //Jets
+    AK8jetsToken             = iC.consumes<pat::JetCollection>(mPset.getParameter<edm::InputTag>("AK8jet_collection"));
+	doNewJEC                 = mPset.getParameter<bool>("doNewJEC");
+	JECup                    = mPset.getParameter<bool>("JECup");
+	JECdown                  = mPset.getParameter<bool>("JECdown");
+	JERup                    = mPset.getParameter<bool>("JERup");
+	JERdown                  = mPset.getParameter<bool>("JERdown");
+	JetMETCorr.Initialize(mPset); // REMINDER: THIS NEEDS --if(!isMc)JetMETCorr.SetFacJetCorr(event)-- somewhere before correcting jets for data, since data JEC is era dependent. !!
+
+	//BTAG parameter initialization
+	btagSfUtil.Initialize(mPset);
+
 
 //     //NewPDF stuff    
 //     if (mPset.exists("OverrideLHEWeights")) orlhew = mPset.getParameter<bool>("OverrideLHEWeights");
@@ -71,381 +85,21 @@ int DileptonCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * sel
     AnalyzeElectron(event, selector);
     
     AnalyzeMuon(event, selector);
+    
+    AnalyzeGenJets(event, selector);
+
+    AnalyzeJets(event, selector);
 
     //
     // _____ Get objects from the selector _____________________
     //
-    std::vector<edm::Ptr<pat::Jet> >      const & vSelJets         = selector->GetSelJets();
-    std::vector<pat::Jet>                 const & vSelCleanedJets  = selector->GetSelCleanedJets();
     edm::Ptr<pat::MET>                    const & pMet             = selector->GetMet();
             
-    
-    //
-    //_____GenJets_____________________________
-    //
-/*
-    if(isMc){
-      edm::InputTag genJetColl = edm::InputTag("slimmedGenJets");
-      edm::Handle<std::vector<reco::GenJet> > genJets;
-      
-      event.getByLabel(genJetColl,genJets);
-    
-      std::vector<double> genJetPt;
-      std::vector<double> genJetEta;
-      std::vector<double> genJetPhi;
-      std::vector<double> genJetEnergy;
-      std::vector<double> genJetMass;
-      
-      for(std::vector<reco::GenJet>::const_iterator ijet = genJets->begin(); ijet != genJets->end(); ijet++){
-          
-          genJetPt.push_back(ijet->pt());
-          genJetEta.push_back(ijet->eta());
-          genJetPhi.push_back(ijet->phi());
-          genJetEnergy.push_back(ijet->energy());
-          genJetMass.push_back(ijet->mass());
-          //cout<<"setting gen jet info"<<endl;
-          
-      }
-      
-      SetValue("genJetPt", genJetPt);
-      SetValue("genJetEta", genJetEta);
-      SetValue("genJetPhi", genJetPhi);
-      SetValue("genJetEnergy", genJetEnergy);
-      SetValue("genJetMass", genJetMass);
-    }
-*/
 
     //
-    //_____ Jets ______________________________
+    //_____ MET ______________________________
     //
 /*    
-    //Get Top-like jets
-    edm::InputTag topJetColl = edm::InputTag("slimmedJetsAK8");
-    edm::Handle<std::vector<pat::Jet> > topJets;
-    event.getByLabel(topJetColl, topJets);
-    
-    //Four std::vector -- COMMENT OUT BECAUSE FOR NOW WE CAN'T ACCESS THESE
-    std::vector <double> CATopJetPt;
-    std::vector <double> CATopJetEta;
-    std::vector <double> CATopJetPhi;
-    std::vector <double> CATopJetEnergy;
-    
-    std::vector <double> CATopJetCSV;
-    //   std::vector <double> CATopJetRCN;
-    
-    //Identity
-    std::vector <int> CATopJetIndex;
-    std::vector <int> CATopJetnDaughters;
-    
-    //Top-like properties
-    std::vector <double> CATopJetTopMass;
-    std::vector <double> CATopJetMinPairMass;
-    
-    //Daughter four std::vector and index
-    std::vector <double> CATopDaughterPt;
-    std::vector <double> CATopDaughterEta;
-    std::vector <double> CATopDaughterPhi;
-    std::vector <double> CATopDaughterEnergy;
-    
-    std::vector <int> CATopDaughterMotherIndex;
-    
-    for (std::vector<pat::Jet>::const_iterator ijet = topJets->begin(); ijet != topJets->end(); ijet++) {
-        
-        int index = (int)(ijet-topJets->begin());
-        
-          CATopJetPt     . push_back(ijet->pt());
-        CATopJetEta    . push_back(ijet->eta());
-        CATopJetPhi    . push_back(ijet->phi());
-        CATopJetEnergy . push_back(ijet->energy());
-        
-        CATopJetCSV    . push_back(ijet->bDiscriminator( "combinedSecondaryVertexBJetTags"));
-        //     CATopJetRCN    . push_back((ijet->chargedEmEnergy()+ijet->chargedHadronEnergy()) / (ijet->neutralEmEnergy()+ijet->neutralHadronEnergy()));
-           
-        CATopJetIndex      . push_back(index);
-        CATopJetnDaughters . push_back((int)ijet->numberOfDaughters());
-        
-          //          cout<<"tag infos"<<(ijet->tagInfoLabels()).at(0)<<endl;
-
-        if(ijet->tagInfoLabels().size()>0){
-            reco::CATopJetTagInfo const * jetInfo = dynamic_cast<reco::CATopJetTagInfo const *> (ijet->tagInfo("caTop"));
-            CATopJetTopMass     . push_back(jetInfo->properties().topMass);
-            CATopJetMinPairMass . push_back(jetInfo->properties().minMass);
-          }
-          else{
-            CATopJetTopMass     . push_back(-999);
-            CATopJetMinPairMass . push_back(-999);
-          }
-
-        for (size_t ui = 0; ui < ijet->numberOfDaughters(); ui++) {
-            //cout<<"in top daughter loop"<<endl;
-            CATopDaughterPt     . push_back(ijet->daughter(ui)->pt());
-            CATopDaughterEta    . push_back(ijet->daughter(ui)->eta());
-            CATopDaughterPhi    . push_back(ijet->daughter(ui)->phi());
-            CATopDaughterEnergy . push_back(ijet->daughter(ui)->energy());
-            
-            CATopDaughterMotherIndex . push_back(index);
-        }
-          //cout<<"finished top daughter loop"<<endl;
-    }
-    
-    //Four std::vector
-    SetValue("CATopJetPt"    , CATopJetPt);
-    SetValue("CATopJetEta"   , CATopJetEta);
-    SetValue("CATopJetPhi"   , CATopJetPhi);
-    SetValue("CATopJetEnergy", CATopJetEnergy);
-    
-    SetValue("CATopJetCSV"   , CATopJetCSV);
-    //   SetValue("CATopJetRCN"    , CATopJetRCN);
-    
-    //Identity
-    SetValue("CATopJetIndex"      , CATopJetIndex);
-    SetValue("CATopJetnDaughters" , CATopJetnDaughters);
-    
-    //Properties
-    SetValue("CATopJetTopMass"     , CATopJetTopMass);
-    SetValue("CATopJetMinPairMass" , CATopJetMinPairMass);
-    //cout<<"setting values for top daughters"<<endl;
-    //Daughter four std::vector and index
-    SetValue("CATopDaughterPt"     , CATopDaughterPt);
-    SetValue("CATopDaughterEta"    , CATopDaughterEta);
-    SetValue("CATopDaughterPhi"    , CATopDaughterPhi);
-    SetValue("CATopDaughterEnergy" , CATopDaughterEnergy);
-    
-    SetValue("CATopDaughterMotherIndex"      , CATopDaughterMotherIndex);
-    
-    //Get AK8 jets for W's
-    edm::InputTag AK8JetColl = edm::InputTag("slimmedJetsAK8");
-    edm::Handle<std::vector<pat::Jet> > AK8Jets;
-    event.getByLabel(AK8JetColl, AK8Jets);
-    
-    //Four std::vector
-    std::vector <double> AK8JetPt;
-    std::vector <double> AK8JetEta;
-    std::vector <double> AK8JetPhi;
-    std::vector <double> AK8JetEnergy;
-    
-    std::vector <double> AK8JetCSV;
-    //   std::vector <double> AK8JetRCN;
-    
-    //Identity
-    std::vector <int> AK8JetIndex;
-    std::vector <int> AK8JetnDaughters;
-    
-    //Mass
-    std::vector <double> AK8JetTrimmedMass;
-    std::vector <double> AK8JetPrunedMass;
-    std::vector <double> AK8JetFilteredMass;
-    std::vector <double> AK8JetSoftDropMass;
-    
-    //nsubjettiness
-    std::vector<double> AK8JetTau1;
-    std::vector<double> AK8JetTau2;
-    std::vector<double> AK8JetTau3;
-
-
-    //Daughter four std::vector and index -- THESE ARE CURRENTLY IDENTICAL TO THOSE FOR TOP DAUGHTERS BECAUSE THE JET IS ALWAYS THE SLIMMED AK8JET
-    std::vector <double> AK8DaughterPt;
-    std::vector <double> AK8DaughterEta;
-    std::vector <double> AK8DaughterPhi;
-    std::vector <double> AK8DaughterEnergy;
-    
-    std::vector <int> AK8DaughterMotherIndex;
-    
-    for (std::vector<pat::Jet>::const_iterator ijet = AK8Jets->begin(); ijet != AK8Jets->end(); ijet++){
-        
-        int index = (int)(ijet-AK8Jets->begin());
-        
-        //Four std::vector
-          AK8JetPt     . push_back(ijet->pt());
-        AK8JetEta    . push_back(ijet->eta());
-        AK8JetPhi    . push_back(ijet->phi());
-        AK8JetEnergy . push_back(ijet->energy());
-        
-        AK8JetCSV    . push_back(ijet->bDiscriminator( "combinedSecondaryVertexBJetTags"));
-        //     AK8JetRCN    . push_back((ijet->chargedEmEnergy()+ijet->chargedHadronEnergy()) / (ijet->neutralEmEnergy()+ijet->neutralHadronEnergy()));
-        
-        //Identity
-        AK8JetIndex      . push_back(index);
-        AK8JetnDaughters . push_back((int)ijet->numberOfDaughters());
-          //cout<<"about to set w masses"<<endl;
-        //Mass
-        //AK8JetTrimmedMass . push_back(ijet->userFloat("ak8PFJetsCHSTrimmedMass"));
-        AK8JetTrimmedMass . push_back(-999);
-        //AK8JetPrunedMass . push_back(ijet->userFloat("ak8PFJetsCHSPrunedMass"));
-        AK8JetPrunedMass . push_back(-999);
-        //AK8JetFilteredMass . push_back(ijet->userFloat("ak8PFJetsCHSFilteredMass"));
-          AK8JetFilteredMass . push_back(-999);
-        //AK8JetSoftDropMass . push_back(ijet->userFloat("ak8PFJetsCHSSoftDropMass"));
-        AK8JetSoftDropMass . push_back(-999);
-          //cout<<"set w masses"<<endl;
-          //nsubjettiness
-          //AK8JetTau1.push_back( ijet->userFloat("NjettinessAK8:tau1"));
-          //AK8JetTau2.push_back( ijet->userFloat("NjettinessAK8:tau2"));
-          //AK8JetTau3.push_back( ijet->userFloat("NjettinessAK8:tau3"));
-          AK8JetTau1.push_back(-999);
-          AK8JetTau2.push_back(-999);
-          AK8JetTau3.push_back(-999);
-          //cout<<"set n subjettiness"<<endl;
-        for (size_t ui = 0; ui < ijet->numberOfDaughters(); ui++){
-            AK8DaughterPt     . push_back(ijet->daughter(ui)->pt());
-            AK8DaughterEta    . push_back(ijet->daughter(ui)->eta());
-            AK8DaughterPhi    . push_back(ijet->daughter(ui)->phi());
-            AK8DaughterEnergy . push_back(ijet->daughter(ui)->energy());
-            
-            AK8DaughterMotherIndex . push_back(index);
-        }
-    }
-    
-    //Four std::vector
-    SetValue("AK8JetPt"     , AK8JetPt);
-    SetValue("AK8JetEta"    , AK8JetEta);
-    SetValue("AK8JetPhi"    , AK8JetPhi);
-    SetValue("AK8JetEnergy" , AK8JetEnergy);
-    
-    SetValue("AK8JetCSV"    , AK8JetCSV);
-    //   SetValue("AK8JetRCN"    , AK8JetRCN);
-    
-    //Identity
-    SetValue("AK8JetIndex"      , AK8JetIndex);
-    SetValue("AK8JetnDaughters" , AK8JetnDaughters);
-    
-    //Mass
-    SetValue("AK8JetTrimmedMass"     , AK8JetTrimmedMass);
-    SetValue("AK8JetPrunedMass"     , AK8JetPrunedMass);
-    SetValue("AK8JetFilteredMass"     , AK8JetFilteredMass);
-    SetValue("AK8JetSoftDropMass"     , AK8JetSoftDropMass);
-
-    
-    //Daughter four std::vector and index
-    SetValue("AK8DaughterPt"     , AK8DaughterPt);
-    SetValue("AK8DaughterEta"    , AK8DaughterEta);
-    SetValue("AK8DaughterPhi"    , AK8DaughterPhi);
-    SetValue("AK8DaughterEnergy" , AK8DaughterEnergy);
-    
-    SetValue("AK8DaughterMotherIndex" , AK8DaughterMotherIndex);
-    
-    //Get all CA8 jets (not just for W and Top)
-    edm::InputTag CA8JetColl = edm::InputTag("slimmedJetsAK8");
-    edm::Handle<std::vector<pat::Jet> > CA8Jets;
-    event.getByLabel(CA8JetColl, CA8Jets);
-
-    
-    //Four std::vector
-    std::vector <double> CA8JetPt;
-    std::vector <double> CA8JetEta;
-    std::vector <double> CA8JetPhi;
-    std::vector <double> CA8JetEnergy;
-    
-    std::vector <double> CA8JetCSV;
-    //   std::vector <double> CA8JetRCN;
-    
-    for (std::vector<pat::Jet>::const_iterator ijet = CA8Jets->begin(); ijet != CA8Jets->end(); ijet++){
-        
-        //Four std::vector
-        CA8JetPt     . push_back(ijet->pt());
-        CA8JetEta    . push_back(ijet->eta());
-        CA8JetPhi    . push_back(ijet->phi());
-        CA8JetEnergy . push_back(ijet->energy());
-        
-        CA8JetCSV    . push_back(ijet->bDiscriminator( "combinedSecondaryVertexBJetTags"));
-        //     CA8JetRCN    . push_back((ijet->chargedEmEnergy()+ijet->chargedHadronEnergy()) / (ijet->neutralEmEnergy()+ijet->neutralHadronEnergy()));
-    }
-    
-    //Four std::vector
-    SetValue("CA8JetPt"     , CA8JetPt);
-    SetValue("CA8JetEta"    , CA8JetEta);
-    SetValue("CA8JetPhi"    , CA8JetPhi);
-    SetValue("CA8JetEnergy" , CA8JetEnergy);
-    
-    SetValue("CA8JetCSV"    , CA8JetCSV);
-    //   SetValue("CA8JetRCN"    , CA8JetRCN);
-    
-    //Get AK4 Jets
-    //Four std::vector
-    std::vector <double> AK4JetPt;
-    std::vector <double> AK4JetEta;
-    std::vector <double> AK4JetPhi;
-    std::vector <double> AK4JetEnergy;
-    
-    std::vector <int>    AK4JetTBag;
-    std::vector <double> AK4JetRCN;
-    
-    for (std::vector<edm::Ptr<pat::Jet> >::const_iterator ijet = vSelJets.begin();
-         ijet != vSelJets.end(); ijet++){
-        
-        //Four std::vector
-        TLorentzVector lv = selector->correctJet(**ijet, event);
-        
-        AK4JetPt     . push_back(lv.Pt());
-        AK4JetEta    . push_back(lv.Eta());
-        AK4JetPhi    . push_back(lv.Phi());
-        AK4JetEnergy . push_back(lv.Energy());
-        
-        AK4JetTBag   . push_back(selector->isJetTagged(**ijet, event));
-        AK4JetRCN    . push_back(((*ijet)->chargedEmEnergy()+(*ijet)->chargedHadronEnergy()) / ((*ijet)->neutralEmEnergy()+(*ijet)->neutralHadronEnergy()));
-    }
-    
-    //Four std::vector
-    SetValue("AK4JetPt"     , AK4JetPt);
-    SetValue("AK4JetEta"    , AK4JetEta);
-    SetValue("AK4JetPhi"    , AK4JetPhi);
-    SetValue("AK4JetEnergy" , AK4JetEnergy);
-    
-    SetValue("AK4JetTBag"   , AK4JetTBag);
-    SetValue("AK4JetRCN"    , AK4JetRCN);
-
-    //Get cleaned AK4 Jets
-    //Four std::vector
-    std::vector <double> cleanedAK4JetPt;
-    std::vector <double> cleanedAK4JetPtScaleUp;
-    std::vector <double> cleanedAK4JetPtScaleDown;
-    std::vector <double> cleanedAK4JetPtSmearUp;
-    std::vector <double> cleanedAK4JetPtSmearDown;
-    std::vector <double> cleanedAK4JetEta;
-    std::vector <double> cleanedAK4JetPhi;
-    std::vector <double> cleanedAK4JetEnergy;
-    
-    std::vector <int>    cleanedAK4JetTBag;
-    std::vector <double> cleanedAK4JetRCN;
-    
-    for (std::vector<pat::Jet>::const_iterator ijet = vSelCleanedJets.begin();
-         ijet != vSelCleanedJets.end(); ijet++){
-      //no need to correct so just push back quantities from jet directly
-      //get scaled values for MC only
-      if(isMc){
-                    TLorentzVector jecUP   = selector->scaleJet(*ijet,true);
-                    TLorentzVector jecDOWN = selector->scaleJet(*ijet,false);
-                    TLorentzVector jerUP   = selector->smearJet(*ijet,event,true);
-                    TLorentzVector jerDOWN = selector->smearJet(*ijet,event,false);
-                    cleanedAK4JetPtScaleUp.   push_back(jecUP.Pt());
-                    cleanedAK4JetPtScaleDown. push_back(jecDOWN.Pt());
-                    cleanedAK4JetPtSmearUp.   push_back(jerUP.Pt());
-                    cleanedAK4JetPtSmearDown. push_back(jerDOWN.Pt());
-      }
-      cleanedAK4JetPt     . push_back((*ijet).pt());
-      cleanedAK4JetEta    . push_back((*ijet).eta());
-      cleanedAK4JetPhi    . push_back((*ijet).phi());
-      cleanedAK4JetEnergy . push_back((*ijet).energy());
-      
-      cleanedAK4JetTBag   . push_back(selector->isJetTagged(*ijet, event));
-      cleanedAK4JetRCN    . push_back(((*ijet).chargedEmEnergy()+(*ijet).chargedHadronEnergy()) / ((*ijet).neutralEmEnergy()+(*ijet).neutralHadronEnergy()));
-    }
-    
-    //Four std::vector
-    SetValue("cleanedAK4JetPt"     , cleanedAK4JetPt);
-    SetValue("cleanedAK4JetPtScaleUp"     , cleanedAK4JetPtScaleUp);
-    SetValue("cleanedAK4JetPtScaleDown"     , cleanedAK4JetPtScaleDown);
-    SetValue("cleanedAK4JetPtSmearUp"     , cleanedAK4JetPtSmearUp);
-    SetValue("cleanedAK4JetPtSmearDown" , cleanedAK4JetPtSmearDown);
-    SetValue("cleanedAK4JetEta"    , cleanedAK4JetEta);
-    SetValue("cleanedAK4JetPhi"    , cleanedAK4JetPhi);
-    SetValue("cleanedAK4JetEnergy" , cleanedAK4JetEnergy);
-    
-    SetValue("cleanedAK4JetTBag"   , cleanedAK4JetTBag);
-    SetValue("cleanedAK4JetRCN"    , cleanedAK4JetRCN);
-
-    
-    // MET
     double _met = -9999.0;
     double _met_phi = -9999.0;
     // Corrected MET
@@ -1312,10 +966,10 @@ void DileptonCalc::AnalyzeElectron(edm::Event const & event, BaseEventSelector *
     SetValue("elChargeConsistent", elChargeConsistent);
     SetValue("elIsEBEE", elIsEBEE);
 
-    SetValue("elQuality", elQuality); // Not used -- June 12, 2019.
-    SetValue("elMiniIsoEA",elMiniIsoEA); // Not used -- June 12, 2019.
-    SetValue("elMiniIsoDB",elMiniIsoDB); // Not used -- June 12, 2019.
-    SetValue("elMiniIsoSUSY",elMiniIsoSUSY); // Not used -- June 12, 2019.
+//     SetValue("elQuality", elQuality); // Not used -- June 12, 2019.
+//     SetValue("elMiniIsoEA",elMiniIsoEA); // Not used -- June 12, 2019.
+//     SetValue("elMiniIsoDB",elMiniIsoDB); // Not used -- June 12, 2019.
+//     SetValue("elMiniIsoSUSY",elMiniIsoSUSY); // Not used -- June 12, 2019.
 
     //this value not specific to electrons but we set it here
     SetValue("rhoNC",_rhoNC);
@@ -1639,9 +1293,9 @@ void DileptonCalc::AnalyzeMuon(edm::Event const & event, BaseEventSelector * sel
     SetValue("muSIP3D", muSIP3D);
     SetValue("muRelIso" , muRelIso);
 
-    SetValue("muMiniIsoEA", muMiniIsoEA); // Not used -- June 12, 2019.
-    SetValue("muMiniIsoDB", muMiniIsoDB); // Not used -- June 12, 2019.
-    SetValue("muMiniIsoSUSY", muMiniIsoSUSY); // Not used -- June 12, 2019.
+//     SetValue("muMiniIsoEA", muMiniIsoEA); // Not used -- June 12, 2019.
+//     SetValue("muMiniIsoDB", muMiniIsoDB); // Not used -- June 12, 2019.
+//     SetValue("muMiniIsoSUSY", muMiniIsoSUSY); // Not used -- June 12, 2019.
 
     SetValue("muNValMuHits"       , muNValMuHits);
     SetValue("muNMatchedStations" , muNMatchedStations);
@@ -1674,6 +1328,257 @@ void DileptonCalc::AnalyzeMuon(edm::Event const & event, BaseEventSelector * sel
 
 
 }
+
+void DileptonCalc::AnalyzeGenJets(edm::Event const & event, BaseEventSelector * selector)
+{
+
+    //
+    //_____GenJets_____________________________
+    //
+
+    if(isMc){
+      edm::Handle<std::vector<reco::GenJet> > genJets;
+      
+      event.getByToken(genJetsToken,genJets);
+    
+      std::vector<double> genJetPt;
+      std::vector<double> genJetEta;
+      std::vector<double> genJetPhi;
+      std::vector<double> genJetEnergy;
+      std::vector<double> genJetMass;
+      
+      for(std::vector<reco::GenJet>::const_iterator ijet = genJets->begin(); ijet != genJets->end(); ijet++){
+          
+          genJetPt.push_back(ijet->pt());
+          genJetEta.push_back(ijet->eta());
+          genJetPhi.push_back(ijet->phi());
+          genJetEnergy.push_back(ijet->energy());
+          genJetMass.push_back(ijet->mass());
+          //cout<<"setting gen jet info"<<endl;
+          
+      }
+      
+      SetValue("genJetPt", genJetPt);
+      SetValue("genJetEta", genJetEta);
+      SetValue("genJetPhi", genJetPhi);
+      SetValue("genJetEnergy", genJetEnergy);
+      SetValue("genJetMass", genJetMass);
+    }
+
+}
+
+void DileptonCalc::AnalyzeJets(edm::Event const & event, BaseEventSelector * selector)
+{
+
+    //
+    // _____ Get objects from the selector _____________________
+    //
+    std::vector<edm::Ptr<pat::Jet> >      const & vSelJets         = selector->GetSelJets();
+    std::vector<pat::Jet>                 const & vSelCleanedJets  = selector->GetSelCleanedJets();            
+
+
+    //
+    //_____ Jets ______________________________
+    //
+
+
+    //for jet correction
+    unsigned int syst;
+    bool reCorrectJet = doNewJEC;
+    if (JECup){syst=1;}
+    else if (JECdown){syst=2;}
+    else if (JERup){syst=3;}
+    else if (JERdown){syst=4;}
+    else syst = 0; //nominal
+
+    //Get AK4 Jets
+    //Four std::vector
+    std::vector <double> AK4JetPt;
+    std::vector <double> AK4JetEta;
+    std::vector <double> AK4JetPhi;
+    std::vector <double> AK4JetEnergy;
+    
+    std::vector <int>    AK4JetTBag;
+    std::vector <double> AK4JetRCN;
+    
+    bool isAK8 = false;
+    for (std::vector<edm::Ptr<pat::Jet> >::const_iterator ijet = vSelJets.begin(); ijet != vSelJets.end(); ijet++){
+        
+        //Four std::vector
+        TLorentzVector lv = JetMETCorr.correctJet(*ijet, event, rhoJetsToken, isAK8, reCorrectJet, syst);
+                
+        AK4JetPt     . push_back(lv.Pt());
+        AK4JetEta    . push_back(lv.Eta());
+        AK4JetPhi    . push_back(lv.Phi());
+        AK4JetEnergy . push_back(lv.Energy());
+        
+        AK4JetTBag   . push_back(btagSfUtil.isJetTagged(*ijet, lv, event, isMc));
+        AK4JetRCN    . push_back(((*ijet)->chargedEmEnergy()+(*ijet)->chargedHadronEnergy()) / ((*ijet)->neutralEmEnergy()+(*ijet)->neutralHadronEnergy()));
+    }
+    
+    //Four std::vector
+    SetValue("AK4JetPt"     , AK4JetPt);
+    SetValue("AK4JetEta"    , AK4JetEta);
+    SetValue("AK4JetPhi"    , AK4JetPhi);
+    SetValue("AK4JetEnergy" , AK4JetEnergy);
+    
+    SetValue("AK4JetTBag"   , AK4JetTBag);
+    SetValue("AK4JetRCN"    , AK4JetRCN);
+
+    //Get cleaned AK4 Jets
+    //Four std::vector
+    std::vector <double> cleanedAK4JetPt;
+    std::vector <double> cleanedAK4JetPtScaleUp;
+    std::vector <double> cleanedAK4JetPtScaleDown;
+    std::vector <double> cleanedAK4JetPtSmearUp;
+    std::vector <double> cleanedAK4JetPtSmearDown;
+    std::vector <double> cleanedAK4JetEta;
+    std::vector <double> cleanedAK4JetPhi;
+    std::vector <double> cleanedAK4JetEnergy;
+    
+    std::vector <int>    cleanedAK4JetTBag;
+    std::vector <double> cleanedAK4JetRCN;
+    
+    for (std::vector<pat::Jet>::const_iterator ijet = vSelCleanedJets.begin(); ijet != vSelCleanedJets.end(); ijet++){
+      //no need to correct so just push back quantities from jet directly
+      //get scaled values for MC only
+      if(isMc){
+                    TLorentzVector jecUP   = JetMETCorr.correctJet(*ijet, event, rhoJetsToken, isAK8, reCorrectJet, 1);
+                    TLorentzVector jecDOWN = JetMETCorr.correctJet(*ijet, event, rhoJetsToken, isAK8, reCorrectJet, 2);
+                    TLorentzVector jerUP   = JetMETCorr.correctJet(*ijet, event, rhoJetsToken, isAK8, reCorrectJet, 3);
+                    TLorentzVector jerDOWN = JetMETCorr.correctJet(*ijet, event, rhoJetsToken, isAK8, reCorrectJet, 4);
+                    cleanedAK4JetPtScaleUp.   push_back(jecUP.Pt());
+                    cleanedAK4JetPtScaleDown. push_back(jecDOWN.Pt());
+                    cleanedAK4JetPtSmearUp.   push_back(jerUP.Pt());
+                    cleanedAK4JetPtSmearDown. push_back(jerDOWN.Pt());
+      }
+      cleanedAK4JetPt     . push_back((*ijet).pt());
+      cleanedAK4JetEta    . push_back((*ijet).eta());
+      cleanedAK4JetPhi    . push_back((*ijet).phi());
+      cleanedAK4JetEnergy . push_back((*ijet).energy());
+      
+      TLorentzVector jetP4; jetP4.SetPtEtaPhiE((*ijet).pt(), (*ijet).eta(), (*ijet).phi(), (*ijet).energy() );
+      
+      cleanedAK4JetTBag   . push_back(btagSfUtil.isJetTagged(*ijet, jetP4, event, isMc));
+      cleanedAK4JetRCN    . push_back(((*ijet).chargedEmEnergy()+(*ijet).chargedHadronEnergy()) / ((*ijet).neutralEmEnergy()+(*ijet).neutralHadronEnergy()));
+    }
+    
+    //Four std::vector
+    SetValue("cleanedAK4JetPt"     , cleanedAK4JetPt);
+    SetValue("cleanedAK4JetPtScaleUp"     , cleanedAK4JetPtScaleUp);
+    SetValue("cleanedAK4JetPtScaleDown"     , cleanedAK4JetPtScaleDown);
+    SetValue("cleanedAK4JetPtSmearUp"     , cleanedAK4JetPtSmearUp);
+    SetValue("cleanedAK4JetPtSmearDown" , cleanedAK4JetPtSmearDown);
+    SetValue("cleanedAK4JetEta"    , cleanedAK4JetEta);
+    SetValue("cleanedAK4JetPhi"    , cleanedAK4JetPhi);
+    SetValue("cleanedAK4JetEnergy" , cleanedAK4JetEnergy);
+    
+    SetValue("cleanedAK4JetTBag"   , cleanedAK4JetTBag);
+    SetValue("cleanedAK4JetRCN"    , cleanedAK4JetRCN);
+
+    //Get AK8 jets for W's
+    edm::Handle<std::vector<pat::Jet> > AK8Jets;
+    event.getByToken(AK8jetsToken, AK8Jets);
+    
+    //Four std::vector
+    std::vector <double> AK8JetPt;
+    std::vector <double> AK8JetEta;
+    std::vector <double> AK8JetPhi;
+    std::vector <double> AK8JetEnergy;
+    
+    std::vector <double> AK8JetCSV;
+    //   std::vector <double> AK8JetRCN;
+    
+    //Identity
+    std::vector <int> AK8JetIndex;
+    std::vector <int> AK8JetnDaughters;
+    
+    //Mass
+    std::vector <double> AK8JetTrimmedMass;
+    std::vector <double> AK8JetPrunedMass;
+    std::vector <double> AK8JetFilteredMass;
+    std::vector <double> AK8JetSoftDropMass;
+    
+    //nsubjettiness
+    std::vector<double> AK8JetTau1;
+    std::vector<double> AK8JetTau2;
+    std::vector<double> AK8JetTau3;
+
+
+    //Daughter four std::vector and index -- THESE ARE CURRENTLY IDENTICAL TO THOSE FOR TOP DAUGHTERS BECAUSE THE JET IS ALWAYS THE SLIMMED AK8JET
+    std::vector <double> AK8DaughterPt;
+    std::vector <double> AK8DaughterEta;
+    std::vector <double> AK8DaughterPhi;
+    std::vector <double> AK8DaughterEnergy;
+    
+    std::vector <int> AK8DaughterMotherIndex;
+    
+    for (std::vector<pat::Jet>::const_iterator ijet = AK8Jets->begin(); ijet != AK8Jets->end(); ijet++){
+        
+        int index = (int)(ijet-AK8Jets->begin());
+        
+        //Four std::vector
+        AK8JetPt     . push_back(ijet->pt());
+        AK8JetEta    . push_back(ijet->eta());
+        AK8JetPhi    . push_back(ijet->phi());
+        AK8JetEnergy . push_back(ijet->energy());
+        
+        AK8JetCSV    . push_back(ijet->bDiscriminator( "combinedSecondaryVertexBJetTags"));
+        
+        //Identity
+        AK8JetIndex      . push_back(index);
+        AK8JetnDaughters . push_back((int)ijet->numberOfDaughters());
+        //Mass
+        AK8JetTrimmedMass . push_back(-999);
+        AK8JetPrunedMass . push_back(-999);
+        AK8JetFilteredMass . push_back(-999);
+        AK8JetSoftDropMass . push_back(-999);
+        //nsubjettiness
+        AK8JetTau1.push_back(-999);
+        AK8JetTau2.push_back(-999);
+        AK8JetTau3.push_back(-999);
+        //cout<<"set n subjettiness"<<endl;
+        for (size_t ui = 0; ui < ijet->numberOfDaughters(); ui++){
+            AK8DaughterPt     . push_back(ijet->daughter(ui)->pt());
+            AK8DaughterEta    . push_back(ijet->daughter(ui)->eta());
+            AK8DaughterPhi    . push_back(ijet->daughter(ui)->phi());
+            AK8DaughterEnergy . push_back(ijet->daughter(ui)->energy());
+            
+            AK8DaughterMotherIndex . push_back(index);
+        }
+    }
+    
+    //Four std::vector
+    SetValue("AK8JetPt"     , AK8JetPt);
+    SetValue("AK8JetEta"    , AK8JetEta);
+    SetValue("AK8JetPhi"    , AK8JetPhi);
+    SetValue("AK8JetEnergy" , AK8JetEnergy);
+    
+    SetValue("AK8JetCSV"    , AK8JetCSV);
+    //   SetValue("AK8JetRCN"    , AK8JetRCN);
+    
+    //Identity
+    SetValue("AK8JetIndex"      , AK8JetIndex);
+    SetValue("AK8JetnDaughters" , AK8JetnDaughters);
+    
+    //Mass
+    SetValue("AK8JetTrimmedMass"     , AK8JetTrimmedMass);
+    SetValue("AK8JetPrunedMass"     , AK8JetPrunedMass);
+    SetValue("AK8JetFilteredMass"     , AK8JetFilteredMass);
+    SetValue("AK8JetSoftDropMass"     , AK8JetSoftDropMass);
+
+    
+    //Daughter four std::vector and index
+    SetValue("AK8DaughterPt"     , AK8DaughterPt);
+    SetValue("AK8DaughterEta"    , AK8DaughterEta);
+    SetValue("AK8DaughterPhi"    , AK8DaughterPhi);
+    SetValue("AK8DaughterEnergy" , AK8DaughterEnergy);
+    
+    SetValue("AK8DaughterMotherIndex" , AK8DaughterMotherIndex);
+
+
+}
+
 
 int DileptonCalc::findMatch(const reco::GenParticleCollection & genParticles, int idToMatch, double eta, double phi){
     float dRtmp = 1000;
