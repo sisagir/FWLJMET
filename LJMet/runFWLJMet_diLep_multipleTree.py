@@ -494,24 +494,23 @@ DileptonCalc_cfg = cms.PSet(
             isMc                   = cms.bool(isMC),
             dataType               = cms.string('None'), #Choose between EE/EM/MM/ALL/ElEl/ElMu/MuMu/All. Need to automate this. But what is this for??? -- June 11, 2019.
             
-            #triggerstudy info
+            # Triggerstudy info
             doTriggerStudy           = cms.bool(True),
             TriggerBits              = cms.InputTag("TriggerResults","","HLT"),
             TriggerObjects           = cms.InputTag("selectedPatTrigger"),
 
+            # PV
             pvSrc   = cms.InputTag('offlineSlimmedPrimaryVertices'),
+            
+            # Electon
+            UseElMVA                 = cms.bool(False), #True means save MVA values, False means not saving.
 
-            genParticlesCollection = cms.InputTag("prunedGenParticles"),
-
-            saveLooseLeps          = cms.bool(not isMC),
+            # Misc
             keepFullMChistory      = cms.bool(isMC),
-
+            rhoJetsInputTag        = cms.InputTag("fixedGridRhoFastjetAll"), #this is for electron. Why is it different compared to muon?
             rhoJetsNCInputTag      = cms.InputTag("fixedGridRhoFastjetCentralNeutral",""), #this is for muon
             PFparticlesCollection  = cms.InputTag("packedPFCandidates"),
-
-            rhoJetsInputTag            = cms.InputTag("fixedGridRhoFastjetAll"), #this is for electron. Why is it different compared to muon?
-            UseElMVA                 = cms.bool(False), #True means save MVA values, False means not saving.
-            UseElIDV1                = cms.bool(UseElIDV1_), #False means using ElIDV2.
+            genParticlesCollection = cms.InputTag("prunedGenParticles"),
 
             # Jet corrections needs to be passed here again if Calc uses jet correction
             doNewJEC                 = cms.bool(doNewJEC),

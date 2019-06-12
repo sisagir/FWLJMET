@@ -10,6 +10,8 @@ DileptonCalc::DileptonCalc()
 int DileptonCalc::BeginJob(edm::ConsumesCollector && iC)
 {
 
+    std::cout << "["+GetName()+"]: "<< "initializing parameters" << std::endl;
+    
     debug     = mPset.getParameter<bool>("debug");
     isMc      = mPset.getParameter<bool>("isMc");
     dataType  = mPset.getParameter<std::string>("dataType");
@@ -23,58 +25,17 @@ int DileptonCalc::BeginJob(edm::ConsumesCollector && iC)
     //PV
     pvToken = iC.consumes<reco::VertexCollection>(mPset.getParameter<edm::InputTag>("pvSrc"));
 
-// 
-//     rhoJetsToken = iC.consumes<double>(mPset.getParameter<edm::InputTag>("rhoJetsInputTag"));
-//     
-//         
-//     genParticlesToken = iC.consumes<reco::GenParticleCollection>(mPset.getParameter<edm::InputTag>("genParticlesCollection"));
-// 
-//     PFCandToken = iC.consumes<pat::PackedCandidateCollection>(mPset.getParameter<edm::InputTag>("PFparticlesCollection"));
-// 
-// 
-//     //   if (mPset.exists("keepFullMChistory")) keepFullMChistory = mPset.getParameter<bool>("keepFullMChistory");
-//     //else                                   keepFullMChistory = true;
-//     keepFullMChistory = true;
-//     cout << "keepFullMChistory "     <<    keepFullMChistory << endl;
-//     
-//     if ( mPset.exists("cutbasedIDSelectorLoose")){
-//         electronSelL_ = boost::shared_ptr<TopElectronSelector>(
-//                                                                new TopElectronSelector(mPset.getParameter<edm::ParameterSet>("cutbasedIDSelectorLoose")) );
-//     }
-//     else {
-//         std::cout << "DileptonCalc: Loose electron selector not configured, exiting"
-//         << std::endl;
-//         std::exit(-1);
-//     }
-//     if ( mPset.exists("cutbasedIDSelectorMedium")){
-//         electronSelM_ = boost::shared_ptr<TopElectronSelector>(
-//                                                                new TopElectronSelector(mPset.getParameter<edm::ParameterSet>("cutbasedIDSelectorMedium")) );
-//     }
-//     else {
-//         std::cout << "DileptonCalc: Medium electron selector not configured, exiting"
-//         << std::endl;
-//         std::exit(-1);
-//     }
-//     if ( mPset.exists("cutbasedIDSelectorTight")){
-//         electronSelT_ = boost::shared_ptr<TopElectronSelector>(
-//                                                                new TopElectronSelector(mPset.getParameter<edm::ParameterSet>("cutbasedIDSelectorTight")) );
-//     }
-//     else {
-//         std::cout << "DileptonCalc: Tight electron selector not configured, exiting"
-//         << std::endl;
-//         std::exit(-1);
-//     }
-// 
-//     //stuff for MVA - added by Bjorn
-//     if (mPset.exists("UseElMVA")) UseElMVA = mPset.getParameter<bool>("UseElMVA");
-//     else                          UseElMVA = false;
-//     
-//     //get mva vid setup
-//     //electronsMiniAODLabel_= mPset.getParameter<edm::InputTag>("electronsMiniAOD");
-//     // eleLooseIdMapLabel_ = mPset.getParameter<edm::InputTag>("eleMVALooseIDMap");
-//     //eleTightIdMapLabel_ = mPset.getParameter<edm::InputTag>("eleMVATightIDMap");
-//     //mvaValuesMapLabel_ = mPset.getParameter<edm::InputTag>("mvaValuesMap");
-//     
+    //Misc
+    rhoJetsToken = iC.consumes<double>(mPset.getParameter<edm::InputTag>("rhoJetsInputTag"));
+    rhoJetsNCToken = iC.consumes<double>(mPset.getParameter<edm::InputTag>("rhoJetsNCInputTag"));
+    PFCandToken = iC.consumes<pat::PackedCandidateCollection>(mPset.getParameter<edm::InputTag>("PFparticlesCollection"));
+    keepFullMChistory = mPset.getParameter<bool>("keepFullMChistory");
+    if(debug) cout << "["+GetName()+"]: "<< "keepFullMChistory : " <<    keepFullMChistory << endl;
+    genParticlesToken = iC.consumes<reco::GenParticleCollection>(mPset.getParameter<edm::InputTag>("genParticlesCollection"));
+    
+    //Electron    
+    UseElMVA = mPset.getParameter<bool>("UseElMVA");
+
 //     //NewPDF stuff    
 //     if (mPset.exists("OverrideLHEWeights")) orlhew = mPset.getParameter<bool>("OverrideLHEWeights");
 //     else                                   orlhew = false;
@@ -106,438 +67,19 @@ int DileptonCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * sel
     AnalyzeTriggers(event, selector);
     
     AnalyzePV(event, selector);
-
+    
+    AnalyzeElectron(event, selector);
 
     //
     // _____ Get objects from the selector _____________________
     //
     std::vector<edm::Ptr<pat::Muon> >     const & vSelMuons        = selector->GetSelMuons();
-    std::vector<edm::Ptr<pat::Electron> > const & vSelElectrons    = selector->GetSelElectrons();
     std::vector<edm::Ptr<pat::Jet> >      const & vSelJets         = selector->GetSelJets();
     std::vector<pat::Jet>                 const & vSelCleanedJets  = selector->GetSelCleanedJets();
     edm::Ptr<pat::MET>                    const & pMet             = selector->GetMet();
     std::vector<unsigned int>             const & vSelTriggers     = selector->GetSelTriggers();
         
     
-    //
-    //_____ Electrons _________________________
-    //
-/*    
-    //Four std::vector
-    std::vector <double> elPt;
-    std::vector <double> elEta;
-    std::vector <double> elPhi;
-    std::vector <double> elEnergy;
-    
-    //Quality criteria
-    std::vector <double> elRelIso;
-    std::vector <double> elMiniIsoEA;
-    std::vector <double> elMiniIsoDB;
-    std::vector <double> elMiniIsoSUSY;
-    std::vector <double> elDxy;
-    std::vector <int>    elNotConversion;
-    std::vector <int>    elChargeConsistent;
-    std::vector <int>    elIsEBEE;
-    std::vector <int>    elQuality;
-    std::vector <int>    elCharge;
-    std::vector <int>    elGsfCharge;
-    std::vector <int>    elCtfCharge;
-    std::vector <int>    elScPixCharge;
-    
-    //ID requirement
-    std::vector <double> elDeta;
-    std::vector <double> elDphi;
-    std::vector <double> elSihih;
-    std::vector <double> elHoE;
-    std::vector <double> elD0;
-    std::vector <double> elSIP3D;
-    std::vector <double> elDZ;
-    std::vector <double> elOoemoop;
-    std::vector <int>    elMHits;
-    std::vector <int>    elVtxFitConv;
-
-    std::vector <double> elMVAValue;
-    std::vector <double> elIsMVATight90;
-    std::vector <double> elIsMVATight80;
-    std::vector <double> elIsMVALoose;
-    std::vector <double> elMVAValue_iso;
-    std::vector <double> elIsMVATightIso90;
-    std::vector <double> elIsMVATightIso80;
-    std::vector <double> elIsMVALooseIso;
-    std::vector <double> elIsTight;
-    std::vector <double> elIsMedium;
-    std::vector <double> elIsLoose;
-    std::vector <double> elIsVeto;
-    
-    //added CMSDAS variables
-    std::vector <double> diElMass;
-    std::vector <int> elCharge1;
-    std::vector <int> elCharge2;
-
-    //Extra info about isolation
-    std::vector <double> elChIso;
-    std::vector <double> elNhIso;
-    std::vector <double> elPhIso;
-    std::vector <double> elAEff;
-    std::vector <double> elRhoIso;
-    std::vector <double> elPUIso;
-    
-    //mother-information
-    //Generator level information -- MC matching
-    std::vector<double> elGen_Reco_dr;
-    std::vector<int> elPdgId;
-    std::vector<int> elStatus;
-    std::vector<int> elMatched;
-    std::vector<int> elNumberOfMothers;
-    std::vector<double> elMother_pt;
-    std::vector<double> elMother_eta;
-    std::vector<double> elMother_phi;
-    std::vector<double> elMother_energy;
-    std::vector<int> elMother_id;
-    std::vector<int> elMother_status;
-    //Matched gen electron information:
-    std::vector<double> elMatchedPt;
-    std::vector<double> elMatchedEta;
-    std::vector<double> elMatchedPhi;
-    std::vector<double> elMatchedEnergy;
-    std::vector<std::string> TriggerElectronFilters;
-    std::vector<double> TriggerElectronPts;
-    std::vector<double> TriggerElectronEtas;
-    std::vector<double> TriggerElectronPhis;
-    std::vector<double> TriggerElectronEnergies;
-    
-    edm::Handle<double> rhoHandle;
-    event.getByLabel(rhoJetsToken, rhoHandle);
-    rhoIso = std::max(*(rhoHandle.product()), 0.0);
-
-    //rho isolation from susy recommendation
-    edm::Handle<double> rhoJetsNC;
-    event.getByLabel(edm::InputTag("fixedGridRhoFastjetCentralNeutral","") , rhoJetsNC);
-    double myRhoJetsNC = *rhoJetsNC;
-    double _rhoNC = myRhoJetsNC;
-
-    //pfcandidates for mini iso
-    
-    edm::Handle<pat::PackedCandidateCollection> packedPFCands;
-    event.getByLabel(PFCandToken, packedPFCands);
-    
-    
-    pat::strbitset retElectron  = electronSelL_->getBitTemplate();
-    bool retElectronT,retElectronM,retElectronL;
-    
-
-    //keep track of which electron we are looking at
-    int ElIndex = 0;
-    for (std::vector<edm::Ptr<pat::Electron> >::const_iterator iel = vSelElectrons.begin(); iel != vSelElectrons.end(); iel++){
-      //Protect against electrons without tracks (should never happen, but just in case)
-      if ((*iel)->gsfTrack().isNonnull() and (*iel)->gsfTrack().isAvailable()){
-      
-          //Four std::vector
-          elPt     . push_back((*iel)->ecalDrivenMomentum().pt()); //Must check: why ecalDrivenMomentum?
-          elEta    . push_back((*iel)->ecalDrivenMomentum().eta());
-          elPhi    . push_back((*iel)->ecalDrivenMomentum().phi());
-          elEnergy . push_back((*iel)->ecalDrivenMomentum().energy());       
-        
-          //if there are two electrons calculate invariant mass from two highest pt objects
-          if(vSelElectrons.size()==2){
-            for (std::vector<edm::Ptr<pat::Electron> >::const_iterator iiel = vSelElectrons.begin(); iiel != vSelElectrons.end(); iiel++){
-              //float mass = pow( (*iel)->energy() * (*iiel)->energy() - ( (*iel)->pt() * (*iiel)->pt() - (*iel)->pz() * (*iiel)->pz()), 0.5);
-              if(iiel!=iel){
-                TLorentzVector diElFourVec( (*iel)->px() + (*iiel)->px(),(*iel)->py() + (*iiel)->py(),(*iel)->pz() + (*iiel)->pz(), (*iel)->energy() + (*iiel)->energy());
-                diElMass.push_back(diElFourVec.M());
-                elCharge1.push_back( (*iel)->charge());
-                elCharge2.push_back( (*iiel)->charge());
-              }
-            }
-          }
-          else{ 
-            diElMass.push_back(-1);
-            elCharge1.push_back(-99999);
-            elCharge2.push_back(-99998);
-          }
-
-          //Isolation
-          
-          // WTF are these hardcoded values below ?! People should fucking stop hardcoding things without doc !! -- June 11, 2019.
-          double scEta = (*iel)->superCluster()->eta();
-          double AEff;
-          if(fabs(scEta) >2.4) AEff = 0.1524;
-          else if(fabs(scEta) >2.3) AEff = 0.1204;
-          else if(fabs(scEta) >2.2) AEff = 0.1051;
-          else if(fabs(scEta) >2.0) AEff = 0.0854;
-          else if(fabs(scEta) >1.479) AEff = 0.1073;
-          else if(fabs(scEta) >1.0) AEff = 0.1626;
-          else AEff = 0.1566;
-
-          reco::GsfElectron::PflowIsolationVariables pfIso = (*iel)->pfIsolationVariables();
-          double chIso = pfIso.sumChargedHadronPt;
-          double nhIso = pfIso.sumNeutralHadronEt;
-          double phIso = pfIso.sumPhotonEt;
-          double PUIso = pfIso.sumPUPt;
-          double relIso = ( chIso + std::max(0.0, nhIso + phIso - rhoIso*AEff) ) / (*iel)->pt();
-          
-          elChIso  . push_back(chIso);
-          elNhIso  . push_back(nhIso);
-          elPhIso  . push_back(phIso);
-          elPUIso  . push_back(PUIso);
-          elAEff   . push_back(AEff);
-          elRhoIso . push_back(rhoIso);
-        
-          elRelIso . push_back(relIso);
-        
-          //Conversion rejection
-          int nLostHits = (*iel)->gsfTrack()->hitPattern().numberOfAllHits(reco::HitPattern::MISSING_INNER_HITS);
-          double dist   = (*iel)->convDist();
-          double dcot   = (*iel)->convDcot();
-          int notConv   = nLostHits == 0 and (fabs(dist) > 0.02 or fabs(dcot) > 0.02);
-          //get three different charges
-          elGsfCharge.push_back( (*iel)->gsfTrack()->charge());
-          if( (*iel)->closestCtfTrackRef().isNonnull()) elCtfCharge.push_back((*iel)->closestCtfTrackRef()->charge());
-          else elCtfCharge.push_back(-999);
-          elScPixCharge.push_back((*iel)->scPixCharge());
-          elCharge.push_back((*iel)->charge());
-          elNotConversion . push_back(notConv);
-        
-          retElectronL = (*electronSelL_)(**iel, event, retElectron);
-          retElectronM = (*electronSelM_)(**iel, event, retElectron);
-          retElectronT = (*electronSelT_)(**iel, event, retElectron);
-        
-          elQuality.push_back((retElectronT<<2) + (retElectronM<<1) + retElectronL);
-        
-          //IP: for some reason this is with respect to the first vertex in the collection
-          if(goodPVs.size() > 0){
-            elDxy.push_back((*iel)->gsfTrack()->dxy(goodPVs.at(0).position()));
-            elDZ.push_back((*iel)->gsfTrack()->dz(goodPVs.at(0).position()));
-          } else {
-            elDxy.push_back(-999);
-            elDZ.push_back(-999);
-          }
-          elChargeConsistent.push_back((*iel)->isGsfCtfScPixChargeConsistent());
-          elIsEBEE.push_back(((*iel)->isEBEEGap()<<2) + ((*iel)->isEE()<<1) + (*iel)->isEB());
-          elDeta.push_back((*iel)->deltaEtaSuperClusterTrackAtVtx());
-          elDphi.push_back((*iel)->deltaPhiSuperClusterTrackAtVtx());
-          elSihih.push_back((*iel)->full5x5_sigmaIetaIeta());
-          elHoE.push_back((*iel)->hcalOverEcal());
-          elD0.push_back((*iel)->dB());
-          pat::Electron::IpType elIP3d = (pat::Electron::IpType) 1;
-          float sip3d = (*iel)->dB(elIP3d) / (*iel)->edB(elIP3d);
-          elSIP3D.push_back(sip3d);
-          elOoemoop.push_back(1.0/(*iel)->ecalEnergy() - (*iel)->eSuperClusterOverP()/(*iel)->ecalEnergy());
-          elMHits.push_back((*iel)->gsfTrack()->hitPattern().numberOfAllHits(reco::HitPattern::MISSING_INNER_HITS));
-          elVtxFitConv.push_back((*iel)->passConversionVeto());
-
-          //add miniIso
-          elMiniIsoEA.push_back(getPFMiniIsolation_EffectiveArea(packedPFCands, dynamic_cast<const reco::Candidate *>(iel->get()),0.05, 0.2, 10., false, false,myRhoJetsNC));
-          elMiniIsoDB.push_back(getPFMiniIsolation_DeltaBeta(packedPFCands, dynamic_cast<const reco::Candidate *>(iel->get()), 0.05, 0.2, 10., false));
-          elMiniIsoSUSY.push_back(getPFMiniIsolation_SUSY(packedPFCands, dynamic_cast<const reco::Candidate *>(iel->get()),0.05, 0.2, 10., false, false,myRhoJetsNC));
-
-
-          //Trigger Matching - store 4-std::vector and filter information for all trigger objects deltaR matched to electrons
-//           if(doTriggerStudy_){
-//             
-//             //read in trigger objects
-//             edm::Handle<pat::TriggerObjectStandAloneCollection> triggerObjects;
-//             event.getByToken(triggerObjectToken,triggerObjects);
-//             
-//             edm::Handle<edm::TriggerResults> triggerBits;
-//             event.getByToken(triggersToken,triggerBits);
-//             const edm::TriggerNames &names = event.triggerNames(*triggerBits);
-//             
-//             //loop over them for deltaR matching
-//             TLorentzVector trigObj;
-//             pat::TriggerObjectStandAlone matchedObj;
-//             std::vector<std::string> paths;
-//             float closestDR = 10000.;
-//             for( pat::TriggerObjectStandAlone obj : *triggerObjects){
-//               obj.unpackPathNames(names);
-//               float dR = mdeltaR( (*iel)->eta(), (*iel)->phi(), obj.eta(),obj.phi() );
-//               if(dR < closestDR){
-//                 closestDR = dR;
-//                 trigObj.SetPtEtaPhiE((*iel)->pt(),(*iel)->eta(),(*iel)->phi(),(*iel)->energy());
-//                 matchedObj=obj;
-//               }
-//             }
-//             if(closestDR<0.5){
-//               TriggerElectronPts.push_back(trigObj.Pt());
-//               TriggerElectronEtas.push_back(trigObj.Eta());
-//               TriggerElectronPhis.push_back(trigObj.Phi());
-//               TriggerElectronEnergies.push_back(trigObj.Energy());
-//               //std::cout<<"found matched trigger object!"<<std::endl;
-//               //now store information about filters
-//               for (unsigned h = 0; h < matchedObj.filterLabels().size(); ++h){
-//                 std::string filter = matchedObj.filterLabels()[h];
-//                 std::string Index = Form("MatchedIndex%i_",ElIndex);
-//                 std::string hltFilter_wIndex = Index+filter;
-//                 //std::cout<<hltFilter_wIndex<<std::endl;
-//                 TriggerElectronFilters.push_back(hltFilter_wIndex);
-//               }              
-//             }
-//             else{
-//               TriggerElectronPts.push_back(-9999);
-//               TriggerElectronEtas.push_back(-9999);
-//               TriggerElectronPhis.push_back(-9999);
-//               TriggerElectronEnergies.push_back(-9999);
-//             }
-//           }
-          
-        if (UseElMVA) {
-            // See singleLepCalc for more IDs and usingV2
-            elIsMVATight80.push_back((*iel)->electronID("mvaEleID-Fall17-noIso-V2-wp80"));
-            elIsMVATight90.push_back((*iel)->electronID("mvaEleID-Fall17-noIso-V2-wp90"));
-            elIsMVALoose.push_back((*iel)->electronID("mvaEleID-Fall17-noIso-V2-wpLoose"));
-            elMVAValue.push_back((*iel)->userFloat("ElectronMVAEstimatorRun2Fall17NoIsoV2Values"));
-
-            elIsMVATightIso80.push_back((*iel)->electronID("mvaEleID-Fall17-iso-V2-wp80"));
-            elIsMVATightIso90.push_back((*iel)->electronID("mvaEleID-Fall17-iso-V2-wp90"));
-            elIsMVALooseIso.push_back((*iel)->electronID("mvaEleID-Fall17-iso-V2-wpLoose"));
-            elMVAValue_iso.push_back((*iel)->userFloat("ElectronMVAEstimatorRun2Fall17IsoV2Values"));
-        }
-        
-        elIsTight.push_back((*iel)->electronID("cutBasedElectronID-Fall17-94X-V2-tight"));
-        elIsMedium.push_back((*iel)->electronID("cutBasedElectronID-Fall17-94X-V2-medium"));
-        elIsLoose.push_back((*iel)->electronID("cutBasedElectronID-Fall17-94X-V2-loose"));
-        elIsVeto.push_back((*iel)->electronID("cutBasedElectronID-Fall17-94X-V2-veto"));
-
-
-
-        if(isMc && keepFullMChistory){
-            //cout << "start\n";
-            edm::Handle<reco::GenParticleCollection> genParticles;
-            event.getByLabel(genParticlesToken, genParticles);
-            int matchId = findMatch(*genParticles, 11, (*iel)->eta(), (*iel)->phi());
-            double closestDR = 10000.;
-            //cout << "matchId "<<matchId <<endl;
-            if (matchId>=0) {
-              const reco::GenParticle & p = (*genParticles).at(matchId);
-              closestDR = mdeltaR( (*iel)->eta(), (*iel)->phi(), p.eta(), p.phi());
-              //cout << "closestDR "<<closestDR <<endl;
-              if(closestDR < 0.3){
-                elGen_Reco_dr.push_back(closestDR);
-                elPdgId.push_back(p.pdgId());
-                elStatus.push_back(p.status());
-                elMatched.push_back(1);
-                elMatchedPt.push_back( p.pt());
-                elMatchedEta.push_back(p.eta());
-                elMatchedPhi.push_back(p.phi());
-                elMatchedEnergy.push_back(p.energy());
-                int oldSize = elMother_id.size();
-                fillMotherInfo(p.mother(), 0, elMother_id, elMother_status, elMother_pt, elMother_eta, elMother_phi, elMother_energy);
-                elNumberOfMothers.push_back(elMother_id.size()-oldSize);
-              }
-            }
-            if(closestDR >= 0.3){
-              elNumberOfMothers.push_back(-1);
-              elGen_Reco_dr.push_back(-1.0);
-              elPdgId.push_back(-1);
-              elStatus.push_back(-1);
-              elMatched.push_back(0);
-              elMatchedPt.push_back(-1000.0);
-              elMatchedEta.push_back(-1000.0);
-              elMatchedPhi.push_back(-1000.0);
-              elMatchedEnergy.push_back(-1000.0);
-            
-            }
-          
-          
-        }//closing the isMC checking criteria
-      }
-      //increment index
-      ElIndex+=1;
-    }
-    
-    //trigger info
-    SetValue("TrigElPt",TriggerElectronPts);
-    SetValue("TrigElEta",TriggerElectronEtas);
-    SetValue("TrigElPhi",TriggerElectronPhis);
-    SetValue("TrigElEnergy",TriggerElectronEnergies);
-    SetValue("TrigElFilters",TriggerElectronFilters);
-
-    //Four std::vector
-    SetValue("elPt"     , elPt);
-    SetValue("elEta"    , elEta);
-    SetValue("elPhi"    , elPhi);
-    SetValue("elEnergy" , elEnergy);
-
-    //cmsdas variables
-    SetValue("diElMass", diElMass);
-    SetValue("elCharge1", elCharge1);
-    SetValue("elCharge2", elCharge2);
-    
-    SetValue("elGsfCharge",elGsfCharge);
-    SetValue("elCtfCharge",elCtfCharge);
-    SetValue("elScPixCharge",elScPixCharge);
-    SetValue("elCharge", elCharge);
-    //Quality requirements
-    SetValue("elRelIso" , elRelIso); //Isolation
-    SetValue("elDxy"    , elDxy);    //Dxy
-    SetValue("elNotConversion" , elNotConversion);  //Conversion rejection
-    SetValue("elChargeConsistent", elChargeConsistent);
-    SetValue("elIsEBEE", elIsEBEE);
-    SetValue("elQuality", elQuality);
-    SetValue("elMiniIsoEA",elMiniIsoEA);
-    SetValue("elMiniIsoDB",elMiniIsoDB);
-    SetValue("elMiniIsoSUSY",elMiniIsoSUSY);
-    //this value not specific to electrons but we set it here
-    SetValue("rhoNC",_rhoNC);
-
-    //ID cuts
-    SetValue("elDeta", elDeta);
-    SetValue("elDphi", elDphi);
-    SetValue("elSihih", elSihih);
-    SetValue("elHoE", elHoE);
-    SetValue("elD0", elD0);
-    SetValue("elSIP3D",elSIP3D);
-    SetValue("elDZ", elDZ);
-    SetValue("elOoemoop", elOoemoop);
-    SetValue("elMHits", elMHits);
-    SetValue("elVtxFitConv", elVtxFitConv);
-    //SetValue("elMVAValVID",elMVAValVID);
-    //SetValue("elMVATightVID",elMVATightVID);
-    //SetValue("elMVALooseVID",elMVALooseVID);
-
-
-    SetValue("elMVAValue", elMVAValue);
-    SetValue("elIsMVATight90", elIsMVATight90);
-    SetValue("elIsMVATight80", elIsMVATight80);
-    SetValue("elIsMVALoose", elIsMVALoose);
-
-    SetValue("elMVAValue_iso", elMVAValue_iso);
-    SetValue("elIsMVATightIso90",elIsMVATightIso90);
-    SetValue("elIsMVATightIso80",elIsMVATightIso80);
-    SetValue("elIsMVALooseIso",elIsMVALooseIso);
-
-    SetValue("elIsTight", elIsTight);
-    SetValue("elIsMedium", elIsMedium);
-    SetValue("elIsLoose", elIsLoose);
-    SetValue("elIsVeto", elIsVeto);
-
-
-    //Extra info about isolation
-    SetValue("elChIso" , elChIso);
-    SetValue("elNhIso" , elNhIso);
-    SetValue("elPhIso" , elPhIso);
-    SetValue("elAEff"  , elAEff);
-    SetValue("elRhoIso", elRhoIso);
-    SetValue("elPUIso", elPUIso);
-    
-    //MC matching -- mother information
-    SetValue("elNumberOfMothers", elNumberOfMothers);
-    SetValue("elGen_Reco_dr", elGen_Reco_dr);
-    SetValue("elPdgId", elPdgId);
-    SetValue("elStatus", elStatus);
-    SetValue("elMatched",elMatched);
-    SetValue("elMother_pt", elMother_pt);
-    SetValue("elMother_eta", elMother_eta);
-    SetValue("elMother_phi", elMother_phi);
-    SetValue("elMother_energy", elMother_energy);
-    SetValue("elMother_status", elMother_status);
-    SetValue("elMother_id", elMother_id);
-    //Matched gen muon information:
-    SetValue("elMatchedPt", elMatchedPt);
-    SetValue("elMatchedEta", elMatchedEta);
-    SetValue("elMatchedPhi", elMatchedPhi);
-    SetValue("elMatchedEnergy", elMatchedEnergy);
-*/    
     
     //
     //_____ Muons _____________________________
@@ -1709,6 +1251,421 @@ void DileptonCalc::AnalyzePV(edm::Event const & event, BaseEventSelector * selec
     goodPVs = *(pvHandle.product());
     
     SetValue("nPV", (int)goodPVs.size());
+
+}
+
+void DileptonCalc::AnalyzeElectron(edm::Event const & event, BaseEventSelector * selector)
+{
+
+    //
+    // _____ Get objects from the selector _____________________
+    //
+    std::vector<edm::Ptr<pat::Electron> > const & vSelElectrons    = selector->GetSelElectrons();
+
+    //
+    //_____ Electrons _________________________
+    //
+    
+    //Four std::vector
+    std::vector <double> elPt;
+    std::vector <double> elEta;
+    std::vector <double> elPhi;
+    std::vector <double> elEnergy;
+    
+    //Quality criteria
+    std::vector <double> elRelIso;
+    std::vector <double> elMiniIsoEA;
+    std::vector <double> elMiniIsoDB;
+    std::vector <double> elMiniIsoSUSY;
+    std::vector <double> elDxy;
+    std::vector <int>    elNotConversion;
+    std::vector <int>    elChargeConsistent;
+    std::vector <int>    elIsEBEE;
+    std::vector <int>    elQuality;
+    std::vector <int>    elCharge;
+    std::vector <int>    elGsfCharge;
+    std::vector <int>    elCtfCharge;
+    std::vector <int>    elScPixCharge;
+    
+    //ID requirement
+    std::vector <double> elDeta;
+    std::vector <double> elDphi;
+    std::vector <double> elSihih;
+    std::vector <double> elHoE;
+    std::vector <double> elD0;
+    std::vector <double> elSIP3D;
+    std::vector <double> elDZ;
+    std::vector <double> elOoemoop;
+    std::vector <int>    elMHits;
+    std::vector <int>    elVtxFitConv;
+
+    std::vector <double> elMVAValue;
+    std::vector <double> elIsMVATight90;
+    std::vector <double> elIsMVATight80;
+    std::vector <double> elIsMVALoose;
+    std::vector <double> elMVAValue_iso;
+    std::vector <double> elIsMVATightIso90;
+    std::vector <double> elIsMVATightIso80;
+    std::vector <double> elIsMVALooseIso;
+    std::vector <double> elIsTight;
+    std::vector <double> elIsMedium;
+    std::vector <double> elIsLoose;
+    std::vector <double> elIsVeto;
+    
+    //added CMSDAS variables
+    std::vector <double> diElMass;
+    std::vector <int> elCharge1;
+    std::vector <int> elCharge2;
+
+    //Extra info about isolation
+    std::vector <double> elChIso;
+    std::vector <double> elNhIso;
+    std::vector <double> elPhIso;
+    std::vector <double> elAEff;
+    std::vector <double> elRhoIso;
+    std::vector <double> elPUIso;
+    
+    //mother-information
+    //Generator level information -- MC matching
+    std::vector<double> elGen_Reco_dr;
+    std::vector<int> elPdgId;
+    std::vector<int> elStatus;
+    std::vector<int> elMatched;
+    std::vector<int> elNumberOfMothers;
+    std::vector<double> elMother_pt;
+    std::vector<double> elMother_eta;
+    std::vector<double> elMother_phi;
+    std::vector<double> elMother_energy;
+    std::vector<int> elMother_id;
+    std::vector<int> elMother_status;
+    //Matched gen electron information:
+    std::vector<double> elMatchedPt;
+    std::vector<double> elMatchedEta;
+    std::vector<double> elMatchedPhi;
+    std::vector<double> elMatchedEnergy;
+    std::vector<std::string> TriggerElectronFilters;
+    std::vector<double> TriggerElectronPts;
+    std::vector<double> TriggerElectronEtas;
+    std::vector<double> TriggerElectronPhis;
+    std::vector<double> TriggerElectronEnergies;
+    
+    edm::Handle<double> rhoHandle;
+    event.getByToken(rhoJetsToken, rhoHandle);
+    rhoIso = std::max(*(rhoHandle.product()), 0.0);
+
+    //rho isolation from susy recommendation
+    edm::Handle<double> rhoJetsNC;
+    event.getByToken(rhoJetsNCToken , rhoJetsNC);
+    double myRhoJetsNC = *rhoJetsNC;
+    double _rhoNC = myRhoJetsNC;
+
+    //pfcandidates for mini iso
+    
+    edm::Handle<pat::PackedCandidateCollection> packedPFCands;
+    event.getByToken(PFCandToken, packedPFCands);
+        
+
+    //keep track of which electron we are looking at
+    int ElIndex = 0;
+    for (std::vector<edm::Ptr<pat::Electron> >::const_iterator iel = vSelElectrons.begin(); iel != vSelElectrons.end(); iel++){
+      //Protect against electrons without tracks (should never happen, but just in case)
+      if ((*iel)->gsfTrack().isNonnull() and (*iel)->gsfTrack().isAvailable()){
+      
+          //Four std::vector
+          elPt     . push_back((*iel)->ecalDrivenMomentum().pt()); //Must check: why ecalDrivenMomentum?
+          elEta    . push_back((*iel)->ecalDrivenMomentum().eta());
+          elPhi    . push_back((*iel)->ecalDrivenMomentum().phi());
+          elEnergy . push_back((*iel)->ecalDrivenMomentum().energy());       
+        
+          //if there are two electrons calculate invariant mass from two highest pt objects
+          if(vSelElectrons.size()==2){
+            for (std::vector<edm::Ptr<pat::Electron> >::const_iterator iiel = vSelElectrons.begin(); iiel != vSelElectrons.end(); iiel++){
+              //float mass = pow( (*iel)->energy() * (*iiel)->energy() - ( (*iel)->pt() * (*iiel)->pt() - (*iel)->pz() * (*iiel)->pz()), 0.5);
+              if(iiel!=iel){
+                TLorentzVector diElFourVec( (*iel)->px() + (*iiel)->px(),(*iel)->py() + (*iiel)->py(),(*iel)->pz() + (*iiel)->pz(), (*iel)->energy() + (*iiel)->energy());
+                diElMass.push_back(diElFourVec.M());
+                elCharge1.push_back( (*iel)->charge());
+                elCharge2.push_back( (*iiel)->charge());
+              }
+            }
+          }
+          else{ 
+            diElMass.push_back(-1);
+            elCharge1.push_back(-99999);
+            elCharge2.push_back(-99998);
+          }
+
+          //Isolation
+          
+          // WTF are these hardcoded values below ?! People should fucking stop hardcoding things without doc !! -- June 11, 2019.
+          double scEta = (*iel)->superCluster()->eta();
+          double AEff;
+          if(fabs(scEta) >2.4) AEff = 0.1524;
+          else if(fabs(scEta) >2.3) AEff = 0.1204;
+          else if(fabs(scEta) >2.2) AEff = 0.1051;
+          else if(fabs(scEta) >2.0) AEff = 0.0854;
+          else if(fabs(scEta) >1.479) AEff = 0.1073;
+          else if(fabs(scEta) >1.0) AEff = 0.1626;
+          else AEff = 0.1566;
+          
+          reco::GsfElectron::PflowIsolationVariables pfIso = (*iel)->pfIsolationVariables();
+          double chIso = pfIso.sumChargedHadronPt;
+          double nhIso = pfIso.sumNeutralHadronEt;
+          double phIso = pfIso.sumPhotonEt;
+          double PUIso = pfIso.sumPUPt;
+          double relIso = ( chIso + std::max(0.0, nhIso + phIso - rhoIso*AEff) ) / (*iel)->pt();
+          
+          elChIso  . push_back(chIso);
+          elNhIso  . push_back(nhIso);
+          elPhIso  . push_back(phIso);
+          elPUIso  . push_back(PUIso);
+          elAEff   . push_back(AEff);
+          elRhoIso . push_back(rhoIso);
+        
+          elRelIso . push_back(relIso);
+        
+          //Conversion rejection
+          int nLostHits = (*iel)->gsfTrack()->hitPattern().numberOfAllHits(reco::HitPattern::MISSING_INNER_HITS);
+          double dist   = (*iel)->convDist();
+          double dcot   = (*iel)->convDcot();
+          int notConv   = nLostHits == 0 and (fabs(dist) > 0.02 or fabs(dcot) > 0.02);
+          //get three different charges
+          elGsfCharge.push_back( (*iel)->gsfTrack()->charge());
+          if( (*iel)->closestCtfTrackRef().isNonnull()) elCtfCharge.push_back((*iel)->closestCtfTrackRef()->charge());
+          else elCtfCharge.push_back(-999);
+          elScPixCharge.push_back((*iel)->scPixCharge());
+          elCharge.push_back((*iel)->charge());
+          elNotConversion . push_back(notConv);
+                
+          //IP: for some reason this is with respect to the first vertex in the collection
+          if(goodPVs.size() > 0){
+            elDxy.push_back((*iel)->gsfTrack()->dxy(goodPVs.at(0).position()));
+            elDZ.push_back((*iel)->gsfTrack()->dz(goodPVs.at(0).position()));
+          } else {
+            elDxy.push_back(-999);
+            elDZ.push_back(-999);
+          }
+          elChargeConsistent.push_back((*iel)->isGsfCtfScPixChargeConsistent());
+          elIsEBEE.push_back(((*iel)->isEBEEGap()<<2) + ((*iel)->isEE()<<1) + (*iel)->isEB());
+          elDeta.push_back((*iel)->deltaEtaSuperClusterTrackAtVtx());
+          elDphi.push_back((*iel)->deltaPhiSuperClusterTrackAtVtx());
+          elSihih.push_back((*iel)->full5x5_sigmaIetaIeta());
+          elHoE.push_back((*iel)->hcalOverEcal());
+          elD0.push_back((*iel)->dB());
+          pat::Electron::IpType elIP3d = (pat::Electron::IpType) 1;
+          float sip3d = (*iel)->dB(elIP3d) / (*iel)->edB(elIP3d);
+          elSIP3D.push_back(sip3d);
+          elOoemoop.push_back(1.0/(*iel)->ecalEnergy() - (*iel)->eSuperClusterOverP()/(*iel)->ecalEnergy());
+          elMHits.push_back((*iel)->gsfTrack()->hitPattern().numberOfAllHits(reco::HitPattern::MISSING_INNER_HITS));
+          elVtxFitConv.push_back((*iel)->passConversionVeto());
+
+
+          //Trigger Matching - store 4-std::vector and filter information for all trigger objects deltaR matched to electrons
+//           if(doTriggerStudy_){
+//             
+//             //read in trigger objects
+//             edm::Handle<pat::TriggerObjectStandAloneCollection> triggerObjects;
+//             event.getByToken(triggerObjectToken,triggerObjects);
+//             
+//             edm::Handle<edm::TriggerResults> triggerBits;
+//             event.getByToken(triggersToken,triggerBits);
+//             const edm::TriggerNames &names = event.triggerNames(*triggerBits);
+//             
+//             //loop over them for deltaR matching
+//             TLorentzVector trigObj;
+//             pat::TriggerObjectStandAlone matchedObj;
+//             std::vector<std::string> paths;
+//             float closestDR = 10000.;
+//             for( pat::TriggerObjectStandAlone obj : *triggerObjects){
+//               obj.unpackPathNames(names);
+//               float dR = mdeltaR( (*iel)->eta(), (*iel)->phi(), obj.eta(),obj.phi() );
+//               if(dR < closestDR){
+//                 closestDR = dR;
+//                 trigObj.SetPtEtaPhiE((*iel)->pt(),(*iel)->eta(),(*iel)->phi(),(*iel)->energy());
+//                 matchedObj=obj;
+//               }
+//             }
+//             if(closestDR<0.5){
+//               TriggerElectronPts.push_back(trigObj.Pt());
+//               TriggerElectronEtas.push_back(trigObj.Eta());
+//               TriggerElectronPhis.push_back(trigObj.Phi());
+//               TriggerElectronEnergies.push_back(trigObj.Energy());
+//               //std::cout<<"found matched trigger object!"<<std::endl;
+//               //now store information about filters
+//               for (unsigned h = 0; h < matchedObj.filterLabels().size(); ++h){
+//                 std::string filter = matchedObj.filterLabels()[h];
+//                 std::string Index = Form("MatchedIndex%i_",ElIndex);
+//                 std::string hltFilter_wIndex = Index+filter;
+//                 //std::cout<<hltFilter_wIndex<<std::endl;
+//                 TriggerElectronFilters.push_back(hltFilter_wIndex);
+//               }              
+//             }
+//             else{
+//               TriggerElectronPts.push_back(-9999);
+//               TriggerElectronEtas.push_back(-9999);
+//               TriggerElectronPhis.push_back(-9999);
+//               TriggerElectronEnergies.push_back(-9999);
+//             }
+//           }
+          
+        if (UseElMVA) {
+            // See singleLepCalc for more IDs and usingV2
+            elIsMVATight80.push_back((*iel)->electronID("mvaEleID-Fall17-noIso-V2-wp80"));
+            elIsMVATight90.push_back((*iel)->electronID("mvaEleID-Fall17-noIso-V2-wp90"));
+            elIsMVALoose.push_back((*iel)->electronID("mvaEleID-Fall17-noIso-V2-wpLoose"));
+            elMVAValue.push_back((*iel)->userFloat("ElectronMVAEstimatorRun2Fall17NoIsoV2Values"));
+
+            elIsMVATightIso80.push_back((*iel)->electronID("mvaEleID-Fall17-iso-V2-wp80"));
+            elIsMVATightIso90.push_back((*iel)->electronID("mvaEleID-Fall17-iso-V2-wp90"));
+            elIsMVALooseIso.push_back((*iel)->electronID("mvaEleID-Fall17-iso-V2-wpLoose"));
+            elMVAValue_iso.push_back((*iel)->userFloat("ElectronMVAEstimatorRun2Fall17IsoV2Values"));
+        }
+        
+        elIsTight.push_back((*iel)->electronID("cutBasedElectronID-Fall17-94X-V2-tight"));
+        elIsMedium.push_back((*iel)->electronID("cutBasedElectronID-Fall17-94X-V2-medium"));
+        elIsLoose.push_back((*iel)->electronID("cutBasedElectronID-Fall17-94X-V2-loose"));
+        elIsVeto.push_back((*iel)->electronID("cutBasedElectronID-Fall17-94X-V2-veto"));
+
+
+
+        if(isMc && keepFullMChistory){
+            //cout << "start\n";
+            edm::Handle<reco::GenParticleCollection> genParticles;
+            event.getByToken(genParticlesToken, genParticles);
+            int matchId = findMatch(*genParticles, 11, (*iel)->eta(), (*iel)->phi());
+            double closestDR = 10000.;
+            //cout << "matchId "<<matchId <<endl;
+            if (matchId>=0) {
+              const reco::GenParticle & p = (*genParticles).at(matchId);
+              closestDR = mdeltaR( (*iel)->eta(), (*iel)->phi(), p.eta(), p.phi());
+              //cout << "closestDR "<<closestDR <<endl;
+              if(closestDR < 0.3){
+                elGen_Reco_dr.push_back(closestDR);
+                elPdgId.push_back(p.pdgId());
+                elStatus.push_back(p.status());
+                elMatched.push_back(1);
+                elMatchedPt.push_back( p.pt());
+                elMatchedEta.push_back(p.eta());
+                elMatchedPhi.push_back(p.phi());
+                elMatchedEnergy.push_back(p.energy());
+                int oldSize = elMother_id.size();
+                fillMotherInfo(p.mother(), 0, elMother_id, elMother_status, elMother_pt, elMother_eta, elMother_phi, elMother_energy);
+                elNumberOfMothers.push_back(elMother_id.size()-oldSize);
+              }
+            }
+            if(closestDR >= 0.3){
+              elNumberOfMothers.push_back(-1);
+              elGen_Reco_dr.push_back(-1.0);
+              elPdgId.push_back(-1);
+              elStatus.push_back(-1);
+              elMatched.push_back(0);
+              elMatchedPt.push_back(-1000.0);
+              elMatchedEta.push_back(-1000.0);
+              elMatchedPhi.push_back(-1000.0);
+              elMatchedEnergy.push_back(-1000.0);
+            
+            }
+          
+          
+        }//closing the isMC checking criteria
+      }
+      //increment index
+      ElIndex+=1;
+    }
+    
+    //trigger info
+    SetValue("TrigElPt",TriggerElectronPts);
+    SetValue("TrigElEta",TriggerElectronEtas);
+    SetValue("TrigElPhi",TriggerElectronPhis);
+    SetValue("TrigElEnergy",TriggerElectronEnergies);
+    SetValue("TrigElFilters",TriggerElectronFilters);
+
+    //Four std::vector
+    SetValue("elPt"     , elPt);
+    SetValue("elEta"    , elEta);
+    SetValue("elPhi"    , elPhi);
+    SetValue("elEnergy" , elEnergy);
+
+    //cmsdas variables
+    SetValue("diElMass", diElMass);
+    SetValue("elCharge1", elCharge1);
+    SetValue("elCharge2", elCharge2);
+    
+    SetValue("elGsfCharge",elGsfCharge);
+    SetValue("elCtfCharge",elCtfCharge);
+    SetValue("elScPixCharge",elScPixCharge);
+    SetValue("elCharge", elCharge);
+
+    //Quality requirements
+    SetValue("elRelIso" , elRelIso); //Isolation
+    SetValue("elDxy"    , elDxy);    //Dxy
+    SetValue("elNotConversion" , elNotConversion);  //Conversion rejection
+    SetValue("elChargeConsistent", elChargeConsistent);
+    SetValue("elIsEBEE", elIsEBEE);
+
+    SetValue("elQuality", elQuality); // Not used -- June 12, 2019.
+    SetValue("elMiniIsoEA",elMiniIsoEA); // Not used -- June 12, 2019.
+    SetValue("elMiniIsoDB",elMiniIsoDB); // Not used -- June 12, 2019.
+    SetValue("elMiniIsoSUSY",elMiniIsoSUSY); // Not used -- June 12, 2019.
+
+    //this value not specific to electrons but we set it here
+    SetValue("rhoNC",_rhoNC);
+
+    //ID cuts
+    SetValue("elDeta", elDeta);
+    SetValue("elDphi", elDphi);
+    SetValue("elSihih", elSihih);
+    SetValue("elHoE", elHoE);
+    SetValue("elD0", elD0);
+    SetValue("elSIP3D",elSIP3D);
+    SetValue("elDZ", elDZ);
+    SetValue("elOoemoop", elOoemoop);
+    SetValue("elMHits", elMHits);
+    SetValue("elVtxFitConv", elVtxFitConv);
+
+
+    SetValue("elMVAValue", elMVAValue);
+    SetValue("elIsMVATight90", elIsMVATight90);
+    SetValue("elIsMVATight80", elIsMVATight80);
+    SetValue("elIsMVALoose", elIsMVALoose);
+
+    SetValue("elMVAValue_iso", elMVAValue_iso);
+    SetValue("elIsMVATightIso90",elIsMVATightIso90);
+    SetValue("elIsMVATightIso80",elIsMVATightIso80);
+    SetValue("elIsMVALooseIso",elIsMVALooseIso);
+
+    SetValue("elIsTight", elIsTight);
+    SetValue("elIsMedium", elIsMedium);
+    SetValue("elIsLoose", elIsLoose);
+    SetValue("elIsVeto", elIsVeto);
+
+
+    //Extra info about isolation
+    SetValue("elChIso" , elChIso);
+    SetValue("elNhIso" , elNhIso);
+    SetValue("elPhIso" , elPhIso);
+    SetValue("elAEff"  , elAEff);
+    SetValue("elRhoIso", elRhoIso);
+    SetValue("elPUIso", elPUIso);
+    
+    //MC matching -- mother information
+    SetValue("elNumberOfMothers", elNumberOfMothers);
+    SetValue("elGen_Reco_dr", elGen_Reco_dr);
+    SetValue("elPdgId", elPdgId);
+    SetValue("elStatus", elStatus);
+    SetValue("elMatched",elMatched);
+    SetValue("elMother_pt", elMother_pt);
+    SetValue("elMother_eta", elMother_eta);
+    SetValue("elMother_phi", elMother_phi);
+    SetValue("elMother_energy", elMother_energy);
+    SetValue("elMother_status", elMother_status);
+    SetValue("elMother_id", elMother_id);
+    //Matched gen muon information:
+    SetValue("elMatchedPt", elMatchedPt);
+    SetValue("elMatchedEta", elMatchedEta);
+    SetValue("elMatchedPhi", elMatchedPhi);
+    SetValue("elMatchedEnergy", elMatchedEnergy);
+    
 
 }
 

@@ -7,8 +7,6 @@
 #include "FWLJMET/LJMet/interface/LjmetFactory.h"
 #include "FWLJMET/LJMet/interface/LjmetEventContent.h"
 
-#include "FWLJMET/LJMet/interface/TopElectronSelector.h"
-
 #include "EgammaAnalysis/ElectronTools/interface/ElectronEffectiveArea.h"
 #include "DataFormats/MuonReco/interface/MuonPFIsolation.h"
 
@@ -65,10 +63,10 @@ private:
     void AnalyzeDataType(edm::Event const & event, BaseEventSelector * selector);
     void AnalyzeTriggers(edm::Event const & event, BaseEventSelector * selector);
     void AnalyzePV(edm::Event const & event, BaseEventSelector * selector);
+    void AnalyzeElectron(edm::Event const & event, BaseEventSelector * selector);
 //     void AnalyzePU(edm::Event const & event, BaseEventSelector * selector);
 //     void AnalyzeBadDupMu(edm::Event const & event, BaseEventSelector * selector);
 //     void AnalyzeMuon(edm::Event const & event, BaseEventSelector * selector);
-//     void AnalyzeElectron(edm::Event const & event, BaseEventSelector * selector);
 //     void AnalyzeJets(edm::Event const & event, BaseEventSelector * selector);
 //     void AnalyzeAK8Jets(edm::Event const & event, BaseEventSelector * selector);
 //     void AnalyzeMET(edm::Event const & event, BaseEventSelector * selector);
@@ -84,37 +82,28 @@ private:
     
     //PV
     std::vector<reco::Vertex> goodPVs;
+    
+    //Electron
+    bool UseElMVA;
 
-//     edm::InputTag             genParticles_it;
-//     edm::InputTag             packedPFCandsLabel_;
-//     edm::InputTag             triggerObjects_;
-
-//     //get electrons for mva vid
-//     edm::InputTag electronsMiniAODLabel_;
-//     edm::InputTag eleLooseIdMapLabel_;
-//     edm::InputTag eleTightIdMapLabel_;
-//     bool UseElMVA;
-// 
-//     edm::InputTag mvaValuesMapLabel_;
-// 
-//     bool keepFullMChistory;
-//     double rhoIso;
-//     
+    //Misc
+    bool keepFullMChistory;
+    double rhoIso;
+        
 //     bool orlhew;
 //     std::string basePDFname;
 //     std::string newPDFname;
 
-//     boost::shared_ptr<TopElectronSelector>     electronSelL_, electronSelM_, electronSelT_;
 
     edm::EDGetTokenT<edm::TriggerResults>                    triggersToken;
     edm::EDGetTokenT<pat::TriggerObjectStandAloneCollection> triggerObjectToken;
     edm::EDGetTokenT<reco::VertexCollection>                 pvToken;
+    edm::EDGetTokenT<double>                           rhoJetsNCToken;
+    edm::EDGetTokenT<double>                           rhoJetsToken;
+    edm::EDGetTokenT<pat::PackedCandidateCollection>   PFCandToken;
+    edm::EDGetTokenT<reco::GenParticleCollection>      genParticlesToken;
 //     edm::EDGetTokenT<std::vector<PileupSummaryInfo>>   PupInfoToken;
 //     edm::EDGetTokenT<edm::TriggerResults >             muflagtagToken;
-//     edm::EDGetTokenT<double>                           rhoJetsNCToken;
-//     edm::EDGetTokenT<double>                           rhoJetsToken;
-//     edm::EDGetTokenT<pat::PackedCandidateCollection>   PFCandToken;
-//     edm::EDGetTokenT<reco::GenParticleCollection>      genParticlesToken;
 //     edm::EDGetTokenT<std::vector<pat::MET> >           METnoHFtoken;
 //     edm::EDGetTokenT<std::vector<pat::MET> >           METmodToken;
 //     edm::EDGetTokenT<GenEventInfoProduct>              genToken;
