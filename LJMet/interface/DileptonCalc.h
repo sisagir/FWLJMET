@@ -64,7 +64,7 @@ private:
 
     void AnalyzeDataType(edm::Event const & event, BaseEventSelector * selector);
     void AnalyzeTriggers(edm::Event const & event, BaseEventSelector * selector);
-//     void AnalyzePV(edm::Event const & event, BaseEventSelector * selector);
+    void AnalyzePV(edm::Event const & event, BaseEventSelector * selector);
 //     void AnalyzePU(edm::Event const & event, BaseEventSelector * selector);
 //     void AnalyzeBadDupMu(edm::Event const & event, BaseEventSelector * selector);
 //     void AnalyzeMuon(edm::Event const & event, BaseEventSelector * selector);
@@ -76,10 +76,14 @@ private:
     
     bool                      debug;
     bool                      isMc;
+
     std::string               dataType;
 
 	//Triggers
     bool doTriggerStudy_; 
+    
+    //PV
+    std::vector<reco::Vertex> goodPVs;
 
 //     edm::InputTag             genParticles_it;
 //     edm::InputTag             packedPFCandsLabel_;
@@ -101,11 +105,10 @@ private:
 //     std::string newPDFname;
 
 //     boost::shared_ptr<TopElectronSelector>     electronSelL_, electronSelM_, electronSelT_;
-//     std::vector<reco::Vertex> goodPVs;
 
     edm::EDGetTokenT<edm::TriggerResults>                    triggersToken;
     edm::EDGetTokenT<pat::TriggerObjectStandAloneCollection> triggerObjectToken;
-//     edm::EDGetTokenT<reco::VertexCollection>           pvToken;
+    edm::EDGetTokenT<reco::VertexCollection>                 pvToken;
 //     edm::EDGetTokenT<std::vector<PileupSummaryInfo>>   PupInfoToken;
 //     edm::EDGetTokenT<edm::TriggerResults >             muflagtagToken;
 //     edm::EDGetTokenT<double>                           rhoJetsNCToken;

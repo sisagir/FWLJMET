@@ -14,14 +14,18 @@ int DileptonCalc::BeginJob(edm::ConsumesCollector && iC)
     isMc      = mPset.getParameter<bool>("isMc");
     dataType  = mPset.getParameter<std::string>("dataType");
     
+    
+    //Triggers
     doTriggerStudy_ = mPset.getParameter<bool>("doTriggerStudy");
     triggersToken      = iC.consumes<edm::TriggerResults>(mPset.getParameter<edm::InputTag>("TriggerBits"));
     triggerObjectToken = iC.consumes<pat::TriggerObjectStandAloneCollection>(mPset.getParameter<edm::InputTag>("TriggerObjects"));
 
+    //PV
+    pvToken = iC.consumes<reco::VertexCollection>(mPset.getParameter<edm::InputTag>("pvSrc"));
+
 // 
 //     rhoJetsToken = iC.consumes<double>(mPset.getParameter<edm::InputTag>("rhoJetsInputTag"));
 //     
-//     pvToken = iC.consumes<reco::VertexCollection>(mPset.getParameter<edm::InputTag>("pvSrc"));
 //         
 //     genParticlesToken = iC.consumes<reco::GenParticleCollection>(mPset.getParameter<edm::InputTag>("genParticlesCollection"));
 // 
@@ -100,6 +104,8 @@ int DileptonCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * sel
     AnalyzeDataType(event, selector);
     
     AnalyzeTriggers(event, selector);
+    
+    AnalyzePV(event, selector);
 
 
     //
@@ -112,18 +118,6 @@ int DileptonCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * sel
     edm::Ptr<pat::MET>                    const & pMet             = selector->GetMet();
     std::vector<unsigned int>             const & vSelTriggers     = selector->GetSelTriggers();
         
-
-    //
-    //_____ Event kinematics __________________
-    //
-/*    
-    //Primary vertices
-    edm::Handle<std::vector<reco::Vertex> > pvHandle;
-    event.getByToken(pvToken, pvHandle);
-    goodPVs = *(pvHandle.product());
-    
-    SetValue("nPV", (int)goodPVs.size());
-*/ 
     
     //
     //_____ Electrons _________________________
@@ -1701,6 +1695,20 @@ void DileptonCalc::AnalyzeTriggers(edm::Event const & event, BaseEventSelector *
     SetValue("HLT_Ele23_CaloIdM_TrackIdM_PFJet30_v",HLT_Ele23_CaloIdM_TrackIdM_PFJet30_v);
 
 
+
+}
+
+void DileptonCalc::AnalyzePV(edm::Event const & event, BaseEventSelector * selector)
+{
+
+    //This currently not the same as calculated by MultiLepCalc ! Should this be modified? -- June 12, 2019 
+
+    //Primary vertices
+    edm::Handle<std::vector<reco::Vertex> > pvHandle;
+    event.getByToken(pvToken, pvHandle);
+    goodPVs = *(pvHandle.product());
+    
+    SetValue("nPV", (int)goodPVs.size());
 
 }
 
