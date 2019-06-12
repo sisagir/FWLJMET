@@ -489,7 +489,6 @@ DileptonSelector_cfg.trigger_path_mm = hlt_path_mm
 
 DileptonCalc_cfg = cms.PSet(
 
-
             debug                  = cms.bool(True),
             isMc                   = cms.bool(isMC),
             dataType               = cms.string('None'), #Choose between EE/EM/MM/ALL/ElEl/ElMu/MuMu/All. Need to automate this. But what is this for??? -- June 11, 2019.
@@ -544,15 +543,10 @@ DileptonCalc_cfg = cms.PSet(
             #Gen stuff
             genParticlesCollection = cms.InputTag("prunedGenParticles"),
             genJetsCollection      = cms.InputTag("slimmedGenJets"),
-            saveGenHT          = cms.bool(False),
+            
             OverrideLHEWeights = cms.bool(isVLQsignal), #TRUE FOR SIGNALS, False otherwise
             basePDFname        = cms.string('NNPDF31_nnlo_as_0118_nf_4'),
             newPDFname         = cms.string('NNPDF31_nnlo_as_0118_nf_4_mc_hessian'),
-            keepPDGID          = cms.vuint32(1, 2, 3, 4, 5, 6, 21, 11, 12, 13, 14, 15, 16, 24),
-            keepMomPDGID       = cms.vuint32(6, 24),
-            keepPDGIDForce     = cms.vuint32(6,6),
-            keepStatusForce    = cms.vuint32(62,22),
-            cleanGenJets       = cms.bool(True),
 
             #Btagging - Btag info needs to be passed here again if Calc uses Btagging.
             btagOP                   = cms.string('MEDIUM'),
@@ -944,11 +938,11 @@ elif(isMC):
        #process.packedJetsAK8Puppi *
        #process.QGTagger *
        process.ecalBadCalibReducedMINIAODFilter *
-       process.ljmet #*#(ntuplizer) 
-#        process.ljmet_JECup *#(ntuplizer) 
-#        process.ljmet_JECdown *#(ntuplizer) 
-#        process.ljmet_JERup *#(ntuplizer) 
-#        process.ljmet_JERdown #(ntuplizer) 
+       process.ljmet *#(ntuplizer) 
+       process.ljmet_JECup *#(ntuplizer) 
+       process.ljmet_JECdown *#(ntuplizer) 
+       process.ljmet_JERup *#(ntuplizer) 
+       process.ljmet_JERdown #(ntuplizer) 
     )
 else: #Data 
     process.p = cms.Path(

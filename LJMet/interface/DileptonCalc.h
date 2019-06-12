@@ -73,6 +73,7 @@ private:
     void AnalyzeJets(edm::Event const & event, BaseEventSelector * selector);
     void AnalyzeAK8Jets(edm::Event const & event, BaseEventSelector * selector);
     void AnalyzeMET(edm::Event const & event, BaseEventSelector * selector);
+    void AnalyzeGenInfo(edm::Event const & event, BaseEventSelector * selector);
     
     bool                      debug;
     bool                      isMc;
@@ -102,12 +103,11 @@ private:
 
     //Btag
     BTagSFUtil btagSfUtil;
-        
-
-        
-//     bool orlhew;
-//     std::string basePDFname;
-//     std::string newPDFname;
+    
+    //GenInfo        
+    bool orlhew;
+    std::string basePDFname;
+    std::string newPDFname;
 
 
     edm::EDGetTokenT<edm::TriggerResults>                    triggersToken;
@@ -121,10 +121,8 @@ private:
     edm::EDGetTokenT<pat::JetCollection>               AK8jetsToken;
     edm::EDGetTokenT<std::vector<pat::MET> >           METnoHFtoken;
     edm::EDGetTokenT<std::vector<pat::MET> >           METmodToken;
-//     edm::EDGetTokenT<std::vector<PileupSummaryInfo>>   PupInfoToken;
-//     edm::EDGetTokenT<edm::TriggerResults >             muflagtagToken;
-//     edm::EDGetTokenT<GenEventInfoProduct>              genToken;
-//     edm::EDGetTokenT<LHEEventProduct>                  LHEToken;
+    edm::EDGetTokenT<GenEventInfoProduct>              genToken;
+    edm::EDGetTokenT<LHEEventProduct>                  LHEToken;
 
 
     int findMatch(const reco::GenParticleCollection & genParticles, int idToMatch, double eta, double phi);

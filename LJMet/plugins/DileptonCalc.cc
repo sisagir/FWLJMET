@@ -31,8 +31,6 @@ int DileptonCalc::BeginJob(edm::ConsumesCollector && iC)
     PFCandToken = iC.consumes<pat::PackedCandidateCollection>(mPset.getParameter<edm::InputTag>("PFparticlesCollection"));
     keepFullMChistory = mPset.getParameter<bool>("keepFullMChistory");
     if(debug) cout << "["+GetName()+"]: "<< "keepFullMChistory : " <<    keepFullMChistory << endl;
-    genParticlesToken = iC.consumes<reco::GenParticleCollection>(mPset.getParameter<edm::InputTag>("genParticlesCollection"));
-    genJetsToken = iC.consumes<std::vector< reco::GenJet> >(mPset.getParameter<edm::InputTag>("genJetsCollection"));
     
     //Electron    
     UseElMVA = mPset.getParameter<bool>("UseElMVA");
@@ -52,22 +50,24 @@ int DileptonCalc::BeginJob(edm::ConsumesCollector && iC)
 	//MET
 	METnoHFtoken        = iC.consumes<std::vector<pat::MET>>(mPset.getParameter<edm::InputTag>("metnohf_collection"));
 	METmodToken         = iC.consumes<std::vector<pat::MET>>(mPset.getParameter<edm::InputTag>("metmod_collection"));
+	
+	
+	//Gen
+    genParticlesToken   = iC.consumes<reco::GenParticleCollection>(mPset.getParameter<edm::InputTag>("genParticlesCollection"));
+    genJetsToken        = iC.consumes<std::vector< reco::GenJet> >(mPset.getParameter<edm::InputTag>("genJetsCollection"));
+	genToken            = iC.consumes<GenEventInfoProduct>(edm::InputTag("generator")); //Hardcoding.
+	LHEToken            = iC.consumes<LHEEventProduct>(edm::InputTag("externalLHEProducer")); //hardcoding.
+	orlhew              = mPset.getParameter<bool>("OverrideLHEWeights");
+	basePDFname         = mPset.getParameter<std::string>("basePDFname");
+	newPDFname          = mPset.getParameter<std::string>("newPDFname");
 
 
-//     //NewPDF stuff    
-//     if (mPset.exists("OverrideLHEWeights")) orlhew = mPset.getParameter<bool>("OverrideLHEWeights");
-//     else                                   orlhew = false;
-//     if (mPset.exists("basePDFname")) basePDFname = mPset.getParameter<std::string>("basePDFname");
-//     else                             basePDFname = "NNPDF31_nnlo_as_0118_nf_4";
-//     if (mPset.exists("newPDFname"))  newPDFname = mPset.getParameter<std::string>("newPDFname");
-//     else                             newPDFname = "NNPDF31_lo_as_0118";
-//     if (orlhew) {
-//         cout << "Overriding LHE weights, using "<<newPDFname<<" as new and "<<basePDFname<<" as base PDF set." << endl;
-//         LHAPDF::Info& cfg = LHAPDF::getConfig();
-//         cfg.set_entry("Verbosity", 0);
-// 
-//     }
-//     else cout << "Writing LHE weights (no override)." << endl;
+    if (orlhew) {
+	  std::cout << "["+GetName()+"]: "<< "Overriding LHE weights, using "<<newPDFname<<" as new and "<<basePDFname<<" as base PDF set." << std::endl;
+	  LHAPDF::Info& cfg = LHAPDF::getConfig();
+	  cfg.set_entry("Verbosity", 0);
+	}
+    else cout << "["+GetName()+"]: "<< "Writing LHE weights (no override)." << endl;
 
     
     return 0;
@@ -97,205 +97,8 @@ int DileptonCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * sel
     AnalyzeAK8Jets(event, selector);
 
     AnalyzeMET(event, selector);
-
     
-    //
-    //_____ Gen Info ______________________________
-    //
-/*    
-    //Four std::vector
-    std::vector <double> genPt;
-    std::vector <double> genEta;
-    std::vector <double> genPhi;
-    std::vector <double> genEnergy;
-    
-    //Identity
-    std::vector <int> genID;
-    std::vector <int> genIndex;
-    std::vector <int> genStatus;
-    std::vector <int> genMotherID;
-    std::vector <int> genMotherIndex;
-    std::vector<bool> genIsFromTau;
-    std::vector<bool> genIsPrompt;
-    std::vector<bool> genPMotherHasC;
-    std::vector<bool> genPMotherHasB;
-    std::vector<int> genPMother;
-
-    double LHEweightorig = 0;
-
-    //event weights
-    std::vector<double> evtWeightsMC;
-    float MCWeight=1;
-    std::vector<double> LHEweights;
-    std::vector<int> LHEweightids;
-
-    std::vector <int> NewPDFids;
-    std::vector <double> NewPDFweights;
-    std::vector <double> NewPDFweightsBase;
-
-    if (isMc){
-      //load info for event weight
-      edm::Handle<GenEventInfoProduct> genEvtInfo;
-      edm::InputTag gen_it("generator");
-      event.getByLabel(gen_it, genEvtInfo );
-
-      std::vector<double> evtWeights = genEvtInfo->weights();
-      double theWeight = genEvtInfo->weight();
-      
-      evtWeightsMC=evtWeights;
-      MCWeight = theWeight;
-      
-      if (orlhew) {
-
-          float x1 = genEvtInfo->pdf()->x.first;
-          float x2 = genEvtInfo->pdf()->x.second;
-          double Q = genEvtInfo->pdf()->scalePDF;
-          int id1 = genEvtInfo->pdf()->id.first;
-          int id2 = genEvtInfo->pdf()->id.second;
-          //std::cout<<"x1 x2 Q id1 id2"<<std::endl;
-          //std::cout<<x1<<" "<<x2<<" "<<Q<<" "<<id1<<" "<<id2<<std::endl;
-
-          //Initialize PDF sets
-          LHAPDF::PDF* basepdf1 = LHAPDF::mkPDF(basePDFname,0);
-          const LHAPDF::GridPDF& pdf1 = * dynamic_cast<const LHAPDF::GridPDF*>(basepdf1);
-  
-          // calculate central PDFs for generator set,
-          double pdf1_gen = pdf1.xfxQ(id1, x1, Q);
-          double pdf2_gen = pdf1.xfxQ(id2, x2, Q);
-          //std::cout<<"pdf1_gen = "<<pdf1_gen<<" pdf2_gen = "<<pdf2_gen<<std::endl;
-          delete basepdf1;
-  
-          const LHAPDF::PDFSet newset(newPDFname);
-          const size_t nmem = newset.size();
-          const std::vector<LHAPDF::PDF*> newpdfs = newset.mkPDFs();
-          for (size_t i = 0; i<nmem; i++) {
-            const LHAPDF::GridPDF& pdf2 = * dynamic_cast<const LHAPDF::GridPDF*>(newpdfs[i]);
-
-            double pdf1_new = pdf2.xfxQ(id1, x1, Q);
-            double pdf2_new = pdf2.xfxQ(id2, x2, Q);
-            NewPDFweights.push_back((pdf1_new*pdf2_new)/(pdf1_gen*pdf2_gen));
-            NewPDFweightsBase.push_back(pdf1_gen*pdf2_gen);
-            NewPDFids.push_back(315000+i);
-
-            delete (newpdfs[i]);
-          }
-        }
-
-      //weights for mc uncertainties
-      edm::Handle<LHEEventProduct> EvtHandle;
-      edm::InputTag theSrc("externalLHEProducer");
-      if(event.getByLabel(theSrc,EvtHandle)){
-            
-                    // Storing LHE weights https://twiki.cern.ch/twiki/bin/viewauth/CMS/LHEReaderCMSSW
-                    // for MC@NLO renormalization and factorization scale. 
-                    // ID numbers 1001 - 1009. (muR,muF) = 
-                    // 0 = 1001: (1,1)    3 = 1004: (2,1)    6 = 1007: (0.5,1)  
-                    // 1 = 1002: (1,2)    4 = 1005: (2,2)   7 = 1008: (0.5,2)  
-                    // 2 = 1003: (1,0.5)  5 = 1006: (2,0.5) 8 = 1009: (0.5,0.5)
-                    // for PDF variations: ID numbers > 2000
-                    
-                    LHEweightorig = EvtHandle->originalXWGTUP();
-
-                    std::string weightidstr;
-                    int weightid;
-                    if(EvtHandle->weights().size() > 0){  
-                      for(unsigned int i = 0; i < EvtHandle->weights().size(); i++){
-                              weightidstr = EvtHandle->weights()[i].id;
-                              weightid = std::stoi(weightidstr);
-                              LHEweights.push_back(EvtHandle->weights()[i].wgt/EvtHandle->originalXWGTUP());
-                              LHEweightids.push_back(weightid);
-                      }
-                    }
-      }
-
-      //load genparticles collection
-      edm::Handle<reco::GenParticleCollection> genParticles;
-      event.getByLabel(genParticlesToken, genParticles);
-      
-      
-      for(size_t i = 0; i < genParticles->size(); i++){
-      
-          const reco::GenParticle & p = (*genParticles).at(i);
-          
-          bool keep=false;
-
-          //attempt using mc gen particle flags
-          if(p.status()==1) keep = true; //all stable out going particles
-          else if( p.isPromptDecayed() ) keep = true; //keep prompt particles which have undergone decay (e.g. B-mesons)
-          else if( p.statusFlags().isPrompt()) keep = true; // keep all prompt particles in case I want to do quark matching
-          else if( p.isDirectPromptTauDecayProductFinalState()) keep = true; //log save leptons from tau decays since they are 'prompt' for us
-          
-
-          if(!keep) continue;    
-
-          bool promptMotherHasB = false;
-          bool promptMotherHasC = false;
-
-          reco::GenParticle* mother = 0;
-          if(p.status()==1){
-            mother = (reco::GenParticle*) p.mother();
-            while(mother){
-                if(mother->isPromptDecayed()) break;
-                else{ mother = (reco::GenParticle*) mother->mother();}
-            }
-          }
-
-          if(mother){
-            HepPDT::ParticleID heppdtid(mother->pdgId());
-            promptMotherHasB = heppdtid.hasBottom();
-            promptMotherHasC = heppdtid.hasCharm();
-          }
-
-          genPMotherHasB.push_back(promptMotherHasB);
-          genPMotherHasC.push_back(promptMotherHasC);
-          if(mother) genPMother.push_back(mother->pdgId());
-          else       genPMother.push_back(-999);
-          //Four std::vector
-          genPt     . push_back(p.pt());
-          genEta    . push_back(p.eta());
-          genPhi    . push_back(p.phi());
-          genEnergy . push_back(p.energy());
-          
-          //Identity
-          genID          . push_back(p.pdgId());
-          genIndex         . push_back((int) i);
-          genStatus        . push_back(p.status());
-          genIsPrompt      . push_back(p.statusFlags().isPrompt());
-          genIsFromTau     . push_back(p.isDirectPromptTauDecayProductFinalState()); //save whether or not a particle came from a prompt tau
-          //mother info - stores mother pdgID if mother exists or -999 if mother doesn't exist. This way the entries will always be aligned with main gen particle entries
-          if(p.mother()) genMotherID.push_back((p.mother())->pdgId());
-          else genMotherID.push_back(-999);
-          //genMotherIndex   . push_back(mInd);
-          
-        }//End loop over gen particles
-    }  //End MC-only if
-    
-    // Four std::vector
-    SetValue("genPt"    , genPt);
-    SetValue("genEta"   , genEta);
-    SetValue("genPhi"   , genPhi);
-    SetValue("genEnergy", genEnergy);
-    
-    // Identity
-    SetValue("genID"         , genID);
-    SetValue("genIndex"      , genIndex);
-    SetValue("genStatus"     , genStatus);
-    SetValue("genMotherID"   , genMotherID);
-    SetValue("genMotherIndex", genMotherIndex);
-    SetValue("genIsPrompt"   , genIsPrompt);
-    SetValue("genIsFromPromptTau", genIsFromTau);
-    SetValue("evtWeightsMC", evtWeightsMC);
-    SetValue("MCWeight",MCWeight);
-    SetValue("LHEweightorig",LHEweightorig);
-    SetValue("LHEWeights",LHEweights);
-    SetValue("LHEWeightIDs",LHEweightids);
-    SetValue("NewPDFids", NewPDFids);
-    SetValue("NewPDFweights", NewPDFweights);
-    SetValue("NewPDFweightsBase", NewPDFweightsBase);
-    SetValue("genPMotherHasC",genPMotherHasC);
-    SetValue("genPMotherHasB",genPMotherHasB);
-    SetValue("genPMother",genPMother);
-*/
+    AnalyzeGenInfo(event, selector);
 
     return 0;
 }
@@ -1663,6 +1466,206 @@ void DileptonCalc::AnalyzeMET(edm::Event const & event, BaseEventSelector * sele
     SetValue("metmod_phi", _metmod_phi);
     SetValue("corr_metmod", _corr_metmod);
     SetValue("corr_metmod_phi", _corr_metmod_phi);
+
+}
+
+void DileptonCalc::AnalyzeGenInfo(edm::Event const & event, BaseEventSelector * selector)
+{
+
+    //
+    //_____ Gen Info ______________________________
+    //
+    
+    //Four std::vector
+    std::vector <double> genPt;
+    std::vector <double> genEta;
+    std::vector <double> genPhi;
+    std::vector <double> genEnergy;
+    
+    //Identity
+    std::vector <int> genID;
+    std::vector <int> genIndex;
+    std::vector <int> genStatus;
+    std::vector <int> genMotherID;
+    std::vector <int> genMotherIndex;
+    std::vector<bool> genIsFromTau;
+    std::vector<bool> genIsPrompt;
+    std::vector<bool> genPMotherHasC;
+    std::vector<bool> genPMotherHasB;
+    std::vector<int> genPMother;
+
+    double LHEweightorig = 0;
+
+    //event weights
+    std::vector<double> evtWeightsMC;
+    float MCWeight=1;
+    std::vector<double> LHEweights;
+    std::vector<int> LHEweightids;
+
+    std::vector <int> NewPDFids;
+    std::vector <double> NewPDFweights;
+    std::vector <double> NewPDFweightsBase;
+
+    if (isMc){
+      //load info for event weight
+      edm::Handle<GenEventInfoProduct> genEvtInfo;
+      event.getByToken(genToken, genEvtInfo );
+
+      std::vector<double> evtWeights = genEvtInfo->weights();
+      double theWeight = genEvtInfo->weight();
+      
+      evtWeightsMC=evtWeights;
+      MCWeight = theWeight;
+      
+      if (orlhew) {
+
+          float x1 = genEvtInfo->pdf()->x.first;
+          float x2 = genEvtInfo->pdf()->x.second;
+          double Q = genEvtInfo->pdf()->scalePDF;
+          int id1 = genEvtInfo->pdf()->id.first;
+          int id2 = genEvtInfo->pdf()->id.second;
+          //std::cout<<"x1 x2 Q id1 id2"<<std::endl;
+          //std::cout<<x1<<" "<<x2<<" "<<Q<<" "<<id1<<" "<<id2<<std::endl;
+
+          //Initialize PDF sets
+          LHAPDF::PDF* basepdf1 = LHAPDF::mkPDF(basePDFname,0);
+          const LHAPDF::GridPDF& pdf1 = * dynamic_cast<const LHAPDF::GridPDF*>(basepdf1);
+  
+          // calculate central PDFs for generator set,
+          double pdf1_gen = pdf1.xfxQ(id1, x1, Q);
+          double pdf2_gen = pdf1.xfxQ(id2, x2, Q);
+          //std::cout<<"pdf1_gen = "<<pdf1_gen<<" pdf2_gen = "<<pdf2_gen<<std::endl;
+          delete basepdf1;
+  
+          const LHAPDF::PDFSet newset(newPDFname);
+          const size_t nmem = newset.size();
+          const std::vector<LHAPDF::PDF*> newpdfs = newset.mkPDFs();
+          for (size_t i = 0; i<nmem; i++) {
+            const LHAPDF::GridPDF& pdf2 = * dynamic_cast<const LHAPDF::GridPDF*>(newpdfs[i]);
+
+            double pdf1_new = pdf2.xfxQ(id1, x1, Q);
+            double pdf2_new = pdf2.xfxQ(id2, x2, Q);
+            NewPDFweights.push_back((pdf1_new*pdf2_new)/(pdf1_gen*pdf2_gen));
+            NewPDFweightsBase.push_back(pdf1_gen*pdf2_gen);
+            NewPDFids.push_back(315000+i);
+
+            delete (newpdfs[i]);
+          }
+        }
+
+      //weights for mc uncertainties
+      edm::Handle<LHEEventProduct> EvtHandle;
+      if(event.getByToken(LHEToken,EvtHandle)){
+            
+                    // Storing LHE weights https://twiki.cern.ch/twiki/bin/viewauth/CMS/LHEReaderCMSSW
+                    // for MC@NLO renormalization and factorization scale. 
+                    // ID numbers 1001 - 1009. (muR,muF) = 
+                    // 0 = 1001: (1,1)    3 = 1004: (2,1)    6 = 1007: (0.5,1)  
+                    // 1 = 1002: (1,2)    4 = 1005: (2,2)   7 = 1008: (0.5,2)  
+                    // 2 = 1003: (1,0.5)  5 = 1006: (2,0.5) 8 = 1009: (0.5,0.5)
+                    // for PDF variations: ID numbers > 2000
+                    
+                    LHEweightorig = EvtHandle->originalXWGTUP();
+
+                    std::string weightidstr;
+                    int weightid;
+                    if(EvtHandle->weights().size() > 0){  
+                      for(unsigned int i = 0; i < EvtHandle->weights().size(); i++){
+                              weightidstr = EvtHandle->weights()[i].id;
+                              weightid = std::stoi(weightidstr);
+                              LHEweights.push_back(EvtHandle->weights()[i].wgt/EvtHandle->originalXWGTUP());
+                              LHEweightids.push_back(weightid);
+                      }
+                    }
+      }
+
+      //load genparticles collection
+      edm::Handle<reco::GenParticleCollection> genParticles;
+      event.getByToken(genParticlesToken, genParticles);
+      
+      
+      for(size_t i = 0; i < genParticles->size(); i++){
+      
+          const reco::GenParticle & p = (*genParticles).at(i);
+          
+          bool keep=false;
+
+          //attempt using mc gen particle flags
+          if(p.status()==1) keep = true; //all stable out going particles
+          else if( p.isPromptDecayed() ) keep = true; //keep prompt particles which have undergone decay (e.g. B-mesons)
+          else if( p.statusFlags().isPrompt()) keep = true; // keep all prompt particles in case I want to do quark matching
+          else if( p.isDirectPromptTauDecayProductFinalState()) keep = true; //log save leptons from tau decays since they are 'prompt' for us
+          
+
+          if(!keep) continue;    
+
+          bool promptMotherHasB = false;
+          bool promptMotherHasC = false;
+
+          reco::GenParticle* mother = 0;
+          if(p.status()==1){
+            mother = (reco::GenParticle*) p.mother();
+            while(mother){
+                if(mother->isPromptDecayed()) break;
+                else{ mother = (reco::GenParticle*) mother->mother();}
+            }
+          }
+
+          if(mother){
+            HepPDT::ParticleID heppdtid(mother->pdgId());
+            promptMotherHasB = heppdtid.hasBottom();
+            promptMotherHasC = heppdtid.hasCharm();
+          }
+
+          genPMotherHasB.push_back(promptMotherHasB);
+          genPMotherHasC.push_back(promptMotherHasC);
+          if(mother) genPMother.push_back(mother->pdgId());
+          else       genPMother.push_back(-999);
+          //Four std::vector
+          genPt     . push_back(p.pt());
+          genEta    . push_back(p.eta());
+          genPhi    . push_back(p.phi());
+          genEnergy . push_back(p.energy());
+          
+          //Identity
+          genID          . push_back(p.pdgId());
+          genIndex         . push_back((int) i);
+          genStatus        . push_back(p.status());
+          genIsPrompt      . push_back(p.statusFlags().isPrompt());
+          genIsFromTau     . push_back(p.isDirectPromptTauDecayProductFinalState()); //save whether or not a particle came from a prompt tau
+          //mother info - stores mother pdgID if mother exists or -999 if mother doesn't exist. This way the entries will always be aligned with main gen particle entries
+          if(p.mother()) genMotherID.push_back((p.mother())->pdgId());
+          else genMotherID.push_back(-999);
+          //genMotherIndex   . push_back(mInd);
+          
+        }//End loop over gen particles
+    }  //End MC-only if
+    
+    // Four std::vector
+    SetValue("genPt"    , genPt);
+    SetValue("genEta"   , genEta);
+    SetValue("genPhi"   , genPhi);
+    SetValue("genEnergy", genEnergy);
+    
+    // Identity
+    SetValue("genID"         , genID);
+    SetValue("genIndex"      , genIndex);
+    SetValue("genStatus"     , genStatus);
+    SetValue("genMotherID"   , genMotherID);
+    SetValue("genMotherIndex", genMotherIndex);
+    SetValue("genIsPrompt"   , genIsPrompt);
+    SetValue("genIsFromPromptTau", genIsFromTau);
+    SetValue("evtWeightsMC", evtWeightsMC);
+    SetValue("MCWeight",MCWeight);
+    SetValue("LHEweightorig",LHEweightorig);
+    SetValue("LHEWeights",LHEweights);
+    SetValue("LHEWeightIDs",LHEweightids);
+    SetValue("NewPDFids", NewPDFids);
+    SetValue("NewPDFweights", NewPDFweights);
+    SetValue("NewPDFweightsBase", NewPDFweightsBase);
+    SetValue("genPMotherHasC",genPMotherHasC);
+    SetValue("genPMotherHasB",genPMotherHasB);
+    SetValue("genPMother",genPMother);
 
 }
 
