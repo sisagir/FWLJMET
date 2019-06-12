@@ -64,9 +64,9 @@ private:
     void AnalyzeTriggers(edm::Event const & event, BaseEventSelector * selector);
     void AnalyzePV(edm::Event const & event, BaseEventSelector * selector);
     void AnalyzeElectron(edm::Event const & event, BaseEventSelector * selector);
+    void AnalyzeMuon(edm::Event const & event, BaseEventSelector * selector);
 //     void AnalyzePU(edm::Event const & event, BaseEventSelector * selector);
 //     void AnalyzeBadDupMu(edm::Event const & event, BaseEventSelector * selector);
-//     void AnalyzeMuon(edm::Event const & event, BaseEventSelector * selector);
 //     void AnalyzeJets(edm::Event const & event, BaseEventSelector * selector);
 //     void AnalyzeAK8Jets(edm::Event const & event, BaseEventSelector * selector);
 //     void AnalyzeMET(edm::Event const & event, BaseEventSelector * selector);

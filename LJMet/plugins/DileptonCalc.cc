@@ -69,308 +69,17 @@ int DileptonCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * sel
     AnalyzePV(event, selector);
     
     AnalyzeElectron(event, selector);
+    
+    AnalyzeMuon(event, selector);
 
     //
     // _____ Get objects from the selector _____________________
     //
-    std::vector<edm::Ptr<pat::Muon> >     const & vSelMuons        = selector->GetSelMuons();
     std::vector<edm::Ptr<pat::Jet> >      const & vSelJets         = selector->GetSelJets();
     std::vector<pat::Jet>                 const & vSelCleanedJets  = selector->GetSelCleanedJets();
     edm::Ptr<pat::MET>                    const & pMet             = selector->GetMet();
-    std::vector<unsigned int>             const & vSelTriggers     = selector->GetSelTriggers();
-        
-    
-    
-    //
-    //_____ Muons _____________________________
-    //
-/*    
-    std::vector <int> muCharge;
-    std::vector <bool> muGlobal;
-    std::vector <bool> muTracker;
-    std::vector <bool> muPF;
-    //Four std::vector
-    std::vector <double> muPt;
-    std::vector <double> muEta;
-    std::vector <double> muPhi;
-    std::vector <double> muEnergy;
-    
-    //Quality criteria
-    std::vector <double> muChi2;
-    std::vector <double> muDxy;
-    std::vector <double> muDz;
-    std::vector <double> muSIP3D;
-    std::vector <double> muRelIso;
-    std::vector <double> muMiniIsoEA;
-    std::vector <double> muMiniIsoDB;
-    std::vector <double> muMiniIsoSUSY;
-    
-    std::vector <int> muNValMuHits;
-    std::vector <int> muNMatchedStations;
-    std::vector <int> muNValPixelHits;
-    std::vector <int> muNTrackerLayers;
-    
-    //Extra info about isolation
-    std::vector <double> muChIso;
-    std::vector <double> muNhIso;
-    std::vector <double> muGIso;
-    std::vector <double> muPuIso;
-
-    //ID info
-    std::vector <int> muIsTight;
-    std::vector<int> muIsLoose;
-    
-    //Generator level information -- MC matching
-    std::vector<double> muGen_Reco_dr;
-    std::vector<int> muPdgId;
-    std::vector<int> muStatus;
-    std::vector<int> muMatched;
-    std::vector<int> muNumberOfMothers;
-    std::vector<double> muMother_pt;
-    std::vector<double> muMother_eta;
-    std::vector<double> muMother_phi;
-    std::vector<double> muMother_energy;
-    std::vector<int> muMother_id;
-    std::vector<int> muMother_status;
-    //Matched gen muon information:
-    std::vector<double> muMatchedPt;
-    std::vector<double> muMatchedEta;
-    std::vector<double> muMatchedPhi;
-    std::vector<double> muMatchedEnergy;
-
-    std::vector<std::string> TriggerMuonFilters;
-    std::vector<double> TriggerMuonPts;
-    std::vector<double> TriggerMuonEtas;
-    std::vector<double> TriggerMuonPhis;
-    std::vector<double> TriggerMuonEnergies;
-    
-
-    //make index for muons
-    int MuIndex = 0;
-    for (std::vector<edm::Ptr<pat::Muon> >::const_iterator imu = vSelMuons.begin(); imu != vSelMuons.end(); imu++){
-        //Protect against muons without tracks (should never happen, but just in case)
-        if ((*imu)->globalTrack().isNonnull() and (*imu)->globalTrack().isAvailable() and
-            (*imu)->innerTrack().isNonnull()  and (*imu)->innerTrack().isAvailable())
-            {
             
-            
-            //charge
-            muCharge.push_back((*imu)->charge());
-            
-            //Four std::vector
-            muPt     . push_back((*imu)->pt());
-            muEta    . push_back((*imu)->eta());
-            muPhi    . push_back((*imu)->phi());
-            muEnergy . push_back((*imu)->energy());
-            
-            muIsTight.push_back((*imu)->passed(reco::Muon::CutBasedIdTight));
-            muIsLoose.push_back((*imu)->passed(reco::Muon::CutBasedIdLoose));
-
-            muGlobal.push_back((*imu)->isGlobalMuon());
-            muTracker.push_back((*imu)->isTrackerMuon());
-            muPF.push_back((*imu)->isPFMuon());
-            
-            //Chi2
-            muChi2 . push_back((*imu)->globalTrack()->normalizedChi2());
-            
-            //new definition of iso based on muon pog page
-            const reco::MuonPFIsolation pfIsolationR04 = (*imu)->pfIsolationR04();
-            double chIso  = pfIsolationR04.sumChargedHadronPt;
-            double nhIso  = pfIsolationR04.sumNeutralHadronEt;
-            double gIso   = pfIsolationR04.sumPhotonEt;
-            double puIso  = pfIsolationR04.sumPUPt;
-            double relIso = (chIso + std::max(0.,nhIso + gIso - 0.5*puIso)) / (*imu)->pt();
-            muRelIso . push_back(relIso);
-
-            muChIso . push_back(chIso);
-            muNhIso . push_back(nhIso);
-            muGIso  . push_back(gIso);
-            muPuIso . push_back(puIso);
-
-            //get miniIso
-            muMiniIsoEA.push_back(getPFMiniIsolation_EffectiveArea(packedPFCands, dynamic_cast<const reco::Candidate *>(imu->get()),0.05, 0.2, 10., false, false,myRhoJetsNC));
-            muMiniIsoDB.push_back(getPFMiniIsolation_DeltaBeta(packedPFCands, dynamic_cast<const reco::Candidate *>(imu->get()), 0.05, 0.2, 10., false));            
-            muMiniIsoSUSY.push_back(getPFMiniIsolation_SUSY(packedPFCands, dynamic_cast<const reco::Candidate *>(imu->get()),0.05, 0.2, 10., false, false,myRhoJetsNC));
-            float musip3d;
-            pat::Muon::IpType muIP3d = (pat::Muon::IpType) 1;
-            
-            //IP: for some reason this is with respect to the first vertex in the collection
-            if (goodPVs.size() > 0){
-                muDxy . push_back((*imu)->dB());
-                muDz  . push_back((*imu)->muonBestTrack()->dz(goodPVs.at(0).position()));
-                //muon sip3d;
-                musip3d = (*imu)->dB(muIP3d) / (*imu)->edB(muIP3d);
-
-            } 
-            else {
-                muDxy . push_back(-999);
-                muDz  . push_back(-999);
-                musip3d=-999;
-            }
-            muSIP3D.push_back(musip3d);
-            
-            //Numbers of hits
-            muNValMuHits       . push_back((*imu)->globalTrack()->hitPattern().numberOfValidMuonHits());
-            muNMatchedStations . push_back((*imu)->numberOfMatchedStations());
-            muNValPixelHits    . push_back((*imu)->innerTrack()->hitPattern().numberOfValidPixelHits());
-            muNTrackerLayers   . push_back((*imu)->innerTrack()->hitPattern().trackerLayersWithMeasurement());
-            
-            
-            //Trigger Matching - store 4-std::vector and filter information for all trigger objects deltaR matched to electrons
-//             if(doTriggerStudy_){
-//                 //read in trigger objects
-//                 edm::Handle<pat::TriggerObjectStandAloneCollection> triggerObjects;
-//                 event.getByToken(triggerObjectToken,triggerObjects);
-//                 
-//                 edm::Handle<edm::TriggerResults> triggerBits;
-//                 event.getByToken(triggersToken,triggerBits);
-//                 const edm::TriggerNames &names = event.triggerNames(*triggerBits);
-//                 
-//                 //loop over them for deltaR matching
-//                 TLorentzVector trigObj;
-//                 pat::TriggerObjectStandAlone matchedObj;
-//                 std::vector<std::string> paths;
-//                 float closestDR = 10000.;
-//                 for( pat::TriggerObjectStandAlone obj : *triggerObjects){
-//                     obj.unpackPathNames(names);
-//                     float dR = mdeltaR( (*imu)->eta(), (*imu)->phi(), obj.eta(),obj.phi() );
-//                     if(dR < closestDR){
-//                         closestDR = dR;
-//                         trigObj.SetPtEtaPhiE((*imu)->pt(),(*imu)->eta(),(*imu)->phi(),(*imu)->energy());
-//                         matchedObj=obj;
-//                     }
-//                 }
-//                 if(closestDR<0.5){
-//                     TriggerMuonPts.push_back(trigObj.Pt());
-//                     TriggerMuonEtas.push_back(trigObj.Eta());
-//                     TriggerMuonPhis.push_back(trigObj.Phi());
-//                     TriggerMuonEnergies.push_back(trigObj.Energy());
-//                     //std::cout<<"found muon matched trigger object!"<<std::endl;
-//                     //now store information about filters
-//                     for (unsigned int h = 0; h < matchedObj.filterLabels().size(); h++){
-//                         std::string filter = matchedObj.filterLabels()[h];
-//                         std::string Index = Form("MatchedIndex%i_",MuIndex);
-//                         std::string hltFilter_wIndex = Index+filter;
-//                         //std::cout<<hltFilter_wIndex<<std::endl;
-//                         TriggerMuonFilters.push_back(hltFilter_wIndex);
-//                     }              
-//                 }
-//                 else{
-//                     TriggerMuonPts.push_back(-9999);
-//                     TriggerMuonEtas.push_back(-9999);
-//                     TriggerMuonPhis.push_back(-9999);
-//                     TriggerMuonEnergies.push_back(-9999);
-//                 }
-//             }
-
-            
-            if(isMc && keepFullMChistory){
-                edm::Handle<reco::GenParticleCollection> genParticles;
-                event.getByLabel(genParticlesToken, genParticles);
-                int matchId = findMatch(*genParticles, 13, (*imu)->eta(), (*imu)->phi());
-                double closestDR = 10000.;
-                if (matchId>=0) {
-                    const reco::GenParticle & p = (*genParticles).at(matchId);
-                    closestDR = mdeltaR( (*imu)->eta(), (*imu)->phi(), p.eta(), p.phi());
-                    if(closestDR < 0.3){
-                        muGen_Reco_dr.push_back(closestDR);
-                        muPdgId.push_back(p.pdgId());
-                        muStatus.push_back(p.status());
-                        muMatched.push_back(1);
-                        muMatchedPt.push_back( p.pt());
-                        muMatchedEta.push_back(p.eta());
-                        muMatchedPhi.push_back(p.phi());
-                        muMatchedEnergy.push_back(p.energy());
-                        int oldSize = muMother_id.size();
-                        fillMotherInfo(p.mother(), 0, muMother_id, muMother_status, muMother_pt, muMother_eta, muMother_phi, muMother_energy);
-                        muNumberOfMothers.push_back(muMother_id.size()-oldSize);
-                    }
-                }
-                if(closestDR >= 0.3){
-                    muNumberOfMothers.push_back(-1);
-                    muGen_Reco_dr.push_back(-1.0);
-                    muPdgId.push_back(-1);
-                    muStatus.push_back(-1);
-                    muMatched.push_back(0);
-                    muMatchedPt.push_back(-1000.0);
-                    muMatchedEta.push_back(-1000.0);
-                    muMatchedPhi.push_back(-1000.0);
-                    muMatchedEnergy.push_back(-1000.0);
-                    
-                }
-                
-                
-            }
-
-        }
-        
-        //increment index
-        MuIndex+=1;
-    }
-
-    //trigger info
-    SetValue("TrigMuPt",TriggerMuonPts);
-    SetValue("TrigMuEta",TriggerMuonEtas);
-    SetValue("TrigMuPhi",TriggerMuonPhis);
-    SetValue("TrigMuEnergy",TriggerMuonEnergies);
-    SetValue("TrigMuFilters",TriggerMuonFilters);
     
-    
-    SetValue("muCharge", muCharge);
-    SetValue("muGlobal", muGlobal);
-    SetValue("muTracker",muTracker);
-    SetValue("muPF",muPF);
-
-    //Four std::vector
-    SetValue("muPt"     , muPt);
-    SetValue("muEta"    , muEta);
-    SetValue("muPhi"    , muPhi);
-    SetValue("muEnergy" , muEnergy);
-  
-    //muon ids
-    SetValue("muIsTight", muIsTight);
-    SetValue("muIsLoose",muIsLoose);
-  
-    //Quality criteria
-    SetValue("muChi2"   , muChi2);
-    SetValue("muDxy"    , muDxy);
-    SetValue("muDz"     , muDz);
-    SetValue("muSIP3D", muSIP3D);
-    SetValue("muRelIso" , muRelIso);
-    SetValue("muMiniIsoEA", muMiniIsoEA);
-    SetValue("muMiniIsoDB", muMiniIsoDB);
-    SetValue("muMiniIsoSUSY", muMiniIsoSUSY);
-
-    SetValue("muNValMuHits"       , muNValMuHits);
-    SetValue("muNMatchedStations" , muNMatchedStations);
-    SetValue("muNValPixelHits"    , muNValPixelHits);
-    SetValue("muNTrackerLayers"   , muNTrackerLayers);
-    
-    //Extra info about isolation
-    SetValue("muChIso", muChIso);
-    SetValue("muNhIso", muNhIso);
-    SetValue("muGIso" , muGIso);
-    SetValue("muPuIso", muPuIso);
-    
-    //MC matching -- mother information
-    SetValue("muGen_Reco_dr", muGen_Reco_dr);
-    SetValue("muPdgId", muPdgId);
-    SetValue("muStatus", muStatus);
-    SetValue("muMatched",muMatched);
-    SetValue("muMother_pt", muMother_pt);
-    SetValue("muMother_eta", muMother_eta);
-    SetValue("muMother_phi", muMother_phi);
-    SetValue("muMother_energy", muMother_energy);
-    SetValue("muMother_status", muMother_status);
-    SetValue("muMother_id", muMother_id);
-    SetValue("muNumberOfMothers", muNumberOfMothers);
-    //Matched gen muon information:
-    SetValue("muMatchedPt", muMatchedPt);
-    SetValue("muMatchedEta", muMatchedEta);
-    SetValue("muMatchedPhi", muMatchedPhi);
-    SetValue("muMatchedEnergy", muMatchedEnergy);
-*/
-
     //
     //_____GenJets_____________________________
     //
@@ -1666,6 +1375,303 @@ void DileptonCalc::AnalyzeElectron(edm::Event const & event, BaseEventSelector *
     SetValue("elMatchedPhi", elMatchedPhi);
     SetValue("elMatchedEnergy", elMatchedEnergy);
     
+
+}
+
+void DileptonCalc::AnalyzeMuon(edm::Event const & event, BaseEventSelector * selector)
+{
+
+    //
+    // _____ Get objects from the selector _____________________
+    //
+    std::vector<edm::Ptr<pat::Muon> >     const & vSelMuons        = selector->GetSelMuons();
+
+    //
+    //_____ Muons _____________________________
+    //
+    
+    std::vector <int> muCharge;
+    std::vector <bool> muGlobal;
+    std::vector <bool> muTracker;
+    std::vector <bool> muPF;
+    //Four std::vector
+    std::vector <double> muPt;
+    std::vector <double> muEta;
+    std::vector <double> muPhi;
+    std::vector <double> muEnergy;
+    
+    //Quality criteria
+    std::vector <double> muChi2;
+    std::vector <double> muDxy;
+    std::vector <double> muDz;
+    std::vector <double> muSIP3D;
+    std::vector <double> muRelIso;
+    std::vector <double> muMiniIsoEA;
+    std::vector <double> muMiniIsoDB;
+    std::vector <double> muMiniIsoSUSY;
+    
+    std::vector <int> muNValMuHits;
+    std::vector <int> muNMatchedStations;
+    std::vector <int> muNValPixelHits;
+    std::vector <int> muNTrackerLayers;
+    
+    //Extra info about isolation
+    std::vector <double> muChIso;
+    std::vector <double> muNhIso;
+    std::vector <double> muGIso;
+    std::vector <double> muPuIso;
+
+    //ID info
+    std::vector <int> muIsTight;
+    std::vector<int> muIsLoose;
+    
+    //Generator level information -- MC matching
+    std::vector<double> muGen_Reco_dr;
+    std::vector<int> muPdgId;
+    std::vector<int> muStatus;
+    std::vector<int> muMatched;
+    std::vector<int> muNumberOfMothers;
+    std::vector<double> muMother_pt;
+    std::vector<double> muMother_eta;
+    std::vector<double> muMother_phi;
+    std::vector<double> muMother_energy;
+    std::vector<int> muMother_id;
+    std::vector<int> muMother_status;
+    //Matched gen muon information:
+    std::vector<double> muMatchedPt;
+    std::vector<double> muMatchedEta;
+    std::vector<double> muMatchedPhi;
+    std::vector<double> muMatchedEnergy;
+
+    std::vector<std::string> TriggerMuonFilters;
+    std::vector<double> TriggerMuonPts;
+    std::vector<double> TriggerMuonEtas;
+    std::vector<double> TriggerMuonPhis;
+    std::vector<double> TriggerMuonEnergies;
+    
+
+    //make index for muons
+    int MuIndex = 0;
+    for (std::vector<edm::Ptr<pat::Muon> >::const_iterator imu = vSelMuons.begin(); imu != vSelMuons.end(); imu++){
+        //Protect against muons without tracks (should never happen, but just in case)
+        if ((*imu)->globalTrack().isNonnull() and (*imu)->globalTrack().isAvailable() and
+            (*imu)->innerTrack().isNonnull()  and (*imu)->innerTrack().isAvailable())
+            {
+            
+            
+            //charge
+            muCharge.push_back((*imu)->charge());
+            
+            //Four std::vector
+            muPt     . push_back((*imu)->pt());
+            muEta    . push_back((*imu)->eta());
+            muPhi    . push_back((*imu)->phi());
+            muEnergy . push_back((*imu)->energy());
+            
+            muIsTight.push_back((*imu)->passed(reco::Muon::CutBasedIdTight));
+            muIsLoose.push_back((*imu)->passed(reco::Muon::CutBasedIdLoose));
+
+            muGlobal.push_back((*imu)->isGlobalMuon());
+            muTracker.push_back((*imu)->isTrackerMuon());
+            muPF.push_back((*imu)->isPFMuon());
+            
+            //Chi2
+            muChi2 . push_back((*imu)->globalTrack()->normalizedChi2());
+            
+            //new definition of iso based on muon pog page
+            const reco::MuonPFIsolation pfIsolationR04 = (*imu)->pfIsolationR04();
+            double chIso  = pfIsolationR04.sumChargedHadronPt;
+            double nhIso  = pfIsolationR04.sumNeutralHadronEt;
+            double gIso   = pfIsolationR04.sumPhotonEt;
+            double puIso  = pfIsolationR04.sumPUPt;
+            double relIso = (chIso + std::max(0.,nhIso + gIso - 0.5*puIso)) / (*imu)->pt();
+            muRelIso . push_back(relIso);
+
+            muChIso . push_back(chIso);
+            muNhIso . push_back(nhIso);
+            muGIso  . push_back(gIso);
+            muPuIso . push_back(puIso);
+
+            float musip3d;
+            pat::Muon::IpType muIP3d = (pat::Muon::IpType) 1;
+            
+            //IP: for some reason this is with respect to the first vertex in the collection
+            if (goodPVs.size() > 0){
+                muDxy . push_back((*imu)->dB());
+                muDz  . push_back((*imu)->muonBestTrack()->dz(goodPVs.at(0).position()));
+                //muon sip3d;
+                musip3d = (*imu)->dB(muIP3d) / (*imu)->edB(muIP3d);
+
+            } 
+            else {
+                muDxy . push_back(-999);
+                muDz  . push_back(-999);
+                musip3d=-999;
+            }
+            muSIP3D.push_back(musip3d);
+            
+            //Numbers of hits
+            muNValMuHits       . push_back((*imu)->globalTrack()->hitPattern().numberOfValidMuonHits());
+            muNMatchedStations . push_back((*imu)->numberOfMatchedStations());
+            muNValPixelHits    . push_back((*imu)->innerTrack()->hitPattern().numberOfValidPixelHits());
+            muNTrackerLayers   . push_back((*imu)->innerTrack()->hitPattern().trackerLayersWithMeasurement());
+            
+            
+            //Trigger Matching - store 4-std::vector and filter information for all trigger objects deltaR matched to electrons
+//             if(doTriggerStudy_){
+//                 //read in trigger objects
+//                 edm::Handle<pat::TriggerObjectStandAloneCollection> triggerObjects;
+//                 event.getByToken(triggerObjectToken,triggerObjects);
+//                 
+//                 edm::Handle<edm::TriggerResults> triggerBits;
+//                 event.getByToken(triggersToken,triggerBits);
+//                 const edm::TriggerNames &names = event.triggerNames(*triggerBits);
+//                 
+//                 //loop over them for deltaR matching
+//                 TLorentzVector trigObj;
+//                 pat::TriggerObjectStandAlone matchedObj;
+//                 std::vector<std::string> paths;
+//                 float closestDR = 10000.;
+//                 for( pat::TriggerObjectStandAlone obj : *triggerObjects){
+//                     obj.unpackPathNames(names);
+//                     float dR = mdeltaR( (*imu)->eta(), (*imu)->phi(), obj.eta(),obj.phi() );
+//                     if(dR < closestDR){
+//                         closestDR = dR;
+//                         trigObj.SetPtEtaPhiE((*imu)->pt(),(*imu)->eta(),(*imu)->phi(),(*imu)->energy());
+//                         matchedObj=obj;
+//                     }
+//                 }
+//                 if(closestDR<0.5){
+//                     TriggerMuonPts.push_back(trigObj.Pt());
+//                     TriggerMuonEtas.push_back(trigObj.Eta());
+//                     TriggerMuonPhis.push_back(trigObj.Phi());
+//                     TriggerMuonEnergies.push_back(trigObj.Energy());
+//                     //std::cout<<"found muon matched trigger object!"<<std::endl;
+//                     //now store information about filters
+//                     for (unsigned int h = 0; h < matchedObj.filterLabels().size(); h++){
+//                         std::string filter = matchedObj.filterLabels()[h];
+//                         std::string Index = Form("MatchedIndex%i_",MuIndex);
+//                         std::string hltFilter_wIndex = Index+filter;
+//                         //std::cout<<hltFilter_wIndex<<std::endl;
+//                         TriggerMuonFilters.push_back(hltFilter_wIndex);
+//                     }              
+//                 }
+//                 else{
+//                     TriggerMuonPts.push_back(-9999);
+//                     TriggerMuonEtas.push_back(-9999);
+//                     TriggerMuonPhis.push_back(-9999);
+//                     TriggerMuonEnergies.push_back(-9999);
+//                 }
+//             }
+
+            
+            if(isMc && keepFullMChistory){
+                edm::Handle<reco::GenParticleCollection> genParticles;
+                event.getByToken(genParticlesToken, genParticles);
+                int matchId = findMatch(*genParticles, 13, (*imu)->eta(), (*imu)->phi());
+                double closestDR = 10000.;
+                if (matchId>=0) {
+                    const reco::GenParticle & p = (*genParticles).at(matchId);
+                    closestDR = mdeltaR( (*imu)->eta(), (*imu)->phi(), p.eta(), p.phi());
+                    if(closestDR < 0.3){
+                        muGen_Reco_dr.push_back(closestDR);
+                        muPdgId.push_back(p.pdgId());
+                        muStatus.push_back(p.status());
+                        muMatched.push_back(1);
+                        muMatchedPt.push_back( p.pt());
+                        muMatchedEta.push_back(p.eta());
+                        muMatchedPhi.push_back(p.phi());
+                        muMatchedEnergy.push_back(p.energy());
+                        int oldSize = muMother_id.size();
+                        fillMotherInfo(p.mother(), 0, muMother_id, muMother_status, muMother_pt, muMother_eta, muMother_phi, muMother_energy);
+                        muNumberOfMothers.push_back(muMother_id.size()-oldSize);
+                    }
+                }
+                if(closestDR >= 0.3){
+                    muNumberOfMothers.push_back(-1);
+                    muGen_Reco_dr.push_back(-1.0);
+                    muPdgId.push_back(-1);
+                    muStatus.push_back(-1);
+                    muMatched.push_back(0);
+                    muMatchedPt.push_back(-1000.0);
+                    muMatchedEta.push_back(-1000.0);
+                    muMatchedPhi.push_back(-1000.0);
+                    muMatchedEnergy.push_back(-1000.0);
+                    
+                }
+                
+                
+            }
+
+        }
+        
+        //increment index
+        MuIndex+=1;
+    }
+
+    //trigger info
+    SetValue("TrigMuPt",TriggerMuonPts);
+    SetValue("TrigMuEta",TriggerMuonEtas);
+    SetValue("TrigMuPhi",TriggerMuonPhis);
+    SetValue("TrigMuEnergy",TriggerMuonEnergies);
+    SetValue("TrigMuFilters",TriggerMuonFilters);
+    
+    
+    SetValue("muCharge", muCharge);
+    SetValue("muGlobal", muGlobal);
+    SetValue("muTracker",muTracker);
+    SetValue("muPF",muPF);
+
+    //Four std::vector
+    SetValue("muPt"     , muPt);
+    SetValue("muEta"    , muEta);
+    SetValue("muPhi"    , muPhi);
+    SetValue("muEnergy" , muEnergy);
+  
+    //muon ids
+    SetValue("muIsTight", muIsTight);
+    SetValue("muIsLoose",muIsLoose);
+  
+    //Quality criteria
+    SetValue("muChi2"   , muChi2);
+    SetValue("muDxy"    , muDxy);
+    SetValue("muDz"     , muDz);
+    SetValue("muSIP3D", muSIP3D);
+    SetValue("muRelIso" , muRelIso);
+
+    SetValue("muMiniIsoEA", muMiniIsoEA); // Not used -- June 12, 2019.
+    SetValue("muMiniIsoDB", muMiniIsoDB); // Not used -- June 12, 2019.
+    SetValue("muMiniIsoSUSY", muMiniIsoSUSY); // Not used -- June 12, 2019.
+
+    SetValue("muNValMuHits"       , muNValMuHits);
+    SetValue("muNMatchedStations" , muNMatchedStations);
+    SetValue("muNValPixelHits"    , muNValPixelHits);
+    SetValue("muNTrackerLayers"   , muNTrackerLayers);
+    
+    //Extra info about isolation
+    SetValue("muChIso", muChIso);
+    SetValue("muNhIso", muNhIso);
+    SetValue("muGIso" , muGIso);
+    SetValue("muPuIso", muPuIso);
+    
+    //MC matching -- mother information
+    SetValue("muGen_Reco_dr", muGen_Reco_dr);
+    SetValue("muPdgId", muPdgId);
+    SetValue("muStatus", muStatus);
+    SetValue("muMatched",muMatched);
+    SetValue("muMother_pt", muMother_pt);
+    SetValue("muMother_eta", muMother_eta);
+    SetValue("muMother_phi", muMother_phi);
+    SetValue("muMother_energy", muMother_energy);
+    SetValue("muMother_status", muMother_status);
+    SetValue("muMother_id", muMother_id);
+    SetValue("muNumberOfMothers", muNumberOfMothers);
+    //Matched gen muon information:
+    SetValue("muMatchedPt", muMatchedPt);
+    SetValue("muMatchedEta", muMatchedEta);
+    SetValue("muMatchedPhi", muMatchedPhi);
+    SetValue("muMatchedEnergy", muMatchedEnergy);
+
 
 }
 
