@@ -12,6 +12,8 @@
 #include "FWLJMET/LJMet/interface/HOTTaggerCalc.h"
 #include "FWLJMET/LJMet/interface/BestCalc.h"
 
+#include "FWLJMET/LJMet/interface/DileptonCalc.h"
+
 #include "FWLJMET/LJMet/interface/DummyCalc.h"
 #include "FWLJMET/LJMet/interface/DummyEventSelector.h"
 #include "FWLJMET/LJMet/interface/TestCalc.h"
@@ -33,6 +35,8 @@ LjmetFactory::LjmetFactory(): theSelector(0)
     this->Register(new DeepAK8Calc(), "DeepAK8Calc");
     this->Register(new HOTTaggerCalc(), "HOTTaggerCalc");
     this->Register(new BestCalc(), "BestCalc");
+
+    this->Register(new DileptonCalc(), "DileptonCalc");
 
     this->Register(new DummyCalc(), "DummyCalc");
     this->Register(new DummyEventSelector(), "DummySelector");

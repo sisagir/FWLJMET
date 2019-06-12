@@ -489,13 +489,24 @@ DileptonSelector_cfg.trigger_path_mm = hlt_path_mm
 
 DileptonCalc_cfg = cms.PSet(
 
-            debug                  = cms.bool(False),
+
+            debug                  = cms.bool(True),
             isMc                   = cms.bool(isMC),
+            dataType               = cms.string('None'), #Choose between EE/EM/MM/ALL/ElEl/ElMu/MuMu/All. Need to automate this. But what is this for??? -- June 11, 2019.
+            
+            #triggerstudy info
+            doTriggerStudy           = cms.bool(True),
+            TriggerBits              = cms.InputTag("TriggerResults","","HLT"),
+            TriggerObjects           = cms.InputTag("selectedPatTrigger"),
+
+            pvSrc   = cms.InputTag('offlineSlimmedPrimaryVertices'),
+
+            genParticlesCollection = cms.InputTag("prunedGenParticles"),
+
             saveLooseLeps          = cms.bool(not isMC),
             keepFullMChistory      = cms.bool(isMC),
 
             rhoJetsNCInputTag      = cms.InputTag("fixedGridRhoFastjetCentralNeutral",""), #this is for muon
-            genParticlesCollection = cms.InputTag("prunedGenParticles"),
             PFparticlesCollection  = cms.InputTag("packedPFCandidates"),
 
             rhoJetsInputTag            = cms.InputTag("fixedGridRhoFastjetAll"), #this is for electron. Why is it different compared to muon?
@@ -654,7 +665,7 @@ process.ljmet = cms.EDAnalyzer(
         verbosity     = cms.int32(0),
         selector      = cms.string('DileptonSelector'),
         include_calcs = cms.vstring(
-#                         'DileptonCalc',
+                        'DileptonCalc',
                         'TpTpCalc',
                         'CommonCalc',
                         'JetSubCalc',
