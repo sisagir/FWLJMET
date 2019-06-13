@@ -70,8 +70,8 @@ class JetMETCorrHelper{
         std::string mLegend = "\t[JetMETCorrHelper]: ";
 
         TRandom3 JERrand;
-
-	std::shared_ptr<JetCorrectionUncertainty> jecUnc;
+        
+        std::shared_ptr<JetCorrectionUncertainty> jecUnc;
 
         JME::JetResolution resolution;
         JME::JetResolution resolutionAK8;
@@ -79,8 +79,8 @@ class JetMETCorrHelper{
 
         std::vector<JetCorrectorParameters> vPar;
         std::vector<JetCorrectorParameters> vParAK8;
-	std::shared_ptr<FactorizedJetCorrector> JetCorrector;
-	std::shared_ptr<FactorizedJetCorrector> JetCorrectorAK8;
+        std::shared_ptr<FactorizedJetCorrector> JetCorrector;
+        std::shared_ptr<FactorizedJetCorrector> JetCorrectorAK8;
 
         std::map<std::string,std::string> mJetParStr;
 
