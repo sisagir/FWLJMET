@@ -16,7 +16,7 @@ options.register('isVLQsignal', '', VarParsing.multiplicity.singleton, VarParsin
 ## ATTENTION: THESE DEFAULT VALUES ARE SET FOR VLQ SIGNAL ! isMC=True, isTTbar=False, isVLQsignal=True 
 options.isMC = True
 options.isTTbar = False
-options.isVLQsignal = False
+options.isVLQsignal = True
 options.inputFiles = [
     'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAODv2/TprimeTprime_M-1400_TuneCP5_13TeV-madgraph-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v2/50000/F82DC089-5591-E811-9210-6C3BE5B58198.root'
     ]
@@ -179,15 +179,15 @@ setupEgammaPostRecoSeq(process,
 ################################################
 ## Produce modified MET with the ECAL noise fix
 ################################################
-# from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
+from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
 
-# runMetCorAndUncFromMiniAOD(
-#     process,
-#     isData = not isMC,
-#     fixEE2017 = True,
-#     fixEE2017Params = {'userawPt': True, 'ptThreshold':50.0, 'minEtaThreshold':2.65, 'maxEtaThreshold': 3.139},
-#     postfix = "ModifiedMET"
-#     )
+runMetCorAndUncFromMiniAOD(
+    process,
+    isData = not isMC,
+    fixEE2017 = True,
+    fixEE2017Params = {'userawPt': True, 'ptThreshold':50.0, 'minEtaThreshold':2.65, 'maxEtaThreshold': 3.139},
+    postfix = "ModifiedMET"
+    )
 
 ################################
 ## Rerun the ecalBadCalibFilter
@@ -294,12 +294,12 @@ process.ecalBadCalibReducedMINIAODFilter = cms.EDFilter(
 ################################
 ## Produce L1 Prefiring probabilities - https://twiki.cern.ch/twiki/bin/viewauth/CMS/L1ECALPrefiringWeightRecipe
 ################################
-# from PhysicsTools.PatUtils.l1ECALPrefiringWeightProducer_cfi import l1ECALPrefiringWeightProducer
-# process.prefiringweight = l1ECALPrefiringWeightProducer.clone(
-#     DataEra = cms.string("2017BtoF"),
-#     UseJetEMPt = cms.bool(False),
-#     PrefiringRateSystematicUncty = cms.double(0.2),
-#     SkipWarnings = False)
+from PhysicsTools.PatUtils.l1ECALPrefiringWeightProducer_cfi import l1ECALPrefiringWeightProducer
+process.prefiringweight = l1ECALPrefiringWeightProducer.clone(
+    DataEra = cms.string("2017BtoF"),
+    UseJetEMPt = cms.bool(False),
+    PrefiringRateSystematicUncty = cms.double(0.2),
+    SkipWarnings = False)
 
 
 
@@ -912,8 +912,8 @@ if (isTTbar):
     process.p = cms.Path(
                          process.mcweightanalyzer *
                          process.filter_any_explicit *
-                         #process.fullPatMetSequenceModifiedMET *
-                         #process.prefiringweight *
+                         process.fullPatMetSequenceModifiedMET *
+                         process.prefiringweight *
                          process.egammaPostRecoSeq *
                          #process.updatedJetsAK8PuppiSoftDropPacked *
                          #process.packedJetsAK8Puppi *
@@ -931,8 +931,8 @@ elif(isMC):
     process.p = cms.Path(
        process.mcweightanalyzer *
        process.filter_any_explicit *
-       #process.fullPatMetSequenceModifiedMET *
-       #process.prefiringweight *
+       process.fullPatMetSequenceModifiedMET *
+       process.prefiringweight *
        process.egammaPostRecoSeq *
        #process.updatedJetsAK8PuppiSoftDropPacked *
        #process.packedJetsAK8Puppi *
@@ -947,8 +947,8 @@ elif(isMC):
 else: #Data 
     process.p = cms.Path(
        process.filter_any_explicit *
-       #process.fullPatMetSequenceModifiedMET *
-       #process.prefiringweight *
+       process.fullPatMetSequenceModifiedMET *
+       process.prefiringweight *
        process.egammaPostRecoSeq *
        #process.updatedJetsAK8PuppiSoftDropPacked *
        #process.packedJetsAK8Puppi *
