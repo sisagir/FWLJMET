@@ -451,8 +451,8 @@ MultiLepSelector_cfg = cms.PSet(
             maxLeptons          = cms.int32(9999),
 
             # Jets
-            # jet_collection           = cms.InputTag('slimmedJets'),
-            jet_collection           = cms.InputTag('updatedPatJets::LJMET'), #if using updated jets
+            jet_collection           = cms.InputTag('slimmedJets'),
+            # jet_collection           = cms.InputTag('updatedPatJets::LJMET'), #if using updated jets
             AK8jet_collection        = cms.InputTag('slimmedJetsAK8'),
             JECup                    = cms.bool(JECup),
             JECdown                  = cms.bool(JECdown),
@@ -529,7 +529,7 @@ MultiLepCalc_cfg = cms.PSet(
             PFparticlesCollection  = cms.InputTag("packedPFCandidates"),
 
             rhoJetsInputTag            = cms.InputTag("fixedGridRhoFastjetAll"), #this is for electron. Why is it different compared to muon?
-            UseElMVA                 = cms.bool(False), #True means save MVA values, False means not saving.
+            UseElMVA                 = cms.bool(True), #True means save MVA values, False means not saving.
             UseElIDV1                = cms.bool(UseElIDV1_), #False means using ElIDV2.
 
             # Jet corrections needs to be passed here again if Calc uses jet correction
