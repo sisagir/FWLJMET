@@ -77,6 +77,8 @@ private:
     std::vector<unsigned int> keepStatusForce;
     bool cleanGenJets;
     std::vector< TLorentzVector > vGenLep;
+    std::vector<std::string> elTrigMatchFilters;
+    std::vector<std::string> muTrigMatchFilters;
 
 
     edm::EDGetTokenT<std::vector<PileupSummaryInfo>>   PupInfoToken;
@@ -90,6 +92,9 @@ private:
     edm::EDGetTokenT<GenEventInfoProduct>              genToken;
     edm::EDGetTokenT<LHEEventProduct>                  LHEToken;
     edm::EDGetTokenT<std::vector< reco::GenJet> >      genJetsToken;
+    edm::EDGetTokenT<edm::TriggerResults >             triggerCollToken;
+    edm::EDGetTokenT<pat::TriggerObjectStandAloneCollection> triggerSumToken;
+
 
 
     //helper functions
