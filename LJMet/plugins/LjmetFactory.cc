@@ -1,6 +1,7 @@
 #include "FWLJMET/LJMet/interface/LjmetFactory.h"
 
 #include "FWLJMET/LJMet/interface/MultiLepEventSelector.h"
+#include "FWLJMET/LJMet/interface/TTbarTagProbeEventSelector.h"
 #include "FWLJMET/LJMet/interface/DileptonEventSelector.h"
 
 #include "FWLJMET/LJMet/interface/CommonCalc.h"
@@ -25,6 +26,7 @@ LjmetFactory::LjmetFactory(): theSelector(0)
     mLegend = "[LjmetFactory]: ";
 
     this->Register(new MultiLepEventSelector(), "MultiLepSelector");
+    this->Register(new TTbarTagProbeEventSelector(), "TTbarTagProbeSelector");
     this->Register(new DileptonEventSelector(), "DileptonSelector");
 
     this->Register(new CommonCalc(), "CommonCalc");
