@@ -123,8 +123,9 @@ trigdict['JetHTRun2018A'] = '/JetHT/Run2018A-17Sep2018-v1/MINIAOD'
 trigdict['JetHTRun2018B'] = '/JetHT/Run2018B-17Sep2018-v1/MINIAOD'
 trigdict['JetHTRun2018C'] = '/JetHT/Run2018C-17Sep2018-v1/MINIAOD'
 trigdict['JetHTRun2018D'] = '/JetHT/Run2018D-PromptReco-v2/MINIAOD'
-trigdictmc['TTToSemiLeptonic'] = '/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/RunIIAutumn18MiniAOD-102X_upgrade2018_realistic_v15-v1/MINIAODSIM'
-trigdictmc['TpTp1400'] = '/TprimeTprime_M-1400_TuneCP5_PSweights_13TeV-madgraph-pythia8/RunIIAutumn18MiniAOD-102X_upgrade2018_realistic_v15-v2/MINIAODSIM'
+trigdictmc['TTTo2L2Nu'] = '/TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8/RunIIAutumn18MiniAOD-102X_upgrade2018_realistic_v15-v1/MINIAODSIM'
+#trigdictmc['TTToSemiLeptonic'] = '/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/RunIIAutumn18MiniAOD-102X_upgrade2018_realistic_v15-v1/MINIAODSIM'
+#trigdictmc['TpTp1400'] = '/TprimeTprime_M-1400_TuneCP5_PSweights_13TeV-madgraph-pythia8/RunIIAutumn18MiniAOD-102X_upgrade2018_realistic_v15-v2/MINIAODSIM'
 
 fourtopssigdict = {}
 fourtopsttdict = {}
