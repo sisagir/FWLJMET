@@ -1010,7 +1010,7 @@ else: #Data
     process.p = cms.Path(
        process.filter_any_explicit *
        process.fullPatMetSequenceModifiedMET *
-       process.prefiringweight *
+       #process.prefiringweight *
        process.egammaPostRecoSeq *
        process.updatedJetsAK8PuppiSoftDropPacked *
        process.packedJetsAK8Puppi *
