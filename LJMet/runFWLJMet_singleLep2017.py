@@ -147,6 +147,12 @@ process.filter_any_explicit = hlt.hltHighLevel.clone(
 
                         'HLT_IsoTkMu24_v*',
                         'HLT_IsoMu24_2p1_v*',
+                        'HLT_Mu15_IsoVVVL_PFHT450_CaloBTagCSV_4p5_v*', # Muon+HT
+
+                        'PFHT380_SixJet32_DoubleBTagCSV_p075_v*', # only data
+                        'PFHT380_SixPFJet32_DoublePFBTagDeepCSV_2p2_v*', # only MC
+                        'HLT_PFHT380_SixPFJet32_DoublePFBTagCSV_2p2_v*',
+                        'HLT_PFHT380_SixPFJet32_DoublePFBTagDeepCSV_2p2_v*',
 
     ],
     throw = False
@@ -380,7 +386,15 @@ hlt_path_mu = cms.vstring(
         
         'HLT_IsoTkMu24_v',
         'HLT_IsoMu24_2p1_v',
+        'HLT_Mu15_IsoVVVL_PFHT450_CaloBTagCSV_4p5_v', # Muon+HT
         )
+
+hlt_path_hadronic = cms.vstring(
+    'PFHT380_SixJet32_DoubleBTagCSV_p075_v', # only data
+    'PFHT380_SixPFJet32_DoublePFBTagDeepCSV_2p2_v', # only MC
+    'HLT_PFHT380_SixPFJet32_DoublePFBTagCSV_2p2_v',
+    'HLT_PFHT380_SixPFJet32_DoublePFBTagDeepCSV_2p2_v',
+    )
 
 #Selector/Calc config
 MultiLepSelector_cfg = cms.PSet(
@@ -523,13 +537,17 @@ MultiLepSelector_cfg = cms.PSet(
 if isMC:
     MultiLepSelector_cfg.mctrigger_path_el = hlt_path_el
     MultiLepSelector_cfg.mctrigger_path_mu = hlt_path_mu
+    MultiLepSelector_cfg.mctrigger_path_hadronic = hlt_path_hadronic
     MultiLepSelector_cfg.trigger_path_el = cms.vstring('')
     MultiLepSelector_cfg.trigger_path_mu = cms.vstring('')
+    MultiLepSelector_cfg.trigger_path_hadronic = cms.vstring('')
 else:
     MultiLepSelector_cfg.mctrigger_path_el = cms.vstring('')
     MultiLepSelector_cfg.mctrigger_path_mu = cms.vstring('')
+    MultiLepSelector_cfg.mctrigger_path_hadronic = cms.vstring('')
     MultiLepSelector_cfg.trigger_path_el = hlt_path_el
     MultiLepSelector_cfg.trigger_path_mu = hlt_path_mu
+    MultiLepSelector_cfg.trigger_path_hadronic = hlt_path_hadronic
 
 MultiLepCalc_cfg = cms.PSet(
 
