@@ -28,31 +28,11 @@ BtagHardcodedConditions::BtagHardcodedConditions() {
 BtagHardcodedConditions::~BtagHardcodedConditions() {
 }
 
-std::string BtagHardcodedConditions::getAlgoName(const std::string & op)
-{
-  if     ( op == "DeepCSVLOOSE"   )  return "pfDeepCSVJetTags:probb";
-  else if( op == "DeepCSVMEDIUM"  )  return "pfDeepCSVJetTags:probb";
-  else if( op == "DeepCSVTIGHT"   )  return "pfDeepCSVJetTags:probb";
-  else if( op == "SJDeepCSVLOOSE" )  return "pfDeepCSVJetTags:probb";
-  else if( op == "SJDeepCSVMEDIUM")  return "pfDeepCSVJetTags:probb";
-  throw cms::Exception("InvalidInput") << "Unknown tagger/operating point: "<< op << std::endl;
-}
-
-float BtagHardcodedConditions::getDiscriminant(const std::string & op)
-{
-  if     ( op == "DeepCSVLOOSE"   ) return 0.1522;
-  else if( op == "DeepCSVMEDIUM"  ) return 0.4941;
-  else if( op == "DeepCSVTIGHT"   ) return 0.8001;
-  else if( op == "SJDeepCSVLOOSE" ) return 0.1522;
-  else if( op == "SJDeepCSVMEDIUM") return 0.4941;
-  throw cms::Exception("InvalidInput") << "Unknown operating point: "<< op << std::endl;
-}
-
 /*.-----------------------------------------------------------------.
   /  .-.                                                         .-.  \
  |  /   \                                                       /   \  |
  | |\_.  |                                                     |    /| |
- |\|  | /|               B-JET SCALE FACTOR SECTION            |\  | |/|
+ |\|  | /|               ALLLLLLLL THE EFFICIENCIES            |\  | |/|
  | `---' |                                                     | `---' |
  |       |                                                     |       |
  |       |-----------------------------------------------------|       |
@@ -65,10 +45,6 @@ double BtagHardcodedConditions::GetBtagEfficiency(double pt, double eta, std::st
   // Efficiencies from TTToSemiLeptonic powheg sample for Fall18 (?).
   // ~jmanagan/nobackup/EffsAndNegWeights/NegWeights2018/TTSemiLep.root
   // Uses hadronFlavour() rather than partonFlavour() as recommended in BTV physics plenary CMS Week 10/2015
-  // BEff_Nptbins_b/BEff_Dptbins_b
-  // [0.403823, 0.618852, 0.679287, 0.706293, 0.717887, 0.713093, 0.670051, 0.59587, 0.531372, 0.483849, 0.417429, 0.30052, 0.20051, 0.124058]
-  // BEffLoose_Nptbins_b/BEffLoose_Dptbins_b
-  // [0.628235, 0.794337, 0.839644, 0.863855, 0.878786, 0.88415, 0.872817, 0.850809, 0.834119, 0.824796, 0.802984, 0.751513, 0.684949, 0.598841]
 
   if(year == 2018){
     if(tagger == "DeepCSVMEDIUM" or tagger == "SJDeepCSVMEDIUM"){
@@ -102,11 +78,43 @@ double BtagHardcodedConditions::GetBtagEfficiency(double pt, double eta, std::st
       else if(pt < 1000) return 0.751513;
       else if(pt < 1200) return 0.684949;
       else               return 0.598841;
+    }
+    else if( tagger == "DeepJetLOOSE") {
+      if(pt < 30)        return 0.628235;
+      else if(pt < 50)   return 0.794337;
+      else if(pt < 70)   return 0.839644;
+      else if(pt < 100)  return 0.863855;
+      else if(pt < 140)  return 0.878786;
+      else if(pt < 200)  return 0.88415;
+      else if(pt < 300)  return 0.872817;
+      else if(pt < 400)  return 0.850809;
+      else if(pt < 500)  return 0.834119;
+      else if(pt < 600)  return 0.824796;
+      else if(pt < 800)  return 0.802984;
+      else if(pt < 1000) return 0.751513;
+      else if(pt < 1200) return 0.684949;
+      else               return 0.598841;
+    }
+    else if( tagger == "DeepJetMEDIUM") {
+      if(pt < 30)        return 0.628235;
+      else if(pt < 50)   return 0.794337;
+      else if(pt < 70)   return 0.839644;
+      else if(pt < 100)  return 0.863855;
+      else if(pt < 140)  return 0.878786;
+      else if(pt < 200)  return 0.88415;
+      else if(pt < 300)  return 0.872817;
+      else if(pt < 400)  return 0.850809;
+      else if(pt < 500)  return 0.834119;
+      else if(pt < 600)  return 0.824796;
+      else if(pt < 800)  return 0.802984;
+      else if(pt < 1000) return 0.751513;
+      else if(pt < 1200) return 0.684949;
+      else               return 0.598841;
     }else{
       std::cerr << "Tagger " << tagger << " not coded into GetBtagEfficiency!" << std::endl;
       return 0;
     }
-  }else{ // 2017
+  }else if(year == 2017){ // 2017
     if(tagger == "DeepCSVMEDIUM" or tagger == "SJDeepCSVMEDIUM"){
       if(pt < 30)        return 0.447390; //0.331971;
       else if(pt < 50)   return 0.652679; //0.550937;
@@ -138,6 +146,106 @@ double BtagHardcodedConditions::GetBtagEfficiency(double pt, double eta, std::st
       else if(pt < 1000) return 0.769139; //0.766063;
       else if(pt < 1200) return 0.702670; //0.762402;
       else               return 0.609493; //0.745491;
+    }
+    else if( tagger == "DeepJetLOOSE") {
+      if(pt < 30)        return 0.628235;
+      else if(pt < 50)   return 0.794337;
+      else if(pt < 70)   return 0.839644;
+      else if(pt < 100)  return 0.863855;
+      else if(pt < 140)  return 0.878786;
+      else if(pt < 200)  return 0.88415;
+      else if(pt < 300)  return 0.872817;
+      else if(pt < 400)  return 0.850809;
+      else if(pt < 500)  return 0.834119;
+      else if(pt < 600)  return 0.824796;
+      else if(pt < 800)  return 0.802984;
+      else if(pt < 1000) return 0.751513;
+      else if(pt < 1200) return 0.684949;
+      else               return 0.598841;
+    }
+    else if( tagger == "DeepJetMEDIUM") {
+      if(pt < 30)        return 0.628235;
+      else if(pt < 50)   return 0.794337;
+      else if(pt < 70)   return 0.839644;
+      else if(pt < 100)  return 0.863855;
+      else if(pt < 140)  return 0.878786;
+      else if(pt < 200)  return 0.88415;
+      else if(pt < 300)  return 0.872817;
+      else if(pt < 400)  return 0.850809;
+      else if(pt < 500)  return 0.834119;
+      else if(pt < 600)  return 0.824796;
+      else if(pt < 800)  return 0.802984;
+      else if(pt < 1000) return 0.751513;
+      else if(pt < 1200) return 0.684949;
+      else               return 0.598841;
+    }else{
+      std::cerr << "Tagger " << tagger << " not coded into GetBtagEfficiency!" << std::endl;
+      return 0;
+    }
+  }else{ // 2016
+    if(tagger == "DeepCSVMEDIUM" or tagger == "SJDeepCSVMEDIUM"){
+      if(pt < 30)        return 0.447390; //0.331971;
+      else if(pt < 50)   return 0.652679; //0.550937;
+      else if(pt < 70)   return 0.704724; //0.599929;
+      else if(pt < 100)  return 0.727924; //0.624677;
+      else if(pt < 140)  return 0.737712; //0.635101;
+      else if(pt < 200)  return 0.731578; //0.632463;
+      else if(pt < 300)  return 0.689644; //0.598059;
+      else if(pt < 400)  return 0.615546; //0.558359;
+      else if(pt < 500)  return 0.552437; //0.514297;
+      else if(pt < 600)  return 0.501756; //0.494422;
+      else if(pt < 800)  return 0.433998; //0.474555;
+      else if(pt < 1000) return 0.318242; //0.451810;
+      else if(pt < 1200) return 0.220351; //0.427328;
+      else               return 0.140777; //0.414162;
+    }
+    else if( tagger == "DeepCSVLOOSE" or tagger == "SJDeepCSVLOOSE") {
+      if(pt < 30)        return 0.665838; //0.531941;
+      else if(pt < 50)   return 0.818215; //0.731394;
+      else if(pt < 70)   return 0.856991; //0.777463;
+      else if(pt < 100)  return 0.878542; //0.802409;
+      else if(pt < 140)  return 0.892642; //0.815819;
+      else if(pt < 200)  return 0.898174; //0.823917;
+      else if(pt < 300)  return 0.888097; //0.813134;
+      else if(pt < 400)  return 0.866256; //0.798508;
+      else if(pt < 500)  return 0.850732; //0.789124;
+      else if(pt < 600)  return 0.837788; //0.783070;
+      else if(pt < 800)  return 0.819362; //0.781245;
+      else if(pt < 1000) return 0.769139; //0.766063;
+      else if(pt < 1200) return 0.702670; //0.762402;
+      else               return 0.609493; //0.745491;
+    }
+    else if( tagger == "DeepJetLOOSE") {
+      if(pt < 30)        return 0.628235;
+      else if(pt < 50)   return 0.794337;
+      else if(pt < 70)   return 0.839644;
+      else if(pt < 100)  return 0.863855;
+      else if(pt < 140)  return 0.878786;
+      else if(pt < 200)  return 0.88415;
+      else if(pt < 300)  return 0.872817;
+      else if(pt < 400)  return 0.850809;
+      else if(pt < 500)  return 0.834119;
+      else if(pt < 600)  return 0.824796;
+      else if(pt < 800)  return 0.802984;
+      else if(pt < 1000) return 0.751513;
+      else if(pt < 1200) return 0.684949;
+      else               return 0.598841;
+    }
+    else if( tagger == "DeepJetMEDIUM") {
+      if(pt < 30)        return 0.628235;
+      else if(pt < 50)   return 0.794337;
+      else if(pt < 70)   return 0.839644;
+      else if(pt < 100)  return 0.863855;
+      else if(pt < 140)  return 0.878786;
+      else if(pt < 200)  return 0.88415;
+      else if(pt < 300)  return 0.872817;
+      else if(pt < 400)  return 0.850809;
+      else if(pt < 500)  return 0.834119;
+      else if(pt < 600)  return 0.824796;
+      else if(pt < 800)  return 0.802984;
+      else if(pt < 1000) return 0.751513;
+      else if(pt < 1200) return 0.684949;
+      else               return 0.598841;
     }else{
       std::cerr << "Tagger " << tagger << " not coded into GetBtagEfficiency!" << std::endl;
       return 0;
@@ -184,11 +292,43 @@ double BtagHardcodedConditions::GetCtagEfficiency(double pt, double eta, std::st
       else if(pt < 1000) return 0.318908;
       else if(pt < 1200) return 0.27957;
       else               return 0.243968;
+    }
+    else if( tagger == "DeepJetLOOSE") {
+      if(pt < 30)        return 0.628235;
+      else if(pt < 50)   return 0.794337;
+      else if(pt < 70)   return 0.839644;
+      else if(pt < 100)  return 0.863855;
+      else if(pt < 140)  return 0.878786;
+      else if(pt < 200)  return 0.88415;
+      else if(pt < 300)  return 0.872817;
+      else if(pt < 400)  return 0.850809;
+      else if(pt < 500)  return 0.834119;
+      else if(pt < 600)  return 0.824796;
+      else if(pt < 800)  return 0.802984;
+      else if(pt < 1000) return 0.751513;
+      else if(pt < 1200) return 0.684949;
+      else               return 0.598841;
+    }
+    else if( tagger == "DeepJetMEDIUM") {
+      if(pt < 30)        return 0.628235;
+      else if(pt < 50)   return 0.794337;
+      else if(pt < 70)   return 0.839644;
+      else if(pt < 100)  return 0.863855;
+      else if(pt < 140)  return 0.878786;
+      else if(pt < 200)  return 0.88415;
+      else if(pt < 300)  return 0.872817;
+      else if(pt < 400)  return 0.850809;
+      else if(pt < 500)  return 0.834119;
+      else if(pt < 600)  return 0.824796;
+      else if(pt < 800)  return 0.802984;
+      else if(pt < 1000) return 0.751513;
+      else if(pt < 1200) return 0.684949;
+      else               return 0.598841;
     }else{
       std::cerr << "Tagger " << tagger << " not coded into GetCtagEfficiency!" << std::endl;
       return 0;
     }
-  }else{ // 2017
+  }else if(year == 2017){ // 2017
     if(tagger == "DeepCSVMEDIUM" or tagger == "SJDeepCSVMEDIUM"){
       if(pt < 30)        return 0.070384; //0.057985;
       else if(pt < 50)   return 0.107334; //0.111536;
@@ -220,6 +360,106 @@ double BtagHardcodedConditions::GetCtagEfficiency(double pt, double eta, std::st
       else if(pt < 1000) return 0.337017; //0.422815;
       else if(pt < 1200) return 0.267386; //0.402299;
       else               return 0.275773; //0.401114;
+    }
+    else if( tagger == "DeepJetLOOSE") {
+      if(pt < 30)        return 0.628235;
+      else if(pt < 50)   return 0.794337;
+      else if(pt < 70)   return 0.839644;
+      else if(pt < 100)  return 0.863855;
+      else if(pt < 140)  return 0.878786;
+      else if(pt < 200)  return 0.88415;
+      else if(pt < 300)  return 0.872817;
+      else if(pt < 400)  return 0.850809;
+      else if(pt < 500)  return 0.834119;
+      else if(pt < 600)  return 0.824796;
+      else if(pt < 800)  return 0.802984;
+      else if(pt < 1000) return 0.751513;
+      else if(pt < 1200) return 0.684949;
+      else               return 0.598841;
+    }
+    else if( tagger == "DeepJetMEDIUM") {
+      if(pt < 30)        return 0.628235;
+      else if(pt < 50)   return 0.794337;
+      else if(pt < 70)   return 0.839644;
+      else if(pt < 100)  return 0.863855;
+      else if(pt < 140)  return 0.878786;
+      else if(pt < 200)  return 0.88415;
+      else if(pt < 300)  return 0.872817;
+      else if(pt < 400)  return 0.850809;
+      else if(pt < 500)  return 0.834119;
+      else if(pt < 600)  return 0.824796;
+      else if(pt < 800)  return 0.802984;
+      else if(pt < 1000) return 0.751513;
+      else if(pt < 1200) return 0.684949;
+      else               return 0.598841;
+    }else{
+      std::cerr << "Tagger " << tagger << " not coded into GetCtagEfficiency!" << std::endl;
+      return 0;
+    }
+  }else{ // 2016
+    if(tagger == "DeepCSVMEDIUM" or tagger == "SJDeepCSVMEDIUM"){
+      if(pt < 30)        return 0.070384; //0.057985;
+      else if(pt < 50)   return 0.107334; //0.111536;
+      else if(pt < 70)   return 0.111125; //0.112216;
+      else if(pt < 100)  return 0.119346; //0.120075;
+      else if(pt < 140)  return 0.128583; //0.128499;
+      else if(pt < 200)  return 0.134354; //0.132918;
+      else if(pt < 300)  return 0.127251; //0.126724;
+      else if(pt < 400)  return 0.107927; //0.126281;
+      else if(pt < 500)  return 0.099135; //0.123026;
+      else if(pt < 600)  return 0.081601; //0.124840;
+      else if(pt < 800)  return 0.056054; //0.130060;
+      else if(pt < 1000) return 0.032320; //0.128022;
+      else if(pt < 1200) return 0.014388; //0.134100;
+      else               return 0.012887; //0.125348;
+    }
+    else if( tagger == "DeepCSVLOOSE" or tagger == "SJDeepCSVLOOSE") {
+      if(pt < 30)        return 0.288516; //0.206192;
+      else if(pt < 50)   return 0.408332; //0.338902;
+      else if(pt < 70)   return 0.422585; //0.353516;
+      else if(pt < 100)  return 0.438211; //0.366214;
+      else if(pt < 140)  return 0.454386; //0.371430;
+      else if(pt < 200)  return 0.464604; //0.381838;
+      else if(pt < 300)  return 0.453372; //0.374189;
+      else if(pt < 400)  return 0.434347; //0.379317;
+      else if(pt < 500)  return 0.443035; //0.393696;
+      else if(pt < 600)  return 0.419901; //0.404215;
+      else if(pt < 800)  return 0.390432; //0.417190;
+      else if(pt < 1000) return 0.337017; //0.422815;
+      else if(pt < 1200) return 0.267386; //0.402299;
+      else               return 0.275773; //0.401114;
+    }
+    else if( tagger == "DeepJetLOOSE") {
+      if(pt < 30)        return 0.628235;
+      else if(pt < 50)   return 0.794337;
+      else if(pt < 70)   return 0.839644;
+      else if(pt < 100)  return 0.863855;
+      else if(pt < 140)  return 0.878786;
+      else if(pt < 200)  return 0.88415;
+      else if(pt < 300)  return 0.872817;
+      else if(pt < 400)  return 0.850809;
+      else if(pt < 500)  return 0.834119;
+      else if(pt < 600)  return 0.824796;
+      else if(pt < 800)  return 0.802984;
+      else if(pt < 1000) return 0.751513;
+      else if(pt < 1200) return 0.684949;
+      else               return 0.598841;
+    }
+    else if( tagger == "DeepJetMEDIUM") {
+      if(pt < 30)        return 0.628235;
+      else if(pt < 50)   return 0.794337;
+      else if(pt < 70)   return 0.839644;
+      else if(pt < 100)  return 0.863855;
+      else if(pt < 140)  return 0.878786;
+      else if(pt < 200)  return 0.88415;
+      else if(pt < 300)  return 0.872817;
+      else if(pt < 400)  return 0.850809;
+      else if(pt < 500)  return 0.834119;
+      else if(pt < 600)  return 0.824796;
+      else if(pt < 800)  return 0.802984;
+      else if(pt < 1000) return 0.751513;
+      else if(pt < 1200) return 0.684949;
+      else               return 0.598841;
     }else{
       std::cerr << "Tagger " << tagger << " not coded into GetCtagEfficiency!" << std::endl;
       return 0;
@@ -267,11 +507,42 @@ double BtagHardcodedConditions::GetMistagRate(double pt, double eta, std::string
       else if(pt < 1200) return 0.141539;
       else               return 0.124475;
     }
-    else{
+    else if( tagger == "DeepJetLOOSE") {
+      if(pt < 30)        return 0.628235;
+      else if(pt < 50)   return 0.794337;
+      else if(pt < 70)   return 0.839644;
+      else if(pt < 100)  return 0.863855;
+      else if(pt < 140)  return 0.878786;
+      else if(pt < 200)  return 0.88415;
+      else if(pt < 300)  return 0.872817;
+      else if(pt < 400)  return 0.850809;
+      else if(pt < 500)  return 0.834119;
+      else if(pt < 600)  return 0.824796;
+      else if(pt < 800)  return 0.802984;
+      else if(pt < 1000) return 0.751513;
+      else if(pt < 1200) return 0.684949;
+      else               return 0.598841;
+    }
+    else if( tagger == "DeepJetMEDIUM") {
+      if(pt < 30)        return 0.628235;
+      else if(pt < 50)   return 0.794337;
+      else if(pt < 70)   return 0.839644;
+      else if(pt < 100)  return 0.863855;
+      else if(pt < 140)  return 0.878786;
+      else if(pt < 200)  return 0.88415;
+      else if(pt < 300)  return 0.872817;
+      else if(pt < 400)  return 0.850809;
+      else if(pt < 500)  return 0.834119;
+      else if(pt < 600)  return 0.824796;
+      else if(pt < 800)  return 0.802984;
+      else if(pt < 1000) return 0.751513;
+      else if(pt < 1200) return 0.684949;
+      else               return 0.598841;
+    }else{
       std::cerr << "Tagger " << tagger << " not coded into MistagRate!" << std::endl;
       return 0;
     }
-  }else{ // 2017
+  }else if(year == 2017){ // 2017
     if(tagger == "DeepCSVMEDIUM" || tagger == "SJDeepCSVMEDIUM"){
       if(pt < 30)        return 0.004377; //0.003385;
       else if(pt < 50)   return 0.010659; //0.009673;
@@ -304,7 +575,106 @@ double BtagHardcodedConditions::GetMistagRate(double pt, double eta, std::string
       else if(pt < 1200) return 0.143730; //0.206650;
       else               return 0.131501; //0.243775;
     }
-    else{
+    else if( tagger == "DeepJetLOOSE") {
+      if(pt < 30)        return 0.628235;
+      else if(pt < 50)   return 0.794337;
+      else if(pt < 70)   return 0.839644;
+      else if(pt < 100)  return 0.863855;
+      else if(pt < 140)  return 0.878786;
+      else if(pt < 200)  return 0.88415;
+      else if(pt < 300)  return 0.872817;
+      else if(pt < 400)  return 0.850809;
+      else if(pt < 500)  return 0.834119;
+      else if(pt < 600)  return 0.824796;
+      else if(pt < 800)  return 0.802984;
+      else if(pt < 1000) return 0.751513;
+      else if(pt < 1200) return 0.684949;
+      else               return 0.598841;
+    }
+    else if( tagger == "DeepJetMEDIUM") {
+      if(pt < 30)        return 0.628235;
+      else if(pt < 50)   return 0.794337;
+      else if(pt < 70)   return 0.839644;
+      else if(pt < 100)  return 0.863855;
+      else if(pt < 140)  return 0.878786;
+      else if(pt < 200)  return 0.88415;
+      else if(pt < 300)  return 0.872817;
+      else if(pt < 400)  return 0.850809;
+      else if(pt < 500)  return 0.834119;
+      else if(pt < 600)  return 0.824796;
+      else if(pt < 800)  return 0.802984;
+      else if(pt < 1000) return 0.751513;
+      else if(pt < 1200) return 0.684949;
+      else               return 0.598841;
+    }else{
+      std::cerr << "Tagger " << tagger << " not coded into MistagRate!" << std::endl;
+      return 0;
+    }
+  }else{ // 2016
+    if(tagger == "DeepCSVMEDIUM" || tagger == "SJDeepCSVMEDIUM"){
+      if(pt < 30)        return 0.004377; //0.003385;
+      else if(pt < 50)   return 0.010659; //0.009673;
+      else if(pt < 70)   return 0.009622; //0.008316;
+      else if(pt < 100)  return 0.009726; //0.008524;
+      else if(pt < 140)  return 0.010565; //0.009092;
+      else if(pt < 200)  return 0.011395; //0.011431;
+      else if(pt < 300)  return 0.011618; //0.013666;
+      else if(pt < 400)  return 0.011412; //0.020405;
+      else if(pt < 500)  return 0.011566; //0.023609;
+      else if(pt < 600)  return 0.010326; //0.025348;
+      else if(pt < 800)  return 0.007474; //0.028858;
+      else if(pt < 1000) return 0.005215; //0.030427;
+      else if(pt < 1200) return 0.001746; //0.034091;
+      else               return 0.001182; //0.047619;
+    }
+    else if( tagger == "DeepCSVLOOSE" || tagger == "SJDeepCSVLOOSE") {
+      if(pt < 30)        return 0.076955; //0.068717;
+      else if(pt < 50)   return 0.104639; //0.095095;
+      else if(pt < 70)   return 0.099754; //0.083338;
+      else if(pt < 100)  return 0.103881; //0.085001;
+      else if(pt < 140)  return 0.113770; //0.086867;
+      else if(pt < 200)  return 0.126487; //0.101223;
+      else if(pt < 300)  return 0.139755; //0.114555;
+      else if(pt < 400)  return 0.149181; //0.139321;
+      else if(pt < 500)  return 0.158620; //0.155025;
+      else if(pt < 600)  return 0.161799; //0.167581;
+      else if(pt < 800)  return 0.161169; //0.189058;
+      else if(pt < 1000) return 0.159885; //0.203596;
+      else if(pt < 1200) return 0.143730; //0.206650;
+      else               return 0.131501; //0.243775;
+    }
+    else if( tagger == "DeepJetLOOSE") {
+      if(pt < 30)        return 0.628235;
+      else if(pt < 50)   return 0.794337;
+      else if(pt < 70)   return 0.839644;
+      else if(pt < 100)  return 0.863855;
+      else if(pt < 140)  return 0.878786;
+      else if(pt < 200)  return 0.88415;
+      else if(pt < 300)  return 0.872817;
+      else if(pt < 400)  return 0.850809;
+      else if(pt < 500)  return 0.834119;
+      else if(pt < 600)  return 0.824796;
+      else if(pt < 800)  return 0.802984;
+      else if(pt < 1000) return 0.751513;
+      else if(pt < 1200) return 0.684949;
+      else               return 0.598841;
+    }
+    else if( tagger == "DeepJetMEDIUM") {
+      if(pt < 30)        return 0.628235;
+      else if(pt < 50)   return 0.794337;
+      else if(pt < 70)   return 0.839644;
+      else if(pt < 100)  return 0.863855;
+      else if(pt < 140)  return 0.878786;
+      else if(pt < 200)  return 0.88415;
+      else if(pt < 300)  return 0.872817;
+      else if(pt < 400)  return 0.850809;
+      else if(pt < 500)  return 0.834119;
+      else if(pt < 600)  return 0.824796;
+      else if(pt < 800)  return 0.802984;
+      else if(pt < 1000) return 0.751513;
+      else if(pt < 1200) return 0.684949;
+      else               return 0.598841;
+    }else{
       std::cerr << "Tagger " << tagger << " not coded into MistagRate!" << std::endl;
       return 0;
     }
@@ -323,6 +693,28 @@ double BtagHardcodedConditions::GetMistagRate(double pt, double eta, std::string
   \     /                                                       \     /
    `---'                                                         `---'*/
 
+std::string BtagHardcodedConditions::getAlgoName(const std::string & op)
+{
+  if     ( op == "DeepCSVLOOSE"   )  return "pfDeepCSVJetTags:probb";
+  else if( op == "DeepCSVMEDIUM"  )  return "pfDeepCSVJetTags:probb";
+  else if( op == "DeepJetTIGHT"   )  return "pfDeepFlavourJetTags:probb";
+  else if( op == "DeepJetMEDIUM"  )  return "pfDeepFlavourJetTags:probb";
+  else if( op == "DeepJetLOOSE"   )  return "pfDeepFlavourJetTags:probb";
+  else if( op == "DeepCSVTIGHT"   )  return "pfDeepCSVJetTags:probb";
+  else if( op == "SJDeepCSVLOOSE" )  return "pfDeepCSVJetTags:probb";
+  else if( op == "SJDeepCSVMEDIUM")  return "pfDeepCSVJetTags:probb";
+  throw cms::Exception("InvalidInput") << "Unknown tagger/operating point: "<< op << std::endl;
+}
+
+float BtagHardcodedConditions::getDiscriminant(const std::string & op)
+{
+  if     ( op == "DeepCSVLOOSE"   ) return 0.1522;
+  else if( op == "DeepCSVMEDIUM"  ) return 0.4941;
+  else if( op == "DeepCSVTIGHT"   ) return 0.8001;
+  else if( op == "SJDeepCSVLOOSE" ) return 0.1522;
+  else if( op == "SJDeepCSVMEDIUM") return 0.4941;
+  throw cms::Exception("InvalidInput") << "Unknown operating point: "<< op << std::endl;
+}
 
 double BtagHardcodedConditions::GetBtagScaleFactor(double pt, double eta, std::string tagger, int year)
 {
