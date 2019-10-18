@@ -18,16 +18,6 @@ int JetSubCalc::BeginJob(edm::ConsumesCollector && iC)
   genParticlesToken   = iC.consumes<reco::GenParticleCollection>(mPset.getParameter<edm::InputTag>("genParticles"));
 
   //HARDCODING !
-  bDiscriminant    = "pfDeepCSVJetTags:probb";
-  bbDiscriminant   = "pfDeepCSVJetTags:probbb";
-  cDiscriminant    = "pfDeepCSVJetTags:probb";
-  udsgDiscriminant = "pfDeepCSVJetTags:probudsg";
-  std::cout << "["+GetName()+"]: "<< "Hardcoded btagging strings:" << std::endl;
-  std::cout << "\t\t"<< "bDiscriminant    :" << bDiscriminant << std::endl;
-  std::cout << "\t\t"<< "bbDiscriminant   :" << bbDiscriminant << std::endl;
-  std::cout << "\t\t"<< "cDiscriminant    :" << cDiscriminant << std::endl;
-  std::cout << "\t\t"<< "udsgDiscriminant :" << udsgDiscriminant << std::endl;
-
   kappa = mPset.getParameter<double>("kappa");
   killHF = mPset.getParameter<bool>("killHF");
 
@@ -74,6 +64,7 @@ int JetSubCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * selec
     std::vector<double> theJetPhi;
     std::vector<double> theJetEnergy;
     std::vector<double> theJetCSV;
+    std::vector<double> theJetDeepFlavB;
 
     // Discriminator for the MVA PileUp id.
     // NOTE: Training used is for ak5PFJetsCHS in CMSSW 5.3.X and Run 1 pileup
@@ -88,11 +79,6 @@ int JetSubCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * selec
     std::vector<double> theJetDaughterEta;
     std::vector<double> theJetDaughterPhi;
     std::vector<double> theJetDaughterEnergy;
-
-    std::vector <double> theJetCSVb;
-    std::vector <double> theJetCSVbb;
-    std::vector <double> theJetCSVc;
-    std::vector <double> theJetCSVudsg;
 
     std::vector<int> theJetDaughterMotherIndex;
     std::vector<int> theJetCSVLSubJets;
@@ -125,10 +111,8 @@ int JetSubCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * selec
       theJetPhi    . push_back(ijet->phi());
       theJetEnergy . push_back(ijet->energy());
 
-      theJetCSVb.    push_back(ijet->bDiscriminator( bDiscriminant ));
-      theJetCSVbb.   push_back(ijet->bDiscriminator( bbDiscriminant ));
-      theJetCSVc.    push_back(ijet->bDiscriminator( cDiscriminant ));
-      theJetCSVudsg. push_back(ijet->bDiscriminator( udsgDiscriminant ));
+      theJetDeepFlavB.push_back(ijet->bDiscriminator("pfDeepFlavourJetTags:probb") + ijet->bDiscriminator("pfDeepFlavourJetTags:probbb") + 
+				ijet->bDiscriminator("pfDeepFlavourJetTags:problepb"));
 
       TLorentzVector jetP4; jetP4.SetPtEtaPhiE(ijet->pt(), ijet->eta(), ijet->phi(), ijet->energy() );
 
@@ -169,11 +153,7 @@ int JetSubCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * selec
     SetValue("theJetPhi",    theJetPhi);
     SetValue("theJetEnergy", theJetEnergy);
 
-    SetValue("theJetDeepCSVb",    theJetCSVb);
-    SetValue("theJetDeepCSVbb",   theJetCSVbb);
-    SetValue("theJetDeepCSVc",    theJetCSVc);
-    SetValue("theJetDeepCSVudsg", theJetCSVudsg);
-
+    SetValue("theJetDeepFlavB",    theJetDeepFlavB);
     SetValue("theJetPFlav",  theJetPFlav);
     SetValue("theJetHFlav",  theJetHFlav);
     SetValue("theJetBTag",   theJetBTag);
@@ -238,10 +218,7 @@ int JetSubCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * selec
     std::vector<double> theJetAK8SDSubjetEta;
     std::vector<double> theJetAK8SDSubjetPhi;
     std::vector<double> theJetAK8SDSubjetMass;
-    std::vector<double> theJetAK8SDSubjetCSVb;
-    std::vector<double> theJetAK8SDSubjetCSVc;
-    std::vector<double> theJetAK8SDSubjetCSVudsg;
-    std::vector<double> theJetAK8SDSubjetCSVbb;
+    std::vector<double> theJetAK8SDSubjetDeepCSVb;
     std::vector<int>    theJetAK8SDSubjetHFlav;
     std::vector<int>    theJetAK8SDSubjetBTag;
     std::vector<double> theJetAK8SDSubjetDR;
@@ -271,9 +248,6 @@ int JetSubCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * selec
     double SDsubjetPhi;
     double SDsubjetMass;
     double SDsubjetDeepCSVb;
-    double SDsubjetDeepCSVc;
-    double SDsubjetDeepCSVudsg;
-    double SDsubjetDeepCSVbb;
     int    SDsubjetHFlav;
     double SDsubjetBTag;
     double SDdeltaRsubjetJet;
@@ -365,7 +339,7 @@ int JetSubCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * selec
       theSoftDropn2b2 = (double)corrak8.userFloat("ak8PFJetsPuppiSoftDropValueMap:nb2AK8PuppiSoftDropN2");
       theSoftDropn3b2 = (double)corrak8.userFloat("ak8PFJetsPuppiSoftDropValueMap:nb2AK8PuppiSoftDropN3");
 
-      theJetAK8CSV.push_back(corrak8.bDiscriminator( bDiscriminant ));
+      theJetAK8CSV.push_back(corrak8.bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags"));
       theJetAK8DoubleB.push_back(corrak8.bDiscriminator("pfBoostedDoubleSecondaryVertexAK8BJetTags"));
 
       theJetAK8CHSPrunedMass.push_back(theCHSPrunedMass); // JEC only
@@ -452,19 +426,13 @@ int JetSubCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * selec
         SDsubjetPhi         = -std::numeric_limits<double>::max();
         SDsubjetMass        = -std::numeric_limits<double>::max();
         SDsubjetDeepCSVb    = -std::numeric_limits<double>::max();
-        SDsubjetDeepCSVc    = -std::numeric_limits<double>::max();
-        SDsubjetDeepCSVudsg = -std::numeric_limits<double>::max();
-        SDsubjetDeepCSVbb   = -std::numeric_limits<double>::max();
         SDdeltaRsubjetJet   = std::numeric_limits<double>::max();
 
         SDsubjetPt           = corrsubjet.pt();
         SDsubjetEta          = corrsubjet.eta();
         SDsubjetPhi          = corrsubjet.phi();
         SDsubjetMass         = corrsubjet.mass();
-        SDsubjetDeepCSVb     = corrsubjet.bDiscriminator(bDiscriminant);
-        SDsubjetDeepCSVbb    = corrsubjet.bDiscriminator(bbDiscriminant);
-        SDsubjetDeepCSVc     = corrsubjet.bDiscriminator(cDiscriminant);
-        SDsubjetDeepCSVudsg  = corrsubjet.bDiscriminator(udsgDiscriminant);
+        SDsubjetDeepCSVb     = corrsubjet.bDiscriminator("pfDeepCSVJetTags:probb") + corrsubjet.bDiscriminator("pfDeepCSVJetTags:probbb");
         SDsubjetHFlav        = corrsubjet.hadronFlavour();
 
         TLorentzVector subjetP4; subjetP4.SetPtEtaPhiE(ii->pt(), ii->eta(), ii->phi(), ii->energy() );
@@ -472,7 +440,7 @@ int JetSubCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * selec
         SDsubjetBTag         = btagSfUtil.isJetTagged(corrsubjet, subjetP4, event, isMc, 0, true);
         SDdeltaRsubjetJet    = deltaR(corrak8.eta(), corrak8.phi(), SDsubjetEta, SDsubjetPhi);
 
-        if(SDsubjetDeepCSVb + SDsubjetDeepCSVbb > 0.1522) nSDSubsDeepCSVL++;
+        if(SDsubjetDeepCSVb > 0.1522) nSDSubsDeepCSVL++;
         if(SDsubjetBTag > 0) nSDSubsDeepCSVMSF++;
         if(btagSfUtil.isJetTagged(corrsubjet, subjetP4, event, isMc, 1, true) > 0) nSDSubsDeepCSVM_bSFup++;
         if(btagSfUtil.isJetTagged(corrsubjet, subjetP4, event, isMc, 2, true) > 0) nSDSubsDeepCSVM_bSFdn++;
@@ -483,10 +451,7 @@ int JetSubCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * selec
         theJetAK8SDSubjetEta.push_back(SDsubjetEta);
         theJetAK8SDSubjetPhi.push_back(SDsubjetPhi);
         theJetAK8SDSubjetMass.push_back(SDsubjetMass);
-        theJetAK8SDSubjetCSVb.push_back(SDsubjetDeepCSVb);
-        theJetAK8SDSubjetCSVc.push_back(SDsubjetDeepCSVc);
-        theJetAK8SDSubjetCSVudsg.push_back(SDsubjetDeepCSVudsg);
-        theJetAK8SDSubjetCSVbb.push_back(SDsubjetDeepCSVbb);
+        theJetAK8SDSubjetDeepCSVb.push_back(SDsubjetDeepCSVb);
         theJetAK8SDSubjetHFlav.push_back(SDsubjetHFlav);
         theJetAK8SDSubjetBTag.push_back(SDsubjetBTag);
         theJetAK8SDSubjetDR.push_back(SDdeltaRsubjetJet);
@@ -616,10 +581,7 @@ int JetSubCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * selec
     SetValue("theJetAK8SDSubjetEta",  theJetAK8SDSubjetEta);
     SetValue("theJetAK8SDSubjetPhi",  theJetAK8SDSubjetPhi);
     SetValue("theJetAK8SDSubjetMass", theJetAK8SDSubjetMass);
-    SetValue("theJetAK8SDSubjetCSVb",  theJetAK8SDSubjetCSVb);
-    SetValue("theJetAK8SDSubjetCSVc",  theJetAK8SDSubjetCSVc);
-    SetValue("theJetAK8SDSubjetCSVudsg",  theJetAK8SDSubjetCSVudsg);
-    SetValue("theJetAK8SDSubjetCSVbb",  theJetAK8SDSubjetCSVbb);
+    SetValue("theJetAK8SDSubjetDeepCSVb",  theJetAK8SDSubjetDeepCSVb);
     SetValue("theJetAK8SDSubjetHFlav", theJetAK8SDSubjetHFlav);
     SetValue("theJetAK8SDSubjetBTag",  theJetAK8SDSubjetBTag);
     SetValue("theJetAK8SDSubjetDR",   theJetAK8SDSubjetDR);

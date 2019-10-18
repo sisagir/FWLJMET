@@ -1029,11 +1029,17 @@ void MultiLepCalc::AnalyzeJets(edm::Event const & event, BaseEventSelector * sel
   std::vector <int>    AK4JetBTag_bSFdn;
   std::vector <int>    AK4JetBTag_lSFup;
   std::vector <int>    AK4JetBTag_lSFdn;
-  std::vector <double> AK4JetBDisc;
-  std::vector <double> AK4JetBDeepCSVb;
-  std::vector <double> AK4JetBDeepCSVbb;
-  std::vector <double> AK4JetBDeepCSVc;
-  std::vector <double> AK4JetBDeepCSVudsg;
+  std::vector <double> AK4JetCSV;
+  std::vector <double> AK4JetDeepCSVb;
+  std::vector <double> AK4JetDeepCSVbb;
+  std::vector <double> AK4JetDeepCSVc;
+  std::vector <double> AK4JetDeepCSVudsg;
+  std::vector <double> AK4JetDeepFlavb;
+  std::vector <double> AK4JetDeepFlavbb;
+  std::vector <double> AK4JetDeepFlavlepb;
+  std::vector <double> AK4JetDeepFlavc;
+  std::vector <double> AK4JetDeepFlavg;
+  std::vector <double> AK4JetDeepFlavuds;
   std::vector <int>    AK4JetFlav;
   
   //std::vector <double> AK4JetRCN;
@@ -1055,11 +1061,17 @@ void MultiLepCalc::AnalyzeJets(edm::Event const & event, BaseEventSelector * sel
       AK4JetBTag_lSFup.push_back(btagSfUtil.isJetTagged(*ii,jetP4, event, isMc, 3));
       AK4JetBTag_lSFdn.push_back(btagSfUtil.isJetTagged(*ii,jetP4, event, isMc, 4));
 
-      AK4JetBDisc        . push_back(ii->bDiscriminator( "pfCombinedInclusiveSecondaryVertexV2BJetTags" ));
-      AK4JetBDeepCSVb    . push_back(ii->bDiscriminator( "pfDeepCSVJetTags:probb" ));
-      AK4JetBDeepCSVbb   . push_back(ii->bDiscriminator( "pfDeepCSVJetTags:probbb" ));
-      AK4JetBDeepCSVc    . push_back(ii->bDiscriminator( "pfDeepCSVJetTags:probc" ));
-      AK4JetBDeepCSVudsg . push_back(ii->bDiscriminator( "pfDeepCSVJetTags:probudsg" ));
+      AK4JetCSV        . push_back(ii->bDiscriminator( "pfCombinedInclusiveSecondaryVertexV2BJetTags" ));
+      AK4JetDeepCSVb    . push_back(ii->bDiscriminator( "pfDeepCSVJetTags:probb" ));
+      AK4JetDeepCSVbb   . push_back(ii->bDiscriminator( "pfDeepCSVJetTags:probbb" ));
+      AK4JetDeepCSVc    . push_back(ii->bDiscriminator( "pfDeepCSVJetTags:probc" ));
+      AK4JetDeepCSVudsg . push_back(ii->bDiscriminator( "pfDeepCSVJetTags:probudsg" ));
+      AK4JetDeepFlavb   . push_back(ii->bDiscriminator( "pfDeepFlavourJetTags:probb" ));
+      AK4JetDeepFlavbb  . push_back(ii->bDiscriminator( "pfDeepFlavourJetTags:probbb" ));
+      AK4JetDeepFlavlepb. push_back(ii->bDiscriminator( "pfDeepFlavourJetTags:problepb" ));
+      AK4JetDeepFlavc   . push_back(ii->bDiscriminator( "pfDeepFlavourJetTags:probc" ));
+      AK4JetDeepFlavg   . push_back(ii->bDiscriminator( "pfDeepFlavourJetTags:probg" ));
+      AK4JetDeepFlavuds . push_back(ii->bDiscriminator( "pfDeepFlavourJetTags:probuds" ));
       AK4JetFlav         . push_back(abs(ii->hadronFlavour()));
 
       //HT
@@ -1125,11 +1137,17 @@ void MultiLepCalc::AnalyzeJets(edm::Event const & event, BaseEventSelector * sel
     SetValue("AK4JetBTag_bSFdn"   , AK4JetBTag_bSFdn);
     SetValue("AK4JetBTag_lSFup"   , AK4JetBTag_lSFup);
     SetValue("AK4JetBTag_lSFdn"   , AK4JetBTag_lSFdn);
-    SetValue("AK4JetBDisc"          , AK4JetBDisc);
-    SetValue("AK4JetBDeepCSVb"      , AK4JetBDeepCSVb);
-    SetValue("AK4JetBDeepCSVbb"     , AK4JetBDeepCSVbb);
-    SetValue("AK4JetBDeepCSVc"      , AK4JetBDeepCSVc);
-    SetValue("AK4JetBDeepCSVudsg"   , AK4JetBDeepCSVudsg);
+    SetValue("AK4JetCSV"          , AK4JetCSV);
+    SetValue("AK4JetDeepCSVb"      , AK4JetDeepCSVb);
+    SetValue("AK4JetDeepCSVbb"     , AK4JetDeepCSVbb);
+    SetValue("AK4JetDeepCSVc"      , AK4JetDeepCSVc);
+    SetValue("AK4JetDeepCSVudsg"   , AK4JetDeepCSVudsg);
+    SetValue("AK4JetDeepFlavb"      , AK4JetDeepFlavb);
+    SetValue("AK4JetDeepFlavbb"     , AK4JetDeepFlavbb);
+    SetValue("AK4JetDeepFlavlepb"   , AK4JetDeepFlavlepb);
+    SetValue("AK4JetDeepFlavc"      , AK4JetDeepFlavc);
+    SetValue("AK4JetDeepFlavg"      , AK4JetDeepFlavg);
+    SetValue("AK4JetDeepFlavuds"    , AK4JetDeepFlavuds);
     SetValue("AK4JetFlav"           , AK4JetFlav);
 
 
