@@ -300,10 +300,25 @@ process.packedJetsAK8Puppi = cms.EDProducer("JetSubstructurePacker",
 
 ##############################################
 #run QGTagger code again to calculate jet axis1  (HOT Tagger) - https://github.com/susy2015/TopTagger/tree/master/TopTagger#instructions-for-saving-tagger-results-to-nanoaod-with-cmssw_9_4_11
+### 
+###  Add DeepFlavour tags for AK4
 ##############################################
 updateJetCollection(
     process,
     jetSource = cms.InputTag('slimmedJets'),
+    pvSource = cms.InputTag('offlineSlimmedPrimaryVertices'),
+    svSource = cms.InputTag('slimmedSecondaryVertices'),
+    jetCorrections = ('AK4PFchs', cms.vstring(['L1FastJet', 'L2Relative', 'L3Absolute']), 'None'),
+    btagDiscriminators = [
+        'pfDeepFlavourJetTags:probb',
+        'pfDeepFlavourJetTags:probbb',
+        'pfDeepFlavourJetTags:problepb',
+        'pfDeepFlavourJetTags:probc',
+        'pfDeepFlavourJetTags:probuds',
+        'pfDeepFlavourJetTags:probg'
+        ],
+    printWarning=False
+
 )
 process.load('RecoJets.JetProducers.QGTagger_cfi')
 # patAlgosToolsTask.add(process.QGTagger)
