@@ -524,9 +524,9 @@ MultiLepSelector_cfg = cms.PSet(
             #Btag
             btag_cuts                = cms.bool(False), #not implemented
             btagOP                   = cms.string('MEDIUM'),
-            bdisc_min                = cms.double(0.4941), # THIS HAS TO MATCH btagOP !
+            bdisc_min                = cms.double(0.3033), # THIS HAS TO MATCH btagOP !
             applyBtagSF              = cms.bool(True), #This is implemented by BTagSFUtil.cc
-            DeepCSVfile              = cms.FileInPath('FWLJMET/LJMet/data/DeepCSV_94XSF_V3_B_F.csv'),
+            DeepCSVfile              = cms.FileInPath('FWLJMET/LJMet/data/DeepFlavour_94XSF_WP_V3_B_F.csv'),
             DeepCSVSubjetfile        = cms.FileInPath('FWLJMET/LJMet/data/subjet_DeepCSV_94XSF_V3_B_F.csv'),
             BTagUncertUp             = cms.bool(False), # no longer needed, but can still be utilized. Keep false as default.
             BTagUncertDown           = cms.bool(False), # no longer needed, but can still be utilized. Keep false as default.
@@ -613,9 +613,9 @@ MultiLepCalc_cfg = cms.PSet(
 
             #Btagging - Btag info needs to be passed here again if Calc uses Btagging.
             btagOP                   = cms.string('MEDIUM'),
-            bdisc_min                = cms.double(0.4941), # THIS HAS TO MATCH btagOP !
+            bdisc_min                = cms.double(0.3033), # THIS HAS TO MATCH btagOP !
             applyBtagSF              = cms.bool(True), #This is implemented by BTagSFUtil.cc
-            DeepCSVfile              = cms.FileInPath('FWLJMET/LJMet/data/DeepCSV_94XSF_V3_B_F.csv'),
+            DeepCSVfile              = cms.FileInPath('FWLJMET/LJMet/data/DeepFlavour_94XSF_WP_V3_B_F.csv'),
             DeepCSVSubjetfile        = cms.FileInPath('FWLJMET/LJMet/data/subjet_DeepCSV_94XSF_V3_B_F.csv'),
             BTagUncertUp             = cms.bool(False), # no longer needed, but can still be utilized. Keep false as default.
             BTagUncertDown           = cms.bool(False), # no longer needed, but can still be utilized. Keep false as default.
@@ -669,9 +669,9 @@ JetSubCalc_cfg = cms.PSet(
 
             #Btagging - Btag info needs to be passed here again if Calc uses Btagging.
             btagOP                   = cms.string('MEDIUM'),
-            bdisc_min                = cms.double(0.4941), # THIS HAS TO MATCH btagOP !
+            bdisc_min                = cms.double(0.3033), # THIS HAS TO MATCH btagOP !
             applyBtagSF              = cms.bool(True), #This is implemented by BTagSFUtil.cc
-            DeepCSVfile              = cms.FileInPath('FWLJMET/LJMet/data/DeepCSV_94XSF_V3_B_F.csv'),
+            DeepCSVfile              = cms.FileInPath('FWLJMET/LJMet/data/DeepFlavour_94XSF_WP_V3_B_F.csv'),
             DeepCSVSubjetfile        = cms.FileInPath('FWLJMET/LJMet/data/subjet_DeepCSV_94XSF_V3_B_F.csv'),
             BTagUncertUp             = cms.bool(False), # no longer needed, but can still be utilized. Keep false as default.
             BTagUncertDown           = cms.bool(False), # no longer needed, but can still be utilized. Keep false as default.
