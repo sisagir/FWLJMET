@@ -511,7 +511,7 @@ bool MultiLepEventSelector::METfilter(edm::Event const & event)
 	  edm::Handle<bool> passecalBadCalibFilterUpdate;
 	  if(event.getByToken( METfilterToken_extra , passecalBadCalibFilterUpdate)){
 	      eebadcalibpass = *passecalBadCalibFilterUpdate;
-	  }
+	  }else{ eebadcalibpass = true; // for 2016}
 
 	  if( hbhenoisepass &&
 	      hbhenoiseisopass &&
