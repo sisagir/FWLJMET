@@ -338,6 +338,23 @@ process.prefiringweight = l1ECALPrefiringWeightProducer.clone(
     SkipWarnings = False)
 
 
+################################
+## Apply Jet ID to AK4 and AK8
+################################
+
+from PhysicsTools.SelectorUtils.pfJetIDSelector_cfi import pfJetIDSelector
+pfJetIDSelector.version = cms.string('WINTER17')
+pfJetIDSelector.quality = cms.string('TIGHT')
+process.tightAK4Jets = cms.EDFilter("PFJetIDSelectionFunctorFilter",
+                                    filterParams =pfJetIDSelector.clone(),
+                                    src = cms.InputTag("updatedPatJets"),
+)
+
+pfJetIDSelector.version = cms.string('WINTER17PUPPI')
+process.tightPackedJetsAK8Puppi = cms.EDFilter("PFJetIDSelectionFunctorFilter",
+                                               filterParams =pfJetIDSelector.clone(),
+                                               src = cms.InputTag("packedJetsAK8Puppi"),
+)
 
 ################################################
 ### LJMET
@@ -503,9 +520,11 @@ MultiLepSelector_cfg = cms.PSet(
 
             # Jets
             # jet_collection           = cms.InputTag('slimmedJets'), #original collection
-            jet_collection           = cms.InputTag('updatedPatJets::LJMET'),
-            # AK8jet_collection        = cms.InputTag('slimmedJetsAK8'), #original collection
-            AK8jet_collection        = cms.InputTag('packedJetsAK8Puppi'),
+            #jet_collection           = cms.InputTag('updatedPatJets::LJMET'),
+            jet_collection           = cms.InputTag('tightAK4Jetse'),
+            # AK8jet_collection        = cms.InputTag('slimmedJetsAK8'), # original collection
+            #AK8jet_collection        = cms.InputTag('packedJetsAK8Puppi'),
+            AK8jet_collection        = cms.InputTag('tightPackedJetsAK8Puppi'),
             JECup                    = cms.bool(JECup),
             JECdown                  = cms.bool(JECdown),
             JERup                    = cms.bool(JERup),
@@ -821,6 +840,8 @@ if (isTTbar):
                          process.updatedJetsAK8PuppiSoftDropPacked *
                          process.packedJetsAK8Puppi *
                          process.QGTagger *
+                         process.tightAK4Jets *
+                         process.tightPackedJetsAK8Puppi *
                          process.ecalBadCalibReducedMINIAODFilter *
                          process.ttbarcat *
                          process.ljmet #(ntuplizer)
@@ -836,6 +857,8 @@ elif(isMC):
         process.updatedJetsAK8PuppiSoftDropPacked *
         process.packedJetsAK8Puppi *
         process.QGTagger *
+        process.tightAK4Jets *
+        process.tightPackedJetsAK8Puppi *
         process.ecalBadCalibReducedMINIAODFilter *
         process.ljmet #(ntuplizer)
         )
@@ -848,6 +871,8 @@ else:
        process.updatedJetsAK8PuppiSoftDropPacked *
        process.packedJetsAK8Puppi *
        process.QGTagger *
+       process.tightAK4Jets *
+       process.tightPackedJetsAK8Puppi *
        process.ecalBadCalibReducedMINIAODFilter *
        process.ljmet #(ntuplizer)
     )

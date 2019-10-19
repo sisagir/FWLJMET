@@ -1119,34 +1119,34 @@ bool MultiLepEventSelector::JetSelection(edm::Event const & event, pat::strbitse
     // jet cuts  //NOTE: THIS IDEALLY SHOULDN'T BE HARD CODED -- Mar 13, 2019
     while(1){
 
-      // PF Jet ID
-      if (fabs(_ijet->correctedJet(0).eta()) < 2.4 &&
-	  _ijet->correctedJet(0).neutralHadronEnergyFraction() < 0.90 &&
-	  _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.90 &&
-	  _ijet->correctedJet(0).chargedMultiplicity()+_ijet->correctedJet(0).neutralMultiplicity() > 1 &&
-	  _ijet->correctedJet(0).chargedHadronEnergyFraction() > 0 &&
-	  _ijet->correctedJet(0).chargedMultiplicity() > 0
-	  ){ }
-      else if (fabs(_ijet->correctedJet(0).eta()) >= 2.4 &&
-	       fabs(_ijet->correctedJet(0).eta()) < 2.7 &&
-	       _ijet->correctedJet(0).neutralHadronEnergyFraction() < 0.90 &&
-	       _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.90 &&
-	       _ijet->correctedJet(0).chargedMultiplicity()+_ijet->correctedJet(0).neutralMultiplicity() > 1
-	       ){ }
-      else if (fabs(_ijet->correctedJet(0).eta()) >= 2.7 &&
-	       fabs(_ijet->correctedJet(0).eta()) < 3.0 &&
-	       _ijet->correctedJet(0).neutralEmEnergyFraction() > 0.02 &&
-	       _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.99 &&
-	       _ijet->correctedJet(0).neutralMultiplicity() > 2
-	       ){ }
-      else if (fabs(_ijet->correctedJet(0).eta()) >= 3.0 &&
-	       _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.9 &&
-	       _ijet->correctedJet(0).neutralHadronEnergyFraction() > 0.02 &&
-	       _ijet->correctedJet(0).neutralMultiplicity() > 10
-	       ){ }
-      else break; // fail
+      // // PF Jet ID
+      // if (fabs(_ijet->correctedJet(0).eta()) < 2.4 &&
+      // 	  _ijet->correctedJet(0).neutralHadronEnergyFraction() < 0.90 &&
+      // 	  _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.90 &&
+      // 	  _ijet->correctedJet(0).chargedMultiplicity()+_ijet->correctedJet(0).neutralMultiplicity() > 1 &&
+      // 	  _ijet->correctedJet(0).chargedHadronEnergyFraction() > 0 &&
+      // 	  _ijet->correctedJet(0).chargedMultiplicity() > 0
+      // 	  ){ }
+      // else if (fabs(_ijet->correctedJet(0).eta()) >= 2.4 &&
+      // 	       fabs(_ijet->correctedJet(0).eta()) < 2.7 &&
+      // 	       _ijet->correctedJet(0).neutralHadronEnergyFraction() < 0.90 &&
+      // 	       _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.90 &&
+      // 	       _ijet->correctedJet(0).chargedMultiplicity()+_ijet->correctedJet(0).neutralMultiplicity() > 1
+      // 	       ){ }
+      // else if (fabs(_ijet->correctedJet(0).eta()) >= 2.7 &&
+      // 	       fabs(_ijet->correctedJet(0).eta()) < 3.0 &&
+      // 	       _ijet->correctedJet(0).neutralEmEnergyFraction() > 0.02 &&
+      // 	       _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.99 &&
+      // 	       _ijet->correctedJet(0).neutralMultiplicity() > 2
+      // 	       ){ }
+      // else if (fabs(_ijet->correctedJet(0).eta()) >= 3.0 &&
+      // 	       _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.9 &&
+      // 	       _ijet->correctedJet(0).neutralHadronEnergyFraction() > 0.02 &&
+      // 	       _ijet->correctedJet(0).neutralMultiplicity() > 10
+      // 	       ){ }
+      // else break; // fail
 
-      _passpf = true;
+      _passpf = true; // now this is applied in the cmsRun job to make the jet collection
 
       if ( jetP4.Pt() > jet_minpt ){ }
       else break; // fail
@@ -1348,35 +1348,36 @@ void MultiLepEventSelector::AK8JetSelection(edm::Event const & event)
     // jet cuts //NOTE: THIS IDEALLY SHOULDN'T BE HARD CODED -- Mar 14, 2019
     while(1){
 
-      // PF Jet ID
-      if (fabs(_ijet->correctedJet(0).eta()) < 2.4 &&
-	  _ijet->correctedJet(0).neutralHadronEnergyFraction() < 0.90 &&
-	  _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.90 &&
-	  //_ijet->userFloat("patPuppiJetSpecificProducer:puppiMultiplicity") > 1 &&
-	  _ijet->correctedJet(0).chargedMultiplicity()+_ijet->correctedJet(0).neutralMultiplicity() > 1 &&
-	  _ijet->correctedJet(0).chargedHadronEnergyFraction() > 0 &&
-	  _ijet->correctedJet(0).chargedMultiplicity() > 0
-	  ){ }
-      else if (fabs(_ijet->correctedJet(0).eta()) >= 2.4 &&
-	       fabs(_ijet->correctedJet(0).eta()) < 2.7 &&
-	       _ijet->correctedJet(0).neutralHadronEnergyFraction() < 0.90 &&
-	       _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.90 &&
-	       //_ijet->userFloat("patPuppiJetSpecificProducer:puppiMultiplicity") > 1
-	       _ijet->correctedJet(0).chargedMultiplicity()+_ijet->correctedJet(0).neutralMultiplicity() > 1
-	       ){ }
-      else if (fabs(_ijet->correctedJet(0).eta()) >= 2.7 &&
-	       fabs(_ijet->correctedJet(0).eta()) < 3.0 &&
-	       _ijet->correctedJet(0).neutralHadronEnergyFraction() < 0.99
-	       ){ }
-      else if (fabs(_ijet->correctedJet(0).eta()) >= 3.0 &&
-	       _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.9 &&
-	       _ijet->correctedJet(0).neutralHadronEnergyFraction() > 0.02 &&
-	       //_ijet->userFloat("patPuppiJetSpecificProducer:neutralPuppiMultiplicity") > 2 &&
-	       //_ijet->userFloat("patPuppiJetSpecificProducer:neutralPuppiMultiplicity") < 15
-	       _ijet->correctedJet(0).neutralMultiplicity() > 2 &&
-	       _ijet->correctedJet(0).neutralMultiplicity() < 15
-	       ){ }
-      else break; // fail
+      // Now we are applying this to make the jet collections
+      // // PF Jet ID
+      // if (fabs(_ijet->correctedJet(0).eta()) < 2.4 &&
+      // 	  _ijet->correctedJet(0).neutralHadronEnergyFraction() < 0.90 &&
+      // 	  _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.90 &&
+      // 	  //_ijet->userFloat("patPuppiJetSpecificProducer:puppiMultiplicity") > 1 &&
+      // 	  _ijet->correctedJet(0).chargedMultiplicity()+_ijet->correctedJet(0).neutralMultiplicity() > 1 &&
+      // 	  _ijet->correctedJet(0).chargedHadronEnergyFraction() > 0 &&
+      // 	  _ijet->correctedJet(0).chargedMultiplicity() > 0
+      // 	  ){ }
+      // else if (fabs(_ijet->correctedJet(0).eta()) >= 2.4 &&
+      // 	       fabs(_ijet->correctedJet(0).eta()) < 2.7 &&
+      // 	       _ijet->correctedJet(0).neutralHadronEnergyFraction() < 0.90 &&
+      // 	       _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.90 &&
+      // 	       //_ijet->userFloat("patPuppiJetSpecificProducer:puppiMultiplicity") > 1
+      // 	       _ijet->correctedJet(0).chargedMultiplicity()+_ijet->correctedJet(0).neutralMultiplicity() > 1
+      // 	       ){ }
+      // else if (fabs(_ijet->correctedJet(0).eta()) >= 2.7 &&
+      // 	       fabs(_ijet->correctedJet(0).eta()) < 3.0 &&
+      // 	       _ijet->correctedJet(0).neutralHadronEnergyFraction() < 0.99
+      // 	       ){ }
+      // else if (fabs(_ijet->correctedJet(0).eta()) >= 3.0 &&
+      // 	       _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.9 &&
+      // 	       _ijet->correctedJet(0).neutralHadronEnergyFraction() > 0.02 &&
+      // 	       //_ijet->userFloat("patPuppiJetSpecificProducer:neutralPuppiMultiplicity") > 2 &&
+      // 	       //_ijet->userFloat("patPuppiJetSpecificProducer:neutralPuppiMultiplicity") < 15
+      // 	       _ijet->correctedJet(0).neutralMultiplicity() > 2 &&
+      // 	       _ijet->correctedJet(0).neutralMultiplicity() < 15
+      // 	       ){ }
+      // else break; // fail
 
       if ( jetP4.Pt() > jet_minpt_AK8 ){ }
       else break; // fail
