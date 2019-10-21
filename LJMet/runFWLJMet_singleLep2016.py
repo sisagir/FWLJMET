@@ -477,7 +477,7 @@ MultiLepSelector_cfg = cms.PSet(
             # Jets
             # jet_collection           = cms.InputTag('slimmedJets'), #original collection
             #jet_collection           = cms.InputTag('updatedPatJets::LJMET'),
-            jet_collection           = cms.InputTag('tightAK4Jetse'),
+            jet_collection           = cms.InputTag('tightAK4Jets'),
             # AK8jet_collection        = cms.InputTag('slimmedJetsAK8'), # original collection
             #AK8jet_collection        = cms.InputTag('packedJetsAK8Puppi'),
             AK8jet_collection        = cms.InputTag('tightPackedJetsAK8Puppi'),
