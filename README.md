@@ -65,7 +65,7 @@ Some info:
      - https://github.com/demarley/lwtnn/tree/CMSSW_8_0_X-compatible#cmssw-compatibility
 
 
-run LJMet:
+run LJMet tester file:
 
-    cmsRun LJMet/runFWLJMet_multiLep.py (or runFWLJMet_singleLep.py)
+    cmsRun LJMet/tester2017.py (or tester2016.py, or tester2018.py)
 
