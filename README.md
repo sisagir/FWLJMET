@@ -25,7 +25,8 @@ install:
 
 	### BestCalc: copy lwtnn so that BestCalc.cc will compile.
 	### This is not ideal, should always try to get official CMSSW / GitHub recipes whenever possible.
-	### JH May 11: likely json needs to get remade for this by BEST team to use "lwtnn"-owned github. Forgot about Dan Marley's linked below, will test next week.
+	### JH May 11: likely json needs to get remade by BEST team to use "lwtnn"-owned github. 
+	### Dan Marley's lwtnn github linked below never tested...
 	cp -r ~jmanagan/nobackup/CMSSW_9_4_12/src/lwtnn .   ## use scp after a Fermilab kinit to copy onto non-LPC clusters
 
 	## Check out FWLJMET
