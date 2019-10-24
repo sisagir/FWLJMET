@@ -41,7 +41,9 @@ OUTFOLDER           = option.outfolder
 #JSON for Data
 JSONFORDATA         = 'https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions17/13TeV/Final/Cert_294927-306462_13TeV_PromptReco_Collisions17_JSON.txt' #https://twiki.cern.ch/twiki/bin/view/CMS/PdmV2017Analysis#DATA
 if option.year == '2018': 
-	JSONFORDATA = 'https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions18/13TeV/PromptReco/Cert_314472-325175_13TeV_PromptReco_Collisions18_JSON.txt' #https://twiki.cern.ch/twiki/bin/view/CMS/PdmV2018Analysis#DATA
+	JSONFORDATA = 'https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions18/13TeV/ReReco/Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt' #https://twiki.cern.ch/twiki/bin/viewauth/CMS/PdmV2018Analysis#Early2018Re_reco_17Sep2018_datas
+else if option.year == '2016':
+	JSONFORDATA = 'https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions16/13TeV/ReReco/Final/Cert_271036-284044_13TeV_ReReco_07Aug2017_Collisions16_JSON.txt' #https://twiki.cern.ch/twiki/bin/viewauth/CMS/PdmV2016Analysis#Re_miniAOD_datasets
 
 def create_crab_config_files_from_template(sample_dict,**kwargs):
 
