@@ -150,6 +150,7 @@ process.filter_any_explicit = hlt.hltHighLevel.clone(
                         'HLT_PFHT380_SixPFJet32_DoublePFBTagDeepCSV_2p2_v*', # only MC
                         'HLT_PFHT380_SixPFJet32_DoublePFBTagCSV_2p2_v*',
                         'HLT_PFHT400_SixPFJet32_DoublePFBTagDeepCSV_2p94_v*',
+                        'HLT_PFHT400_SixJet30_DoubleBTagCSV_p056_v*',
 
     ],
     throw = False
@@ -431,6 +432,7 @@ hlt_path_hadronic = cms.vstring(
     'HLT_PFHT380_SixPFJet32_DoublePFBTagDeepCSV_2p2_v*', # only MC
     'HLT_PFHT380_SixPFJet32_DoublePFBTagCSV_2p2_v*',
     'HLT_PFHT400_SixPFJet32_DoublePFBTagDeepCSV_2p94_v*',
+    'HLT_PFHT400_SixJet30_DoubleBTagCSV_p056_v*',
     )
 
 
