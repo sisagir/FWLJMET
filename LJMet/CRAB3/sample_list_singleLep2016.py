@@ -129,6 +129,14 @@ datadict['SingleMuonRun2016F']  = '/SingleMuon/Run2016F-17Jul2018-v1/MINIAOD'
 datadict['SingleMuonRun2016G']  = '/SingleMuon/Run2016G-17Jul2018-v1/MINIAOD'
 datadict['SingleMuonRun2016H']  = '/SingleMuon/Run2016H-17Jul2018-v1/MINIAOD'
 
+datadict['JetHTRun2016B']  = '/JetHT/Run2016B-17Jul2018_ver2-v2/MINIAOD'
+datadict['JetHTRun2016C']  = '/JetHT/Run2016C-17Jul2018-v1/MINIAOD'
+datadict['JetHTRun2016D']  = '/JetHT/Run2016D-17Jul2018-v1/MINIAOD'
+datadict['JetHTRun2016E']  = '/JetHT/Run2016E-17Jul2018-v1/MINIAOD'
+datadict['JetHTRun2016F']  = '/JetHT/Run2016F-17Jul2018-v1/MINIAOD'
+datadict['JetHTRun2016G']  = '/JetHT/Run2016G-17Jul2018-v1/MINIAOD'
+datadict['JetHTRun2016H']  = '/JetHT/Run2016H-17Jul2018-v1/MINIAOD'
+
 trigdictmc = {}
 trigdictmc['TTInclusive'] = '/TT_TuneCUETP8M2T4_PSweights_13TeV-powheg-pythia8/RunIISummer16MiniAODv3-94X_mcRun2_asymptotic_v3-v1/MINIAODSIM'
 

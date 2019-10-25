@@ -101,13 +101,15 @@ datadict['SingleMuonRun2017D']  = '/SingleMuon/Run2017D-31Mar2018-v1/MINIAOD'
 datadict['SingleMuonRun2017E']  = '/SingleMuon/Run2017E-31Mar2018-v1/MINIAOD'
 datadict['SingleMuonRun2017F']  = '/SingleMuon/Run2017F-31Mar2018-v1/MINIAOD'
 
-trigdict = {}
+datadict['JetHTRun2017B']  = '/JetHT/Run2017B-31Mar2018-v1/MINIAOD'
+datadict['JetHTRun2017C']  = '/JetHT/Run2017C-31Mar2018-v1/MINIAOD'
+datadict['JetHTRun2017D']  = '/JetHT/Run2017D-31Mar2018-v1/MINIAOD'
+datadict['JetHTRun2017E']  = '/JetHT/Run2017E-31Mar2018-v1/MINIAOD'
+datadict['JetHTRun2017F']  = '/JetHT/Run2017F-31Mar2018-v1/MINIAOD'
+
+# trigdict = {}
 trigdictmc = {}
-trigdict['JetHTRun2017B']  = '/JetHT/Run2017B-31Mar2018-v1/MINIAOD'
-trigdict['JetHTRun2017C']  = '/JetHT/Run2017C-31Mar2018-v1/MINIAOD'
-trigdict['JetHTRun2017D']  = '/JetHT/Run2017D-31Mar2018-v1/MINIAOD'
-trigdict['JetHTRun2017E']  = '/JetHT/Run2017E-31Mar2018-v1/MINIAOD'
-trigdict['JetHTRun2017F']  = '/JetHT/Run2017F-31Mar2018-v1/MINIAOD'
+
 trigdictmc['TTTo2L2Nu'] = '/TTTo2L2Nu_TuneCP5_PSweights_13TeV-powheg-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_new_pmx_94X_mc2017_realistic_v14-v2/MINIAODSIM'
 #trigdictmc['TTToSemiLeptonic'] = '/TTToSemiLeptonic_TuneCP5_PSweights_13TeV-powheg-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v2/MINIAODSIM'
 #trigdictmc['TpTp1400'] = '/TprimeTprime_M-1400_TuneCP5_PSweights_13TeV-madgraph-pythia8/RunIIAutumn18MiniAOD-102X_upgrade2018_realistic_v15-v2/MINIAODSIM'
@@ -116,7 +118,8 @@ fourtopssigdict = {}
 fourtopsttdict = {}
 fourtopsbkgdict ={}
 
-fourtopssigdict['TTTT'] = '/TTTT_TuneCP5_13TeV-amcatnlo-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v2/MINIAODSIM'
+fourtopssigdict['TTTTnoPS'] = '/TTTT_TuneCP5_13TeV-amcatnlo-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v2/MINIAODSIM'
+fourtopssigdict['TTTT'] =     '/TTTT_TuneCP5_PSweights_13TeV-amcatnlo-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM'
 
 fourtopsttdict['TTToSemiLepton_HT500Njet9'] = '/TTToSemiLepton_HT500Njet9_TuneCP5_PSweights_13TeV-powheg-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM'
 fourtopsttdict['TTToSemiLeptonic_TuneCP5down'] = '/TTToSemiLeptonic_TuneCP5down_PSweights_13TeV-powheg-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM'

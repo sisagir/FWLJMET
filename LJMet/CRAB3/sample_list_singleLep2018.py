@@ -117,12 +117,13 @@ datadict['SingleMuonRun2018B']  = '/SingleMuon/Run2018B-17Sep2018-v1/MINIAOD'
 datadict['SingleMuonRun2018C']  = '/SingleMuon/Run2018C-17Sep2018-v1/MINIAOD'
 datadict['SingleMuonRun2018D']  = '/SingleMuon/Run2018D-PromptReco-v2/MINIAOD'
 
-trigdict = {}
+datadict['JetHTRun2018A'] = '/JetHT/Run2018A-17Sep2018-v1/MINIAOD'
+datadict['JetHTRun2018B'] = '/JetHT/Run2018B-17Sep2018-v1/MINIAOD'
+datadict['JetHTRun2018C'] = '/JetHT/Run2018C-17Sep2018-v1/MINIAOD'
+datadict['JetHTRun2018D'] = '/JetHT/Run2018D-PromptReco-v2/MINIAOD'
+
+#trigdict = {}
 trigdictmc = {}
-trigdict['JetHTRun2018A'] = '/JetHT/Run2018A-17Sep2018-v1/MINIAOD'
-trigdict['JetHTRun2018B'] = '/JetHT/Run2018B-17Sep2018-v1/MINIAOD'
-trigdict['JetHTRun2018C'] = '/JetHT/Run2018C-17Sep2018-v1/MINIAOD'
-trigdict['JetHTRun2018D'] = '/JetHT/Run2018D-PromptReco-v2/MINIAOD'
 trigdictmc['TTTo2L2Nu'] = '/TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8/RunIIAutumn18MiniAOD-102X_upgrade2018_realistic_v15-v1/MINIAODSIM'
 #trigdictmc['TTToSemiLeptonic'] = '/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/RunIIAutumn18MiniAOD-102X_upgrade2018_realistic_v15-v1/MINIAODSIM'
 #trigdictmc['TpTp1400'] = '/TprimeTprime_M-1400_TuneCP5_PSweights_13TeV-madgraph-pythia8/RunIIAutumn18MiniAOD-102X_upgrade2018_realistic_v15-v2/MINIAODSIM'
