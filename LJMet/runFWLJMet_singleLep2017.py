@@ -146,13 +146,13 @@ process.filter_any_explicit = hlt.hltHighLevel.clone(
                         'HLT_Mu15_IsoVVVL_PFHT600_v*',
 
                         'HLT_IsoTkMu24_v*',
-                        #'HLT_IsoMu24_2p1_v*', DOES NOT EXIST
                         'HLT_Mu15_IsoVVVL_PFHT450_CaloBTagCSV_4p5_v*', # Muon+HT
 
-                        'HLT_PFHT380_SixJet32_DoubleBTagCSV_p075_v*', # only data #NOT IN MENU?
+                        'HLT_PFHT380_SixJet32_DoubleBTagCSV_p075_v*', # only data
                         'HLT_PFHT380_SixPFJet32_DoublePFBTagDeepCSV_2p2_v*', # only MC
                         'HLT_PFHT380_SixPFJet32_DoublePFBTagCSV_2p2_v*',
-                        #'HLT_PFHT380_SixPFJet32_DoublePFBTagDeepCSV_2p2_v*',#DUPLICATE
+                        'HLT_PFHT400_SixPFJet32_DoublePFBTagDeepCSV_2p94_v*',
+
 
     ],
     throw = False
@@ -426,15 +426,14 @@ hlt_path_mu = cms.vstring(
         'HLT_Mu15_IsoVVVL_PFHT600_v',
         
         'HLT_IsoTkMu24_v*',
-        #'HLT_IsoMu24_2p1_v*', DOES NOT EXIST
         'HLT_Mu15_IsoVVVL_PFHT450_CaloBTagCSV_4p5_v*', # Muon+HT
         )
 
 hlt_path_hadronic = cms.vstring(
-    'HLT_PFHT380_SixJet32_DoubleBTagCSV_p075_v*', # only data #NOT IN MENU?
+    'HLT_PFHT380_SixJet32_DoubleBTagCSV_p075_v*', # only data
     'HLT_PFHT380_SixPFJet32_DoublePFBTagDeepCSV_2p2_v*', # only MC
     'HLT_PFHT380_SixPFJet32_DoublePFBTagCSV_2p2_v*',
-    #'HLT_PFHT380_SixPFJet32_DoublePFBTagDeepCSV_2p2_v*',#DUPLICATE
+    'HLT_PFHT400_SixPFJet32_DoublePFBTagDeepCSV_2p94_v*',
     )
 
 #Selector/Calc config
