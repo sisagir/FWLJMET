@@ -426,16 +426,16 @@ hlt_path_mu = cms.vstring(
         'HLT_Mu50_IsoVVVL_PFHT450_v',
         'HLT_Mu15_IsoVVVL_PFHT600_v',
         
-        'HLT_IsoTkMu24_v*',
-        'HLT_Mu15_IsoVVVL_PFHT450_CaloBTagCSV_4p5_v*', # Muon+HT
+        'HLT_IsoTkMu24_v',
+        'HLT_Mu15_IsoVVVL_PFHT450_CaloBTagCSV_4p5_v', # Muon+HT
         )
 
 hlt_path_hadronic = cms.vstring(
-    'HLT_PFHT380_SixJet32_DoubleBTagCSV_p075_v*', # only data
-    'HLT_PFHT380_SixPFJet32_DoublePFBTagDeepCSV_2p2_v*', # only MC
-    'HLT_PFHT380_SixPFJet32_DoublePFBTagCSV_2p2_v*',
-    'HLT_PFHT400_SixPFJet32_DoublePFBTagDeepCSV_2p94_v*',
-    'HLT_PFHT400_SixJet30_DoubleBTagCSV_p056_v*',
+    'HLT_PFHT380_SixJet32_DoubleBTagCSV_p075_v', # only data
+    'HLT_PFHT380_SixPFJet32_DoublePFBTagDeepCSV_2p2_v', # only MC
+    'HLT_PFHT380_SixPFJet32_DoublePFBTagCSV_2p2_v',
+    'HLT_PFHT400_SixPFJet32_DoublePFBTagDeepCSV_2p94_v',
+    'HLT_PFHT400_SixJet30_DoubleBTagCSV_p056_v',
     )
 
 #Selector/Calc config
