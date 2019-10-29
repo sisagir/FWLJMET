@@ -5,9 +5,17 @@
 install:
 
 	source /cvmfs/cms.cern.ch/cmsset_default.csh
+	
+	#from SLC7 (recommended)
+	setenv SCRAM_ARCH slc7_amd64_gcc700
+	cmsrel CMSSW_10_2_16_UL
+	cd CMSSW_10_2_16_UL/src/
+	
+	#from SLC6
 	setenv SCRAM_ARCH slc6_amd64_gcc700
 	cmsrel CMSSW_10_2_16
 	cd CMSSW_10_2_16/src/
+	
 	cmsenv
 
 	## Modified MET
