@@ -11,6 +11,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--finalState",action="store")
 parser.add_argument("--year",action="store")
 parser.add_argument("--nominalTreeOnly",action="store_true")
+parser.add_argument("--brux",action="store_true")
 parser.add_argument("--outfolder",action="store",default="FWLJMET_crab_output")
 option = parser.parse_args()
 
@@ -44,6 +45,13 @@ if option.year == '2018':
 	JSONFORDATA = 'https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions18/13TeV/ReReco/Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt' #https://twiki.cern.ch/twiki/bin/viewauth/CMS/PdmV2018Analysis#Early2018Re_reco_17Sep2018_datas
 elif option.year == '2016':
 	JSONFORDATA = 'https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions16/13TeV/ReReco/Final/Cert_271036-284044_13TeV_ReReco_07Aug2017_Collisions16_JSON.txt' #https://twiki.cern.ch/twiki/bin/viewauth/CMS/PdmV2016Analysis#Re_miniAOD_datasets
+
+if option.brux:
+	OUTPATH = '/store/group/bruxljm/'
+	STORESITE = 'T3_US_Brown'
+else:
+	OUTPATH = '/store/group/lpcljm/'
+	STORESITE = 'T3_US_FNALLPC'
 
 def create_crab_config_files_from_template(sample_dict,**kwargs):
 
@@ -80,6 +88,9 @@ def create_crab_config_files_from_template(sample_dict,**kwargs):
 		os.system("sed -i 's|ISVLQSIGNAL|"+kwargs['ISVLQSIGNAL']+"|g' "+CRABCONFIG_DIR+"/"+cmsRunname)		
 		os.system("sed -i 's|ISTTBAR|"+kwargs['ISTTBAR']+"|g' "+CRABCONFIG_DIR+"/"+cmsRunname)
 		os.system("sed -i 's|DOGENHT|"+kwargs['DOGENHT']+"|g' "+CRABCONFIG_DIR+"/"+cmsRunname)
+
+		os.system("sed -i 's|OUTPATH|"+OUTPATH+"|g' "+CRABCONFIG_DIR+"/"+filename)
+		os.system("sed -i 's|STORESITE|"+STORESITE+"|g' "+CRABCONFIG_DIR+"/"+filename)
 
 
 if __name__=='__main__':
