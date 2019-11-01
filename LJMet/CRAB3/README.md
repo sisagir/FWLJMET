@@ -36,13 +36,13 @@ OR use the "create config" script below and do a dryrun on one of the configs it
 
 #### 1Lep
 
-       python create_crab_config_files_from_template.py --finalState singleLep --year 2017 (--nominalTreeOnly)  # year can be 2018 too
+       python create_crab_config_files_from_template.py --finalState singleLep --year 2017 (--nominalTreeOnly) (--brux)  # year can be 2018 too
 
        python submit_mutiple_crab_jobs.py --finalState singleLep --year 2017 (--nominalTreeOnly) # year can be 2018 too
 
 #### 3Lep
 
-       python create_crab_config_files_from_template.py --finalState multiLep --year 2017 (--nominalTreeOnly) # year can be 2018 too
+       python create_crab_config_files_from_template.py --finalState multiLep --year 2017 (--nominalTreeOnly) (--brux) # year can be 2018 too
 
        python submit_mutiple_crab_jobs.py --finalState multiLep --year 2017 (--nominalTreeOnly) # year can be 2018 too
 
