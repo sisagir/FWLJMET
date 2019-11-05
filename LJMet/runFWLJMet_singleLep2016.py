@@ -107,8 +107,8 @@ process.TFileService = cms.Service("TFileService", fileName = cms.string(OUTFILE
 process.mcweightanalyzer = cms.EDAnalyzer(
     "WeightAnalyzer",
     overrideLHEweight = cms.bool(False), ## 2016 has the NNPDF3.0 all positive
-    #basePDFname = cms.string("NNPDF31_nnlo_as_0118_nf_4"),
-    #newPDFname = cms.string("NNPDF31_nnlo_as_0118_nf_4_mc_hessian"),
+    basePDFname = cms.string("NNPDF31_nnlo_as_0118_nf_4"),
+    newPDFname = cms.string("NNPDF31_nnlo_as_0118_nf_4_mc_hessian"),
     )
 
 ################################
