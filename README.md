@@ -40,7 +40,7 @@ install:
 	## Check out FWLJMET
 	git clone -b 10_2_X_fullRun2data git@github.com:cms-ljmet/FWLJMET.git
 	cd FWLJMET
-	git checkout -b v4.1 v4.1
+	git checkout -b v4.2 v4.2
 
 	## JetSubCalc currently uses uses PUPPI mass corrections:
 	cd ${CMSSW_BASE}/src/FWLJMET/LJMet/data/
