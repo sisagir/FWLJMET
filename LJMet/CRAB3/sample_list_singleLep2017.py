@@ -89,17 +89,17 @@ ttbarbkgdict['TT_Mtt1000'] = '/TT_Mtt-1000toInf_TuneCP5_PSweights_13TeV-powheg-p
 
 datadict = {}
 
-# datadict['SingleElectronRun2017B']  = '/SingleElectron/Run2017B-31Mar2018-v1/MINIAOD'
-# datadict['SingleElectronRun2017C']  = '/SingleElectron/Run2017C-31Mar2018-v1/MINIAOD'
-# datadict['SingleElectronRun2017D']  = '/SingleElectron/Run2017D-31Mar2018-v1/MINIAOD'
-# datadict['SingleElectronRun2017E']  = '/SingleElectron/Run2017E-31Mar2018-v1/MINIAOD'
-# datadict['SingleElectronRun2017F']  = '/SingleElectron/Run2017F-31Mar2018-v1/MINIAOD'
+datadict['SingleElectronRun2017B']  = '/SingleElectron/Run2017B-31Mar2018-v1/MINIAOD'
+datadict['SingleElectronRun2017C']  = '/SingleElectron/Run2017C-31Mar2018-v1/MINIAOD'
+datadict['SingleElectronRun2017D']  = '/SingleElectron/Run2017D-31Mar2018-v1/MINIAOD'
+datadict['SingleElectronRun2017E']  = '/SingleElectron/Run2017E-31Mar2018-v1/MINIAOD'
+datadict['SingleElectronRun2017F']  = '/SingleElectron/Run2017F-31Mar2018-v1/MINIAOD'
 
-# datadict['SingleMuonRun2017B']  = '/SingleMuon/Run2017B-31Mar2018-v1/MINIAOD'
-# datadict['SingleMuonRun2017C']  = '/SingleMuon/Run2017C-31Mar2018-v1/MINIAOD'
-# datadict['SingleMuonRun2017D']  = '/SingleMuon/Run2017D-31Mar2018-v1/MINIAOD'
-# datadict['SingleMuonRun2017E']  = '/SingleMuon/Run2017E-31Mar2018-v1/MINIAOD'
-# datadict['SingleMuonRun2017F']  = '/SingleMuon/Run2017F-31Mar2018-v1/MINIAOD'
+datadict['SingleMuonRun2017B']  = '/SingleMuon/Run2017B-31Mar2018-v1/MINIAOD'
+datadict['SingleMuonRun2017C']  = '/SingleMuon/Run2017C-31Mar2018-v1/MINIAOD'
+datadict['SingleMuonRun2017D']  = '/SingleMuon/Run2017D-31Mar2018-v1/MINIAOD'
+datadict['SingleMuonRun2017E']  = '/SingleMuon/Run2017E-31Mar2018-v1/MINIAOD'
+datadict['SingleMuonRun2017F']  = '/SingleMuon/Run2017F-31Mar2018-v1/MINIAOD'
 
 datadict['JetHTRun2017B']  = '/JetHT/Run2017B-31Mar2018-v1/MINIAOD'
 datadict['JetHTRun2017C']  = '/JetHT/Run2017C-31Mar2018-v1/MINIAOD'
