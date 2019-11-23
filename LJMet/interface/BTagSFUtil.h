@@ -80,7 +80,8 @@ private:
     TRandom3 rand_;
 
     double      bdisc_min;
-    std::string DeepCSVfile;
+    double      bdisc_sj;
+    std::string DeepJetfile;
     std::string DeepCSVSubjetfile;
     std::string btagOP;
     int         year;

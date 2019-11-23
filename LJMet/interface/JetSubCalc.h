@@ -51,10 +51,6 @@ private:
   edm::EDGetTokenT<reco::GenParticleCollection>      genParticlesToken;
   edm::EDGetTokenT<double>                           rhoJetsToken;
 
-  std::string bDiscriminant;
-  std::string bbDiscriminant;
-  std::string cDiscriminant;
-  std::string udsgDiscriminant;
   double kappa;
   bool killHF;
   bool isMc;

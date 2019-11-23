@@ -51,7 +51,7 @@ void BTagSFUtil::Initialize(const edm::ParameterSet& iConfig){
     debug              = iConfig.getParameter<bool>("debug");
 
     bdisc_min          = iConfig.getParameter<double>("bdisc_min");
-    DeepCSVfile        = iConfig.getParameter<edm::FileInPath>("DeepCSVfile").fullPath();
+    DeepJetfile        = iConfig.getParameter<edm::FileInPath>("DeepJetfile").fullPath();
     DeepCSVSubjetfile  = iConfig.getParameter<edm::FileInPath>("DeepCSVSubjetfile").fullPath();   
     btagOP             = iConfig.getParameter<std::string>("btagOP");
     applyBtagSF        = iConfig.getParameter<bool>("applyBtagSF");
@@ -60,13 +60,14 @@ void BTagSFUtil::Initialize(const edm::ParameterSet& iConfig){
     MistagUncertUp     = iConfig.getParameter<bool>("MistagUncertUp");
     MistagUncertDown   = iConfig.getParameter<bool>("MistagUncertDown");
 
-    if(DeepCSVfile.find("94X") != std::string::npos) year = 2017;
+    if(DeepJetfile.find("2016Legacy") != std::string::npos) year = 2016;
+    else if(DeepJetfile.find("94X") != std::string::npos) year = 2017;
     else year = 2018;
 
-    std::cout << mLegend << "b-tag check: DeepCSV "<<btagOP<<" > "<<bdisc_min<<std::endl;
-    std::cout << mLegend << "b-tag files: " << DeepCSVfile << ", " << DeepCSVSubjetfile << std::endl;
+    std::cout << mLegend << "b-tag check: DeepJet "<<btagOP<<" > "<<bdisc_min<<std::endl;
+    std::cout << mLegend << "b-tag files: " << DeepJetfile << ", " << DeepCSVSubjetfile << std::endl;
     std::cout << mLegend << "b-tag year: " << year << std::endl;
-    calib   = BTagCalibration("deepcsv",DeepCSVfile);
+    calib   = BTagCalibration("deepcsv",DeepJetfile);
     calibsj = BTagCalibration("deepcsvsj",DeepCSVSubjetfile);
     if(btagOP == "LOOSE"){
       reader   = BTagCalibrationReader(BTagEntry::OP_LOOSE, "central", {"up","down"});
@@ -84,6 +85,16 @@ void BTagSFUtil::Initialize(const edm::ParameterSet& iConfig){
     readerSJ.load(calibsj, BTagEntry::FLAV_C, "lt");
     readerSJ.load(calibsj, BTagEntry::FLAV_UDSG, "incl");
 
+    // Set Subjet WPs manually since we need DeepCSV instead of DeepJet
+    if(btagOP == "LOOSE"){	      
+      if (year == 2016) bdisc_sj = 0.2217;
+      else if(year == 2017) bdisc_sj = 0.1522;
+      else bdisc_sj = 0.1241;
+    }else{ // medium, only loose & medium for subjets
+      if (year == 2016) bdisc_sj = 0.6321;
+      else if(year == 2017) bdisc_sj = 0.4941;
+      else bdisc_sj = 0.4184;
+    }
 
 }
 
@@ -166,7 +177,10 @@ bool BTagSFUtil::isJetTagged(const pat::Jet & jet,
 {
     bool _isTagged = false;
 
-    if (jet.bDiscriminator("pfDeepCSVJetTags:probb")+jet.bDiscriminator("pfDeepCSVJetTags:probbb") > bdisc_min) _isTagged = true;
+    if (jet.bDiscriminator("pfDeepFlavourJetTags:probb")+jet.bDiscriminator("pfDeepFlavourJetTags:probbb")+jet.bDiscriminator("pfDeepFlavourJetTags:problepb") > bdisc_min) _isTagged = true;
+    if (subjetflag){
+      	if (jet.bDiscriminator("pfDeepCSVJetTags:probb")+jet.bDiscriminator("pfDeepCSVJetTags:probbb") > bdisc_sj) _isTagged = true;
+    }
 
     if (isMc && applyBtagSF){
 
@@ -181,26 +195,26 @@ bool BTagSFUtil::isJetTagged(const pat::Jet & jet,
 
       if(!subjetflag){
 
-		_heavySf = reader.eval_auto_bounds("central",BTagEntry::FLAV_B,fabs(lvjet.Eta()),lvjet.Pt());
-		if (shiftflag == 1 ||  BTagUncertUp ) _heavySf = reader.eval_auto_bounds("up",BTagEntry::FLAV_B,fabs(lvjet.Eta()),lvjet.Pt());
-		else if (shiftflag == 2 ||  BTagUncertDown ) _heavySf = reader.eval_auto_bounds("down",BTagEntry::FLAV_B,fabs(lvjet.Eta()),lvjet.Pt());
-		_heavyEff = mBtagCond.GetBtagEfficiency(lvjet.Et(), fabs(lvjet.Eta()), "DeepCSV"+btagOP, year);
-
-		if(_jetFlavor == 4){
-		  _heavySf = reader.eval_auto_bounds("central",BTagEntry::FLAV_C,fabs(lvjet.Eta()),lvjet.Pt());
-		  if (shiftflag == 1 ||  BTagUncertUp ) _heavySf = reader.eval_auto_bounds("up",BTagEntry::FLAV_C,fabs(lvjet.Eta()),lvjet.Pt());
-		  else if (shiftflag == 2 ||  BTagUncertDown ) _heavySf = reader.eval_auto_bounds("down",BTagEntry::FLAV_C,fabs(lvjet.Eta()),lvjet.Pt());
-		  _heavyEff = mBtagCond.GetCtagEfficiency(lvjet.Et(), fabs(lvjet.Eta()), "DeepCSV"+btagOP, year);
-		}
-
-		_lightSf = reader.eval_auto_bounds("central",BTagEntry::FLAV_UDSG,fabs(lvjet.Eta()),lvjet.Pt());
-		if (shiftflag == 3 || MistagUncertUp ) _lightSf = reader.eval_auto_bounds("up",BTagEntry::FLAV_UDSG,fabs(lvjet.Eta()),lvjet.Pt());
-		else if (shiftflag == 4 ||  MistagUncertDown ) _lightSf = reader.eval_auto_bounds("down",BTagEntry::FLAV_UDSG,fabs(lvjet.Eta()),lvjet.Pt());
-		_lightEff = mBtagCond.GetMistagRate(lvjet.Et(), fabs(lvjet.Eta()), "DeepCSV"+btagOP, year);
-
+	_heavySf = reader.eval_auto_bounds("central",BTagEntry::FLAV_B,fabs(lvjet.Eta()),lvjet.Pt());
+	if (shiftflag == 1 ||  BTagUncertUp ) _heavySf = reader.eval_auto_bounds("up",BTagEntry::FLAV_B,fabs(lvjet.Eta()),lvjet.Pt());
+	else if (shiftflag == 2 ||  BTagUncertDown ) _heavySf = reader.eval_auto_bounds("down",BTagEntry::FLAV_B,fabs(lvjet.Eta()),lvjet.Pt());
+	_heavyEff = mBtagCond.GetBtagEfficiency(lvjet.Et(), fabs(lvjet.Eta()), "DeepJet"+btagOP, year);
+	
+	if(_jetFlavor == 4){
+	  _heavySf = reader.eval_auto_bounds("central",BTagEntry::FLAV_C,fabs(lvjet.Eta()),lvjet.Pt());
+	  if (shiftflag == 1 ||  BTagUncertUp ) _heavySf = reader.eval_auto_bounds("up",BTagEntry::FLAV_C,fabs(lvjet.Eta()),lvjet.Pt());
+	  else if (shiftflag == 2 ||  BTagUncertDown ) _heavySf = reader.eval_auto_bounds("down",BTagEntry::FLAV_C,fabs(lvjet.Eta()),lvjet.Pt());
+	  _heavyEff = mBtagCond.GetCtagEfficiency(lvjet.Et(), fabs(lvjet.Eta()), "DeepJet"+btagOP, year);
+	}
+	
+	_lightSf = reader.eval_auto_bounds("central",BTagEntry::FLAV_UDSG,fabs(lvjet.Eta()),lvjet.Pt());
+	if (shiftflag == 3 || MistagUncertUp ) _lightSf = reader.eval_auto_bounds("up",BTagEntry::FLAV_UDSG,fabs(lvjet.Eta()),lvjet.Pt());
+	else if (shiftflag == 4 ||  MistagUncertDown ) _lightSf = reader.eval_auto_bounds("down",BTagEntry::FLAV_UDSG,fabs(lvjet.Eta()),lvjet.Pt());
+	_lightEff = mBtagCond.GetMistagRate(lvjet.Et(), fabs(lvjet.Eta()), "DeepJet"+btagOP, year);
+	
       }
       else{
-
+	
       	_heavySf = readerSJ.eval_auto_bounds("central",BTagEntry::FLAV_B,fabs(lvjet.Eta()),lvjet.Pt());
       	if (shiftflag == 1 ||  BTagUncertUp ) _heavySf = readerSJ.eval_auto_bounds("up",BTagEntry::FLAV_B,fabs(lvjet.Eta()),lvjet.Pt());
       	else if (shiftflag == 2 ||  BTagUncertDown ) _heavySf = readerSJ.eval_auto_bounds("down",BTagEntry::FLAV_B,fabs(lvjet.Eta()),lvjet.Pt());

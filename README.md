@@ -5,13 +5,21 @@
 install:
 
 	source /cvmfs/cms.cern.ch/cmsset_default.csh
+	
+	#from SLC7 (recommended)
+	setenv SCRAM_ARCH slc7_amd64_gcc700
+	cmsrel CMSSW_10_2_16_UL
+	cd CMSSW_10_2_16_UL/src/
+	
+	#from SLC6
 	setenv SCRAM_ARCH slc6_amd64_gcc700
-	cmsrel CMSSW_10_2_10
-	cd CMSSW_10_2_10/src/
+	cmsrel CMSSW_10_2_16
+	cd CMSSW_10_2_16/src/
+	
 	cmsenv
 
-	## Modified MET -- Only needed in 2017, JH May 11
-	## git cms-merge-topic cms-met:METFixEE2017_949_v2_backport_to_102X
+	## Modified MET
+	git cms-merge-topic cms-met:METFixEE2017_949_v2_backport_to_102X
 
 	## Redo MET filter
 	git cms-addpkg RecoMET/METFilters
@@ -23,16 +31,18 @@ install:
 	## EGamma post-reco for MVA values (NOTE: won't work in 10_2_9)
 	git cms-merge-topic cms-egamma:EgammaPostRecoTools
 
-	### -- FWLJMET/LJMet/plugins/BestCalc.cc is now functional for JH with new commit from May 11 --
 	### BestCalc: copy lwtnn so that BestCalc.cc will compile.
 	### This is not ideal, should always try to get official CMSSW / GitHub recipes whenever possible.
-	### JH May 11: likely json needs to get remade for this by BEST team to use "lwtnn"-owned github. Forgot about Dan Marley's linked below, will test next week.
+	### JH May 11: likely json needs to get remade by BEST team to use "lwtnn"-owned github. 
+	### Dan Marley's lwtnn github linked below never tested...
 	cp -r ~jmanagan/nobackup/CMSSW_9_4_12/src/lwtnn .   ## use scp after a Fermilab kinit to copy onto non-LPC clusters
 
 	## Check out FWLJMET
 	git clone -b 10_2_X_fullRun2data git@github.com:cms-ljmet/FWLJMET.git
+	cd FWLJMET
+	git checkout -b v4.2 v4.2
 
-	## JetSubCalc currently uses uses PUPPI mass corrections: (NOTE: no updates available on JetWtagging TWiki as of May 11, but this branch will always be the most updated.)
+	## JetSubCalc currently uses uses PUPPI mass corrections:
 	cd ${CMSSW_BASE}/src/FWLJMET/LJMet/data/
 	git clone https://github.com/thaarres/PuppiSoftdropMassCorr
 
@@ -65,7 +75,7 @@ Some info:
      - https://github.com/demarley/lwtnn/tree/CMSSW_8_0_X-compatible#cmssw-compatibility
 
 
-run LJMet:
+run LJMet tester file:
 
-    cmsRun LJMet/runFWLJMet_multiLep.py (or runFWLJMet_singleLep.py)
+    cmsRun LJMet/tester2017.py (or tester2016.py, or tester2018.py)
 

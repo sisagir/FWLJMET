@@ -31,8 +31,10 @@ void MultiLepEventSelector::BeginJob( const edm::ParameterSet& iConfig, edm::Con
     dump_trigger        = selectorConfig.getParameter<bool>("dump_trigger");
     mctrigger_path_el   = selectorConfig.getParameter<std::vector<std::string>>("mctrigger_path_el");
     mctrigger_path_mu   = selectorConfig.getParameter<std::vector<std::string>>("mctrigger_path_mu");
-    trigger_path_el     = selectorConfig.getParameter<std::vector<std::string>>("trigger_path_el");;
-    trigger_path_mu     = selectorConfig.getParameter<std::vector<std::string>>("trigger_path_mu");;
+    mctrigger_path_hadronic   = selectorConfig.getParameter<std::vector<std::string>>("mctrigger_path_hadronic");
+    trigger_path_el     = selectorConfig.getParameter<std::vector<std::string>>("trigger_path_el");
+    trigger_path_mu     = selectorConfig.getParameter<std::vector<std::string>>("trigger_path_mu");
+    trigger_path_hadronic     = selectorConfig.getParameter<std::vector<std::string>>("trigger_path_hadronic");
 
     //PV
     const edm::ParameterSet& PVconfig = selectorConfig.getParameterSet("pvSelector") ;
@@ -280,113 +282,152 @@ bool MultiLepEventSelector::TriggerSelection(edm::Event const & event)
 	bool passTrig = false;
 
 	if ( considerCut("Trigger") ) {
-
-		if(debug)std::cout << "\t" <<"TriggerSelection:"<< std::endl;
-
-		edm::Handle< edm::TriggerResults > triggersHandle;
-		event.getByToken(triggersToken,triggersHandle);
-		const edm::TriggerNames trigNames = event.triggerNames(*triggersHandle);
-
-		unsigned int _tSize = triggersHandle->size();
-
-		bool passTrigElMC = false;
-		bool passTrigMuMC = false;
-		bool passTrigElData = false;
-		bool passTrigMuData = false;
-
-		// dump trigger names
-		if (bFirstEntry && dump_trigger){
-			std::cout << "\t" << "Dumping available HLT paths in dataset:"<<std::endl;
-			for (unsigned int i=0; i<_tSize; i++){
-				std::string trigName = trigNames.triggerName(i);
-				std::cout << trigName <<std::endl;
-			}
-		}
-		if (debug) std::cout<< "\t\t" <<"The event FIRED the following registered trigger(s) in LJMet: "<<std::endl;
-
-		mvSelTriggersEl.clear();
-		mvSelMCTriggersEl.clear();
-		mvSelTriggersMu.clear();
-		mvSelMCTriggersMu.clear();
-
-		int passTrigEl = 0;
-		if (debug) std::cout<< "\t" <<"	In MC El trig list: "<<std::endl;
-		for (unsigned int ipath = 0; ipath < mctrigger_path_el.size() && mctrigger_path_el.at(0)!="" ; ipath++){
-			mvSelMCTriggersEl[mctrigger_path_el.at(ipath)] = 0;
-			for(unsigned int i=0; i<_tSize; i++){
-				std::string trigName = trigNames.triggerName(i);
-				if (trigName.find(mctrigger_path_el.at(ipath)) == std::string::npos) continue;
-				if (triggersHandle->accept(trigNames.triggerIndex(trigName))) {
-					passTrigEl = 1;
-					mvSelMCTriggersEl[mctrigger_path_el.at(ipath)] = 1;
-					if (debug) std::cout << "		" << trigNames.triggerName(i)  << std::endl;
-				}
-			}
-		}
-		if (passTrigEl>0) passTrigElMC = true;
-
-		int passTrigMu = 0;
-		if (debug) std::cout<< "\t" <<"	In MC Mu trig list: "<<std::endl;
-		for (unsigned int ipath = 0; ipath < mctrigger_path_mu.size() && mctrigger_path_mu.at(0)!="" ; ipath++){
-			mvSelMCTriggersMu[mctrigger_path_mu.at(ipath)] = 0;
-			for(unsigned int i=0; i<_tSize; i++){
-				std::string trigName = trigNames.triggerName(i);
-				if ( trigName.find(mctrigger_path_mu.at(ipath)) == std::string::npos) continue;
-				if (triggersHandle->accept(trigNames.triggerIndex(trigName))){
-					passTrigMu = 1;
-					mvSelMCTriggersMu[mctrigger_path_mu.at(ipath)] = 1;
-					if (debug) std::cout << "		" << trigNames.triggerName(i)  << std::endl;
-				}
-			}
-		}
-		if (passTrigMu>0) passTrigMuMC = true;
-
-		//Loop over each data channel separately
-		passTrigEl = 0;
-		if (debug) std::cout<< "\t" <<"	In Data El trig list: "<<std::endl;
-		for (unsigned int ipath = 0; ipath < trigger_path_el.size() && trigger_path_el.at(0)!="" ; ipath++){
-			mvSelTriggersEl[trigger_path_el.at(ipath)] = 0;
-			for(unsigned int i=0; i<_tSize; i++){
-				std::string trigName = trigNames.triggerName(i);
-				if ( trigName.find(trigger_path_el.at(ipath)) == std::string::npos) continue;
-				if (triggersHandle->accept(trigNames.triggerIndex(trigName))){
-					passTrigEl = 1;
-					mvSelTriggersEl[trigger_path_el.at(ipath)] = 1;
-					if (debug) std::cout << "		" << trigNames.triggerName(i)  << std::endl;
-				}
-			}
-		}
-		if (passTrigEl>0) passTrigElData = true;
-
-		passTrigMu = 0;
-		if (debug) std::cout<< "\t" <<"	In Data Mu trig list: "<<std::endl;
-		for (unsigned int ipath = 0; ipath < trigger_path_mu.size() && trigger_path_mu.at(0)!="" ; ipath++){
-			mvSelTriggersMu[trigger_path_mu.at(ipath)] = 0;
-			for(unsigned int i=0; i<_tSize; i++){
-			std::string trigName = trigNames.triggerName(i);
-			if ( trigName.find(trigger_path_mu.at(ipath)) == std::string::npos) continue;
-			if (triggersHandle->accept(trigNames.triggerIndex(trigName))){
-				passTrigMu = 1;
-				mvSelTriggersMu[trigger_path_mu.at(ipath)] = 1;
-				if (debug) std::cout << "		" << trigNames.triggerName(i)  << std::endl;
-			}
-			}
-		}
-		if (passTrigMu>0) passTrigMuData = true;
-
-		if (isMc && (passTrigMuMC||passTrigElMC) ) passTrig = true;
-		if (!isMc && (passTrigMuData||passTrigElData) ) passTrig = true;
-
-
+	  
+	  if(debug)std::cout << "\t" <<"TriggerSelection:"<< std::endl;
+	  
+	  edm::Handle< edm::TriggerResults > triggersHandle;
+	  event.getByToken(triggersToken,triggersHandle);
+	  const edm::TriggerNames trigNames = event.triggerNames(*triggersHandle);
+	  
+	  unsigned int _tSize = triggersHandle->size();
+	  
+	  bool passTrigElMC = false;
+	  bool passTrigMuMC = false;
+	  bool passTrigHadMC = false;
+	  bool passTrigElData = false;
+	  bool passTrigMuData = false;
+	  bool passTrigHadData = false;
+	  
+	  // dump trigger names
+	  if (bFirstEntry && dump_trigger){
+	    std::cout << "\t" << "Dumping available HLT paths in dataset:"<<std::endl;
+	    for (unsigned int i=0; i<_tSize; i++){
+	      std::string trigName = trigNames.triggerName(i);
+	      std::cout << trigName <<std::endl;
+	    }
+	  }
+	  if (debug) std::cout<< "\t\t" <<"The event FIRED the following registered trigger(s) in LJMet: "<<std::endl;
+	  
+	  mvSelTriggersEl.clear();
+	  mvSelMCTriggersEl.clear();
+	  mvSelTriggersMu.clear();
+	  mvSelMCTriggersMu.clear();
+	  mvSelTriggersHad.clear();
+	  mvSelMCTriggersHad.clear();
+	  
+	  int passTrigEl = 0;
+	  if (debug) std::cout<< "\t" <<"	In MC El trig list: "<<std::endl;
+	  for (unsigned int ipath = 0; ipath < mctrigger_path_el.size() && mctrigger_path_el.at(0)!="" ; ipath++){
+	    mvSelMCTriggersEl[mctrigger_path_el.at(ipath)] = 0;
+	    for(unsigned int i=0; i<_tSize; i++){
+	      std::string trigName = trigNames.triggerName(i);
+	      if (trigName.find(mctrigger_path_el.at(ipath)) == std::string::npos) continue;
+	      if (triggersHandle->accept(trigNames.triggerIndex(trigName))) {
+		passTrigEl = 1;
+		mvSelMCTriggersEl[mctrigger_path_el.at(ipath)] = 1;
+		if (debug) std::cout << "		" << trigNames.triggerName(i)  << std::endl;
+	      }
+	    }
+	  }
+	  if (passTrigEl>0) passTrigElMC = true;
+	  
+	  int passTrigMu = 0;
+	  if (debug) std::cout<< "\t" <<"	In MC Mu trig list: "<<std::endl;
+	  for (unsigned int ipath = 0; ipath < mctrigger_path_mu.size() && mctrigger_path_mu.at(0)!="" ; ipath++){
+	    mvSelMCTriggersMu[mctrigger_path_mu.at(ipath)] = 0;
+	    for(unsigned int i=0; i<_tSize; i++){
+	      std::string trigName = trigNames.triggerName(i);
+	      if ( trigName.find(mctrigger_path_mu.at(ipath)) == std::string::npos) continue;
+	      if (triggersHandle->accept(trigNames.triggerIndex(trigName))){
+		passTrigMu = 1;
+		mvSelMCTriggersMu[mctrigger_path_mu.at(ipath)] = 1;
+		if (debug) std::cout << "		" << trigNames.triggerName(i)  << std::endl;
+	      }
+	    }
+	  }
+	  if (passTrigMu>0) passTrigMuMC = true;
+	  
+	  
+	  int passTrigHad = 0;
+	  if (debug) std::cout<< "\t" <<" In MC Hadronic trig list: "<<std::endl;
+	  for (unsigned int ipath = 0; ipath < mctrigger_path_hadronic.size() && mctrigger_path_hadronic.at(0)!="" ; ipath++){
+            mvSelMCTriggersHad[mctrigger_path_hadronic.at(ipath)] = 0;
+            for(unsigned int i=0; i<_tSize; i++){
+	      std::string trigName = trigNames.triggerName(i);
+	      if (trigName.find(mctrigger_path_hadronic.at(ipath)) == std::string::npos) continue;
+	      if (triggersHandle->accept(trigNames.triggerIndex(trigName))) {
+		passTrigHad = 1;
+		mvSelMCTriggersHad[mctrigger_path_hadronic.at(ipath)] = 1;
+		if (debug) std::cout << "               " << trigNames.triggerName(i)  << std::endl;
+	      }
+            }
+	  }
+	  if (passTrigHad>0) passTrigHadMC = true;
+	  
+	  
+	  
+	  //Loop over each data channel separately
+	  passTrigEl = 0;
+	  if (debug) std::cout<< "\t" <<"	In Data El trig list: "<<std::endl;
+	  for (unsigned int ipath = 0; ipath < trigger_path_el.size() && trigger_path_el.at(0)!="" ; ipath++){
+	    mvSelTriggersEl[trigger_path_el.at(ipath)] = 0;
+	    for(unsigned int i=0; i<_tSize; i++){
+	      std::string trigName = trigNames.triggerName(i);
+	      if ( trigName.find(trigger_path_el.at(ipath)) == std::string::npos) continue;
+	      if (triggersHandle->accept(trigNames.triggerIndex(trigName))){
+		passTrigEl = 1;
+		mvSelTriggersEl[trigger_path_el.at(ipath)] = 1;
+		if (debug) std::cout << "		" << trigNames.triggerName(i)  << std::endl;
+	      }
+	    }
+	  }
+	  if (passTrigEl>0) passTrigElData = true;
+	  
+	  passTrigMu = 0;
+	  if (debug) std::cout<< "\t" <<"	In Data Mu trig list: "<<std::endl;
+	  for (unsigned int ipath = 0; ipath < trigger_path_mu.size() && trigger_path_mu.at(0)!="" ; ipath++){
+	    mvSelTriggersMu[trigger_path_mu.at(ipath)] = 0;
+	    for(unsigned int i=0; i<_tSize; i++){
+	      std::string trigName = trigNames.triggerName(i);
+	      if ( trigName.find(trigger_path_mu.at(ipath)) == std::string::npos) continue;
+	      if (triggersHandle->accept(trigNames.triggerIndex(trigName))){
+		passTrigMu = 1;
+		mvSelTriggersMu[trigger_path_mu.at(ipath)] = 1;
+		if (debug) std::cout << "		" << trigNames.triggerName(i)  << std::endl;
+	      }
+	    }
+	  }
+	  if (passTrigMu>0) passTrigMuData = true;
+	  
+	  passTrigHad = 0;
+	  if (debug) std::cout<< "\t" <<" In Data Hadronic trig list: "<<std::endl;
+	  for (unsigned int ipath = 0; ipath < trigger_path_hadronic.size() && trigger_path_hadronic.at(0)!="" ; ipath++){
+	    mvSelTriggersHad[trigger_path_hadronic.at(ipath)] = 0;
+	    for(unsigned int i=0; i<_tSize; i++){
+	      std::string trigName = trigNames.triggerName(i);
+	      if ( trigName.find(trigger_path_hadronic.at(ipath)) == std::string::npos) continue;
+	      if (triggersHandle->accept(trigNames.triggerIndex(trigName))){
+		passTrigHad = 1;
+		mvSelTriggersHad[trigger_path_hadronic.at(ipath)] = 1;
+		if (debug) std::cout << "               " << trigNames.triggerName(i)  << std::endl;
+	      }
+	    }
+	  }
+	  if (passTrigHad>0) passTrigHadData = true;
+	  
+	  if (isMc && (passTrigMuMC||passTrigElMC||passTrigHadMC) ) passTrig = true;
+	  if (!isMc && (passTrigMuData||passTrigElData||passTrigHadData) ) passTrig = true;
+	  
+	  
 	}
 	else{
-
-		if(debug)std::cout << "\t" <<"IGNORING TriggerSelection."<< std::endl;
-
-		passTrig = true;
-
+	  
+	  if(debug)std::cout << "\t" <<"IGNORING TriggerSelection."<< std::endl;
+	  
+	  passTrig = true;
+	  
 	} // end of trigger cuts
-
+	
 	return passTrig;
 
 }
@@ -436,13 +477,13 @@ bool MultiLepEventSelector::METfilter(edm::Event const & event)
 	//
 	//
 	if (considerCut("MET filters")) {
-
+	  
 	  if(debug)std::cout << "\t" <<"METFilterSelection:"<< std::endl;
-
+	  
 	  edm::Handle<edm::TriggerResults > PatTriggerResults;
 	  event.getByToken( METfilterToken, PatTriggerResults );
 	  const edm::TriggerNames patTrigNames = event.triggerNames(*PatTriggerResults);
-
+	  
 	  bool goodvertpass = false;
 	  bool globaltighthalopass = false;
 	  bool hbhenoisepass = false;
@@ -469,9 +510,9 @@ bool MultiLepEventSelector::METfilter(edm::Event const & event)
 	  // Rerun ecalBadCalibReducedMINIAODFilter if possible
 	  edm::Handle<bool> passecalBadCalibFilterUpdate;
 	  if(event.getByToken( METfilterToken_extra , passecalBadCalibFilterUpdate)){
-	      eebadcalibpass = *passecalBadCalibFilterUpdate;
-	  }
-
+	    eebadcalibpass = *passecalBadCalibFilterUpdate;
+	  }else{ eebadcalibpass = true; }// for 2016
+	    
 	  if( hbhenoisepass &&
 	      hbhenoiseisopass &&
 	      globaltighthalopass &&
@@ -1078,34 +1119,34 @@ bool MultiLepEventSelector::JetSelection(edm::Event const & event, pat::strbitse
     // jet cuts  //NOTE: THIS IDEALLY SHOULDN'T BE HARD CODED -- Mar 13, 2019
     while(1){
 
-      // PF Jet ID
-      if (fabs(_ijet->correctedJet(0).eta()) < 2.4 &&
-	  _ijet->correctedJet(0).neutralHadronEnergyFraction() < 0.90 &&
-	  _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.90 &&
-	  _ijet->correctedJet(0).chargedMultiplicity()+_ijet->correctedJet(0).neutralMultiplicity() > 1 &&
-	  _ijet->correctedJet(0).chargedHadronEnergyFraction() > 0 &&
-	  _ijet->correctedJet(0).chargedMultiplicity() > 0
-	  ){ }
-      else if (fabs(_ijet->correctedJet(0).eta()) >= 2.4 &&
-	       fabs(_ijet->correctedJet(0).eta()) < 2.7 &&
-	       _ijet->correctedJet(0).neutralHadronEnergyFraction() < 0.90 &&
-	       _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.90 &&
-	       _ijet->correctedJet(0).chargedMultiplicity()+_ijet->correctedJet(0).neutralMultiplicity() > 1
-	       ){ }
-      else if (fabs(_ijet->correctedJet(0).eta()) >= 2.7 &&
-	       fabs(_ijet->correctedJet(0).eta()) < 3.0 &&
-	       _ijet->correctedJet(0).neutralEmEnergyFraction() > 0.02 &&
-	       _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.99 &&
-	       _ijet->correctedJet(0).neutralMultiplicity() > 2
-	       ){ }
-      else if (fabs(_ijet->correctedJet(0).eta()) >= 3.0 &&
-	       _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.9 &&
-	       _ijet->correctedJet(0).neutralHadronEnergyFraction() > 0.02 &&
-	       _ijet->correctedJet(0).neutralMultiplicity() > 10
-	       ){ }
-      else break; // fail
+      // // PF Jet ID
+      // if (fabs(_ijet->correctedJet(0).eta()) < 2.4 &&
+      // 	  _ijet->correctedJet(0).neutralHadronEnergyFraction() < 0.90 &&
+      // 	  _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.90 &&
+      // 	  _ijet->correctedJet(0).chargedMultiplicity()+_ijet->correctedJet(0).neutralMultiplicity() > 1 &&
+      // 	  _ijet->correctedJet(0).chargedHadronEnergyFraction() > 0 &&
+      // 	  _ijet->correctedJet(0).chargedMultiplicity() > 0
+      // 	  ){ }
+      // else if (fabs(_ijet->correctedJet(0).eta()) >= 2.4 &&
+      // 	       fabs(_ijet->correctedJet(0).eta()) < 2.7 &&
+      // 	       _ijet->correctedJet(0).neutralHadronEnergyFraction() < 0.90 &&
+      // 	       _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.90 &&
+      // 	       _ijet->correctedJet(0).chargedMultiplicity()+_ijet->correctedJet(0).neutralMultiplicity() > 1
+      // 	       ){ }
+      // else if (fabs(_ijet->correctedJet(0).eta()) >= 2.7 &&
+      // 	       fabs(_ijet->correctedJet(0).eta()) < 3.0 &&
+      // 	       _ijet->correctedJet(0).neutralEmEnergyFraction() > 0.02 &&
+      // 	       _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.99 &&
+      // 	       _ijet->correctedJet(0).neutralMultiplicity() > 2
+      // 	       ){ }
+      // else if (fabs(_ijet->correctedJet(0).eta()) >= 3.0 &&
+      // 	       _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.9 &&
+      // 	       _ijet->correctedJet(0).neutralHadronEnergyFraction() > 0.02 &&
+      // 	       _ijet->correctedJet(0).neutralMultiplicity() > 10
+      // 	       ){ }
+      // else break; // fail
 
-      _passpf = true;
+      _passpf = true; // now this is applied in the cmsRun job to make the jet collection
 
       if ( jetP4.Pt() > jet_minpt ){ }
       else break; // fail
@@ -1307,35 +1348,36 @@ void MultiLepEventSelector::AK8JetSelection(edm::Event const & event)
     // jet cuts //NOTE: THIS IDEALLY SHOULDN'T BE HARD CODED -- Mar 14, 2019
     while(1){
 
-      // PF Jet ID
-      if (fabs(_ijet->correctedJet(0).eta()) < 2.4 &&
-	  _ijet->correctedJet(0).neutralHadronEnergyFraction() < 0.90 &&
-	  _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.90 &&
-	  //_ijet->userFloat("patPuppiJetSpecificProducer:puppiMultiplicity") > 1 &&
-	  _ijet->correctedJet(0).chargedMultiplicity()+_ijet->correctedJet(0).neutralMultiplicity() > 1 &&
-	  _ijet->correctedJet(0).chargedHadronEnergyFraction() > 0 &&
-	  _ijet->correctedJet(0).chargedMultiplicity() > 0
-	  ){ }
-      else if (fabs(_ijet->correctedJet(0).eta()) >= 2.4 &&
-	       fabs(_ijet->correctedJet(0).eta()) < 2.7 &&
-	       _ijet->correctedJet(0).neutralHadronEnergyFraction() < 0.90 &&
-	       _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.90 &&
-	       //_ijet->userFloat("patPuppiJetSpecificProducer:puppiMultiplicity") > 1
-	       _ijet->correctedJet(0).chargedMultiplicity()+_ijet->correctedJet(0).neutralMultiplicity() > 1
-	       ){ }
-      else if (fabs(_ijet->correctedJet(0).eta()) >= 2.7 &&
-	       fabs(_ijet->correctedJet(0).eta()) < 3.0 &&
-	       _ijet->correctedJet(0).neutralHadronEnergyFraction() < 0.99
-	       ){ }
-      else if (fabs(_ijet->correctedJet(0).eta()) >= 3.0 &&
-	       _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.9 &&
-	       _ijet->correctedJet(0).neutralHadronEnergyFraction() > 0.02 &&
-	       //_ijet->userFloat("patPuppiJetSpecificProducer:neutralPuppiMultiplicity") > 2 &&
-	       //_ijet->userFloat("patPuppiJetSpecificProducer:neutralPuppiMultiplicity") < 15
-	       _ijet->correctedJet(0).neutralMultiplicity() > 2 &&
-	       _ijet->correctedJet(0).neutralMultiplicity() < 15
-	       ){ }
-      else break; // fail
+      // Now we are applying this to make the jet collections
+      // // PF Jet ID
+      // if (fabs(_ijet->correctedJet(0).eta()) < 2.4 &&
+      // 	  _ijet->correctedJet(0).neutralHadronEnergyFraction() < 0.90 &&
+      // 	  _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.90 &&
+      // 	  //_ijet->userFloat("patPuppiJetSpecificProducer:puppiMultiplicity") > 1 &&
+      // 	  _ijet->correctedJet(0).chargedMultiplicity()+_ijet->correctedJet(0).neutralMultiplicity() > 1 &&
+      // 	  _ijet->correctedJet(0).chargedHadronEnergyFraction() > 0 &&
+      // 	  _ijet->correctedJet(0).chargedMultiplicity() > 0
+      // 	  ){ }
+      // else if (fabs(_ijet->correctedJet(0).eta()) >= 2.4 &&
+      // 	       fabs(_ijet->correctedJet(0).eta()) < 2.7 &&
+      // 	       _ijet->correctedJet(0).neutralHadronEnergyFraction() < 0.90 &&
+      // 	       _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.90 &&
+      // 	       //_ijet->userFloat("patPuppiJetSpecificProducer:puppiMultiplicity") > 1
+      // 	       _ijet->correctedJet(0).chargedMultiplicity()+_ijet->correctedJet(0).neutralMultiplicity() > 1
+      // 	       ){ }
+      // else if (fabs(_ijet->correctedJet(0).eta()) >= 2.7 &&
+      // 	       fabs(_ijet->correctedJet(0).eta()) < 3.0 &&
+      // 	       _ijet->correctedJet(0).neutralHadronEnergyFraction() < 0.99
+      // 	       ){ }
+      // else if (fabs(_ijet->correctedJet(0).eta()) >= 3.0 &&
+      // 	       _ijet->correctedJet(0).neutralEmEnergyFraction() < 0.9 &&
+      // 	       _ijet->correctedJet(0).neutralHadronEnergyFraction() > 0.02 &&
+      // 	       //_ijet->userFloat("patPuppiJetSpecificProducer:neutralPuppiMultiplicity") > 2 &&
+      // 	       //_ijet->userFloat("patPuppiJetSpecificProducer:neutralPuppiMultiplicity") < 15
+      // 	       _ijet->correctedJet(0).neutralMultiplicity() > 2 &&
+      // 	       _ijet->correctedJet(0).neutralMultiplicity() < 15
+      // 	       ){ }
+      // else break; // fail
 
       if ( jetP4.Pt() > jet_minpt_AK8 ){ }
       else break; // fail

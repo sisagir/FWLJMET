@@ -4,9 +4,9 @@
 int CommonCalc::BeginJob(edm::ConsumesCollector && iC){
 
 
-    L1prefiringToken         = iC.consumes<double>(edm::InputTag("prefiringweight","NonPrefiringProb")); //Hardcoding.
-    L1prefiringToken_up      = iC.consumes<double>(edm::InputTag("prefiringweight","NonPrefiringProbUp")); //Hardcoding.
-    L1prefiringToken_down    = iC.consumes<double>(edm::InputTag("prefiringweight","NonPrefiringProbDown")); //Hardcoding.
+    L1prefiringToken         = iC.consumes<double>(edm::InputTag("prefiringweight:nonPrefiringProb")); //Hardcoding.
+    L1prefiringToken_up      = iC.consumes<double>(edm::InputTag("prefiringweight:nonPrefiringProbUp")); //Hardcoding.
+    L1prefiringToken_down    = iC.consumes<double>(edm::InputTag("prefiringweight:nonPrefiringProbDown")); //Hardcoding.
 
 
   return 0;
