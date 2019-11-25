@@ -2,10 +2,12 @@
 #define FWLJMET_LJMet_interface_HOTTaggerCalc_h
 
 /*
-  Calculator for the Run 2 inclusive TprimeTprime analysis
-  Finds Tprime or Bprime particles and tags the decays chain so branching ratios can be scanned
+  Calculator for resolved top tagging using SUSY HOT tagger
+  Finds resolved top candidates and truth matches top candidates with generated top 
+  and constituent jets with daughters of gen top (2 or 3 constituent matching)
 
-  Author: Julie Hogan, 2015
+  Author: Julie Hogan, 2019
+  Update: Sinan Sagir, Nov 2019
 */
 
 
@@ -55,6 +57,11 @@
 
 #include "FWCore/ParameterSet/interface/FileInPath.h"
 
+#include "TopTagger/Tools/cpp/TaggerUtility.h"
+
+#include "TopTagger/TopTagger/interface/TTModule.h"
+#include "TopTagger/TopTagger/interface/TopTaggerUtilities.h"
+
 using namespace std;
 
 class LjmetFactory;
@@ -79,6 +86,7 @@ private:
   std::string bTagKeyString_;
   std::string taggerCfgFile_;
   double discriminatorCut_;
+  edm::EDGetTokenT<reco::GenParticleCollection> genParticlesToken;
     
   TopTagger tt;
  
