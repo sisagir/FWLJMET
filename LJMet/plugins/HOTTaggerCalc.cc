@@ -41,11 +41,8 @@ int HOTTaggerCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * se
   // Get the generated particle collection
   std::vector<TLorentzVector> mygenTops, mygenTopDaughtersTemp_;
   std::vector<std::vector<TLorentzVector>> mygenTopDaughters_;
-  //std::vector<std::vector<int>> mygenTopDaughterIDs_;
-  //std::vector<int> mygenTopDaughterIDsTemp_;
   mygenTops.clear();
   mygenTopDaughters_.clear();
-  //mygenTopDaughterIDs_.clear();
   TLorentzVector topLV,topdauLV;
     
   edm::Handle<reco::GenParticleCollection> genParticles;
@@ -59,12 +56,14 @@ int HOTTaggerCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * se
   		if(abs(id) != 6) continue;
   		
   		mygenTopDaughtersTemp_.clear();
+  		bool foundB = false;
+  		bool foundW = false;
   		for(size_t idau = 0; idau < p.numberOfDaughters(); idau++){
   			int dauId = p.daughter(idau)->pdgId();
   			if(abs(dauId) == 5){
   				topdauLV.SetPtEtaPhiE(p.daughter(idau)->pt(),p.daughter(idau)->eta(),p.daughter(idau)->phi(),p.daughter(idau)->energy());
   				mygenTopDaughtersTemp_.push_back(topdauLV);
-  				//mygenTopDaughterIDsTemp_.push_back(dauId);
+  				foundB = true;
   				}
   			else if(abs(dauId) == 24){
   				const reco::Candidate *W = p.daughter(idau);
@@ -84,14 +83,13 @@ int HOTTaggerCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * se
 					if(abs(WdauId) > 0 && abs(WdauId) < 6){
 						topdauLV.SetPtEtaPhiE(W->daughter(iWdau)->pt(),W->daughter(iWdau)->eta(),W->daughter(iWdau)->phi(),W->daughter(iWdau)->energy());
 						mygenTopDaughtersTemp_.push_back(topdauLV);
-						//mygenTopDaughterIDsTemp_.push_back(WdauId);
+						foundW = true;
 						}
 					}//W daughter loop
   				}
   			}//top daughter loop
-  		if(mygenTopDaughtersTemp_.size()>1){ // only save hadronicly decaying tops
+  		if(foundB && foundW){ // only save hadronicly decaying tops
   			mygenTopDaughters_.push_back(mygenTopDaughtersTemp_);
-  			//mygenTopDaughterIDs_.push_back(mygenTopDaughterIDsTemp_);
   			topLV.SetPtEtaPhiE(p.pt(),p.eta(),p.phi(),p.energy());
   			mygenTops.push_back(topLV);
   			}
@@ -100,13 +98,10 @@ int HOTTaggerCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * se
 
   std::vector<std::vector<const TLorentzVector*>> mygenTopDaughters;
   for(size_t itop = 0; itop < mygenTops.size(); itop++){
-  	//std::cout << "Ntops:" << mygenTops.size() << "Ndaug:" << mygenTopDaughters_[itop].size() << "(";
   	std::vector<const TLorentzVector*> mygenTopsTemp;
   	for(size_t idau = 0; idau < mygenTopDaughters_[itop].size(); idau++){
   		mygenTopsTemp.push_back(&mygenTopDaughters_[itop][idau]);
-  		//std::cout << mygenTopDaughterIDs_[itop][idau] << ",";
   		}
-  	//std::cout << ")" << std::endl;
   	mygenTopDaughters.push_back(mygenTopsTemp);
   	}
 
