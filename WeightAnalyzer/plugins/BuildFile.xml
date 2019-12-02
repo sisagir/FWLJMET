@@ -4,5 +4,7 @@
 <use name="FWCore/ServiceRegistry"/>
 <use name="CommonTools/UtilAlgos"/>
 <use name="SimDataFormats/GeneratorProducts"/>
+<use name="PhysicsTools/PatUtils"/>
+<use name="DataFormats/PatCandidates"/>
 <use name="lhapdf"/>
 <flags EDM_PLUGIN="1"/>
