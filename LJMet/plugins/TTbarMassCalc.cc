@@ -111,10 +111,18 @@ int TTbarMassCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * se
 
 	    const reco::Candidate *W = p.daughter(1);
 	    if(abs(d2Id)==5) W = p.daughter(0);
-
-	    while(W->numberOfDaughters() == 1) W = W->daughter(0);	    
-	    if(W->daughter(1)->pdgId() == 22) W = W->daughter(0);	    
-	    while(W->numberOfDaughters() == 1) W = W->daughter(0);	    
+    
+		bool isHardProcess = false;
+		while(!isHardProcess){
+			isHardProcess = true;
+			for(size_t iWdau = 0; iWdau < W->numberOfDaughters(); iWdau++){
+				int WdauId = W->daughter(iWdau)->pdgId();
+				if(abs(WdauId) == 24){
+					W = W->daughter(iWdau);
+					isHardProcess = false;
+					}
+				}
+			}
 
 	    size_t nWDs = W->numberOfDaughters();
 	    if(nWDs > 2) cout << "W daughters: " << nWDs << endl;

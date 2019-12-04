@@ -744,6 +744,7 @@ BestCalc_cfg = cms.PSet(
     )
 HOTTaggerCalc_cfg = cms.PSet(
 
+    genParticles     = cms.InputTag("prunedGenParticles"),
     ak4PtCut         = cms.double(20),
     qgTaggerKey      = cms.string('QGTagger'),
     deepCSVBJetTags  = cms.string('pfDeepCSVJetTags'),
@@ -886,4 +887,3 @@ process.p.associate(patAlgosToolsTask)
 # process.scedule = cms.Schedule(
 #     process.p,
 #     process.outpath)
-
