@@ -10,6 +10,7 @@ int HOTTaggerCalc::BeginJob(edm::ConsumesCollector && iC){
     bTagKeyString_ = mPset.getParameter<std::string>("bTagKeyString");    
     taggerCfgFile_ = mPset.getParameter<edm::FileInPath>("taggerCfgFile").fullPath();
     discriminatorCut_ = mPset.getParameter<double>("discriminatorCut");
+    genParticlesToken = iC.consumes<reco::GenParticleCollection>(mPset.getParameter<edm::InputTag>("genParticles"));
     
     //configure the top tagger
     try{
@@ -36,10 +37,197 @@ int HOTTaggerCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * se
 
   //container holding input jet info for top tagger
   std::vector<Constituent> constituents;
+    
+  // Get the generated particle collection
+  std::vector<TLorentzVector> mygenTops, mygenTopDaughtersTemp_;
+  std::vector<std::vector<TLorentzVector>> mygenTopDaughters_;
+  mygenTops.clear();
+  mygenTopDaughters_.clear();
+  TLorentzVector topLV,topdauLV;
+    
+  edm::Handle<reco::GenParticleCollection> genParticles;
+  if(event.getByToken(genParticlesToken, genParticles)){
+  	// loop over all gen particles in event
+  	for(size_t igen = 0; igen < genParticles->size(); igen++){
+  		const reco::GenParticle &p = (*genParticles).at(igen);
+  		int id = p.pdgId();
+  		
+  		// find tops
+  		if(abs(id) != 6) continue;
+  		
+  		mygenTopDaughtersTemp_.clear();
+  		bool foundB = false;
+  		bool foundW = false;
+  		for(size_t idau = 0; idau < p.numberOfDaughters(); idau++){
+  			int dauId = p.daughter(idau)->pdgId();
+  			if(abs(dauId) == 5){
+  				topdauLV.SetPtEtaPhiE(p.daughter(idau)->pt(),p.daughter(idau)->eta(),p.daughter(idau)->phi(),p.daughter(idau)->energy());
+  				mygenTopDaughtersTemp_.push_back(topdauLV);
+  				foundB = true;
+  				}
+  			else if(abs(dauId) == 24){
+  				const reco::Candidate *W = p.daughter(idau);
+  				bool isHardProcess = false;
+  				while(!isHardProcess){
+  					isHardProcess = true;
+  					for(size_t iWdau = 0; iWdau < W->numberOfDaughters(); iWdau++){
+  						int WdauId = W->daughter(iWdau)->pdgId();
+  						if(abs(WdauId) == 24){
+  							W = W->daughter(iWdau);
+  							isHardProcess = false;
+  							}
+  						}
+  					}
+  				for(size_t iWdau = 0; iWdau < W->numberOfDaughters(); iWdau++){
+					int WdauId = W->daughter(iWdau)->pdgId();
+					if(abs(WdauId) > 0 && abs(WdauId) < 6){
+						topdauLV.SetPtEtaPhiE(W->daughter(iWdau)->pt(),W->daughter(iWdau)->eta(),W->daughter(iWdau)->phi(),W->daughter(iWdau)->energy());
+						mygenTopDaughtersTemp_.push_back(topdauLV);
+						foundW = true;
+						}
+					}//W daughter loop
+  				}
+  			}//top daughter loop
+  		if(foundB && foundW){ // only save hadronicly decaying tops
+  			mygenTopDaughters_.push_back(mygenTopDaughtersTemp_);
+  			topLV.SetPtEtaPhiE(p.pt(),p.eta(),p.phi(),p.energy());
+  			mygenTops.push_back(topLV);
+  			}
+		}//gen loop
+    }
+
+  std::vector<std::vector<const TLorentzVector*>> mygenTopDaughters;
+  for(size_t itop = 0; itop < mygenTops.size(); itop++){
+  	std::vector<const TLorentzVector*> mygenTopsTemp;
+  	for(size_t idau = 0; idau < mygenTopDaughters_[itop].size(); idau++){
+  		mygenTopsTemp.push_back(&mygenTopDaughters_[itop][idau]);
+  		}
+  	mygenTopDaughters.push_back(mygenTopsTemp);
+  	}
+
+  std::vector<double> topGenPt;
+  std::vector<double> topGenPhi;
+  std::vector<double> topGenEta;
+  std::vector<double> topGenMass;
+  std::vector<double> topD1GenPt;
+  std::vector<double> topD1GenPhi;
+  std::vector<double> topD1GenEta;
+  std::vector<double> topD1GenMass;
+  std::vector<double> topD2GenPt;
+  std::vector<double> topD2GenPhi;
+  std::vector<double> topD2GenEta;
+  std::vector<double> topD2GenMass;
+  std::vector<double> topD3GenPt;
+  std::vector<double> topD3GenPhi;
+  std::vector<double> topD3GenEta;
+  std::vector<double> topD3GenMass;
+
+  for (unsigned int igtop = 0; igtop < mygenTops.size(); igtop++){
+  	topGenPt.push_back(mygenTops[igtop].Pt());
+  	topGenPhi.push_back(mygenTops[igtop].Phi());
+  	topGenEta.push_back(mygenTops[igtop].Eta());
+  	topGenMass.push_back(mygenTops[igtop].M());
+    double pt1 = -999;
+    double phi1 = -999;
+    double eta1 = -999;
+    double mass1 = -999;
+    double pt2 = -999;
+    double phi2 = -999;
+    double eta2 = -999;
+    double mass2 = -999;
+    double pt3 = -999;
+    double phi3 = -999;
+    double eta3 = -999;
+    double mass3 = -999;
+  	if(mygenTopDaughters_[igtop].size()>0){
+  		pt1 = mygenTopDaughters_[igtop][0].Pt();
+  		phi1 = mygenTopDaughters_[igtop][0].Phi();
+  		eta1 = mygenTopDaughters_[igtop][0].Eta();
+  		mass1 = mygenTopDaughters_[igtop][0].M();
+  		}
+  	if(mygenTopDaughters_[igtop].size()>1){
+  		pt2 = mygenTopDaughters_[igtop][1].Pt();
+  		phi2 = mygenTopDaughters_[igtop][1].Phi();
+  		eta2 = mygenTopDaughters_[igtop][1].Eta();
+  		mass2 = mygenTopDaughters_[igtop][1].M();
+  		}
+  	if(mygenTopDaughters_[igtop].size()>2){
+  		pt3 = mygenTopDaughters_[igtop][2].Pt();
+  		phi3 = mygenTopDaughters_[igtop][2].Phi();
+  		eta3 = mygenTopDaughters_[igtop][2].Eta();
+  		mass3 = mygenTopDaughters_[igtop][2].M();
+  		}
+
+	topD1GenPt.push_back(pt1);
+	topD1GenPhi.push_back(phi1);
+	topD1GenEta.push_back(eta1);
+	topD1GenMass.push_back(mass1);
+	topD2GenPt.push_back(pt2);
+	topD2GenPhi.push_back(phi2);
+	topD2GenEta.push_back(eta2);
+	topD2GenMass.push_back(mass2);
+	topD3GenPt.push_back(pt3);
+	topD3GenPhi.push_back(phi3);
+	topD3GenEta.push_back(eta3);
+	topD3GenMass.push_back(mass3);
+  	}
   
+  std::vector<TLorentzVector> perJetLVec_;
+  std::vector<float> qgLikelihood_;
+  std::vector<float> qgPtD;
+  std::vector<float> qgAxis1;
+  std::vector<float> qgAxis2;
+  std::vector<float> qgMult;
+  std::vector<float> deepCSVb;
+  std::vector<float> deepCSVc;
+  std::vector<float> deepCSVl;
+  std::vector<float> deepCSVbb;
+  std::vector<float> deepCSVcc;
+  std::vector<float> recoJetsBtag_;
+  std::vector<float> chargedHadronEnergyFraction;
+  std::vector<float> neutralHadronEnergyFraction;
+  std::vector<float> chargedEmEnergyFraction;
+  std::vector<float> neutralEmEnergyFraction;
+  std::vector<float> muonEnergyFraction;
+  std::vector<float> photonEnergyFraction;
+  std::vector<float> electronEnergyFraction;
+  std::vector<float> recoJetsHFHadronEnergyFraction;
+  std::vector<float> recoJetsHFEMEnergyFraction;
+  std::vector<float> chargedHadronMultiplicity;
+  std::vector<float> neutralHadronMultiplicity;
+  std::vector<float> photonMultiplicity;
+  std::vector<float> electronMultiplicity;
+  std::vector<float> muonMultiplicity;
+  
+  perJetLVec_.clear();
+  qgLikelihood_.clear();
+  qgPtD.clear();
+  qgAxis1.clear();
+  qgAxis2.clear();
+  qgMult.clear();
+  deepCSVb.clear();
+  deepCSVc.clear();
+  deepCSVl.clear();
+  deepCSVbb.clear();
+  deepCSVcc.clear();
+  recoJetsBtag_.clear();
+  chargedHadronEnergyFraction.clear();
+  neutralHadronEnergyFraction.clear();
+  chargedEmEnergyFraction.clear();
+  neutralEmEnergyFraction.clear();
+  muonEnergyFraction.clear();
+  photonEnergyFraction.clear();
+  electronEnergyFraction.clear();
+  recoJetsHFHadronEnergyFraction.clear();
+  recoJetsHFEMEnergyFraction.clear();
+  chargedHadronMultiplicity.clear();
+  neutralHadronMultiplicity.clear();
+  photonMultiplicity.clear();
+  electronMultiplicity.clear();
+  muonMultiplicity.clear();
+      
   int nAK4 = 0; // to check against the number of jets from singleLepCalc, they should be the same
   for (std::vector<pat::Jet>::const_iterator ijet = vSelCorrJets.begin(); ijet != vSelCorrJets.end(); ijet++){
-    int iJet = (int)(ijet-vSelCorrJets.begin());
       
     const pat::Jet jet = *ijet;
       
@@ -47,60 +235,76 @@ int HOTTaggerCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * se
     if(jet.pt() < ak4ptCut_) continue;
     nAK4++;
 
-    TLorentzVector perJetLVec(jet.p4().X(), jet.p4().Y(), jet.p4().Z(), jet.p4().T());
+    TLorentzVector perJetLVecTemp(jet.p4().X(), jet.p4().Y(), jet.p4().Z(), jet.p4().T());
       
-    double qgPtD = jet.userFloat("QGTagger:ptD");
-    double qgAxis1 = jet.userFloat("QGTagger:axis1");
-    double qgAxis2 = jet.userFloat("QGTagger:axis2");
-    double qgMult = static_cast<double>(jet.userInt("QGTagger:mult"));
-    double deepCSVb = jet.bDiscriminator((deepCSVBJetTags_+":probb").c_str());
-    double deepCSVc = jet.bDiscriminator((deepCSVBJetTags_+":probc").c_str());
-    double deepCSVl = jet.bDiscriminator((deepCSVBJetTags_+":probudsg").c_str());
-    double deepCSVbb = jet.bDiscriminator((deepCSVBJetTags_+":probbb").c_str());
-    double deepCSVcc = jet.bDiscriminator((deepCSVBJetTags_+":probcc").c_str());
-    double btag = jet.bDiscriminator(bTagKeyString_.c_str());
-    double chargedHadronEnergyFraction = jet.chargedHadronEnergyFraction();
-    double neutralHadronEnergyFraction = jet.neutralHadronEnergyFraction();
-    double chargedEmEnergyFraction = jet.chargedEmEnergyFraction();
-    double neutralEmEnergyFraction = jet.neutralEmEnergyFraction();
-    double muonEnergyFraction = jet.muonEnergyFraction();
-    double photonEnergyFraction = jet.photonEnergyFraction();
-    double electronEnergyFraction = jet.electronEnergyFraction();
-    double recoJetsHFHadronEnergyFraction = jet.HFHadronEnergyFraction();
-    double recoJetsHFEMEnergyFraction = jet.HFEMEnergyFraction();
-    double chargedHadronMultiplicity = jet.chargedHadronMultiplicity();
-    double neutralHadronMultiplicity = jet.neutralHadronMultiplicity();
-    double photonMultiplicity = jet.photonMultiplicity();
-    double electronMultiplicity = jet.electronMultiplicity();
-    double muonMultiplicity = jet.muonMultiplicity();
+    perJetLVec_.push_back(perJetLVecTemp);
+    qgLikelihood_.push_back(0.0);
+    qgPtD.push_back(jet.userFloat("QGTagger:ptD"));
+    qgAxis1.push_back(jet.userFloat("QGTagger:axis1"));
+    qgAxis2.push_back(jet.userFloat("QGTagger:axis2"));
+    qgMult.push_back(static_cast<double>(jet.userInt("QGTagger:mult")));
+    deepCSVb.push_back(jet.bDiscriminator((deepCSVBJetTags_+":probb").c_str()));
+    deepCSVc.push_back(jet.bDiscriminator((deepCSVBJetTags_+":probc").c_str()));
+    deepCSVl.push_back(jet.bDiscriminator((deepCSVBJetTags_+":probudsg").c_str()));
+    deepCSVbb.push_back(jet.bDiscriminator((deepCSVBJetTags_+":probbb").c_str()));
+    deepCSVcc.push_back(jet.bDiscriminator((deepCSVBJetTags_+":probcc").c_str()));
+    recoJetsBtag_.push_back(jet.bDiscriminator(bTagKeyString_.c_str()));
+    chargedHadronEnergyFraction.push_back(jet.chargedHadronEnergyFraction());
+    neutralHadronEnergyFraction.push_back(jet.neutralHadronEnergyFraction());
+    chargedEmEnergyFraction.push_back(jet.chargedEmEnergyFraction());
+    neutralEmEnergyFraction.push_back(jet.neutralEmEnergyFraction());
+    muonEnergyFraction.push_back(jet.muonEnergyFraction());
+    photonEnergyFraction.push_back(jet.photonEnergyFraction());
+    electronEnergyFraction.push_back(jet.electronEnergyFraction());
+    recoJetsHFHadronEnergyFraction.push_back(jet.HFHadronEnergyFraction());
+    recoJetsHFEMEnergyFraction.push_back(jet.HFEMEnergyFraction());
+    chargedHadronMultiplicity.push_back(jet.chargedHadronMultiplicity());
+    neutralHadronMultiplicity.push_back(jet.neutralHadronMultiplicity());
+    photonMultiplicity.push_back(jet.photonMultiplicity());
+    electronMultiplicity.push_back(jet.electronMultiplicity());
+    muonMultiplicity.push_back(jet.muonMultiplicity());
     
-    constituents.emplace_back(perJetLVec, btag, 0.0);
-    constituents.back().setIndex(iJet);
-    constituents.back().setExtraVar("qgMult"                              , qgMult);
-    constituents.back().setExtraVar("qgPtD"                               , qgPtD);
-    constituents.back().setExtraVar("qgAxis1"                             , qgAxis1);
-    constituents.back().setExtraVar("qgAxis2"                             , qgAxis2);
-    constituents.back().setExtraVar("recoJetschargedHadronEnergyFraction" , chargedHadronEnergyFraction);
-    constituents.back().setExtraVar("recoJetschargedEmEnergyFraction"     , chargedEmEnergyFraction);
-    constituents.back().setExtraVar("recoJetsneutralEmEnergyFraction"     , neutralEmEnergyFraction);
-    constituents.back().setExtraVar("recoJetsmuonEnergyFraction"          , muonEnergyFraction);
-    constituents.back().setExtraVar("recoJetsHFHadronEnergyFraction"      , recoJetsHFHadronEnergyFraction);
-    constituents.back().setExtraVar("recoJetsHFEMEnergyFraction"          , recoJetsHFEMEnergyFraction);
-    constituents.back().setExtraVar("recoJetsneutralEnergyFraction"       , neutralHadronEnergyFraction);
-    constituents.back().setExtraVar("PhotonEnergyFraction"                , photonEnergyFraction);
-    constituents.back().setExtraVar("ElectronEnergyFraction"              , electronEnergyFraction);
-    constituents.back().setExtraVar("ChargedHadronMultiplicity"           , chargedHadronMultiplicity);
-    constituents.back().setExtraVar("NeutralHadronMultiplicity"           , neutralHadronMultiplicity);
-    constituents.back().setExtraVar("PhotonMultiplicity"                  , photonMultiplicity);
-    constituents.back().setExtraVar("ElectronMultiplicity"                , electronMultiplicity);
-    constituents.back().setExtraVar("MuonMultiplicity"                    , muonMultiplicity);
-    constituents.back().setExtraVar("DeepCSVb"                            , deepCSVb);
-    constituents.back().setExtraVar("DeepCSVc"                            , deepCSVc);
-    constituents.back().setExtraVar("DeepCSVl"                            , deepCSVl);
-    constituents.back().setExtraVar("DeepCSVbb"                           , deepCSVbb);
-    constituents.back().setExtraVar("DeepCSVcc"                           , deepCSVcc);
   }
+
+  //New Tagger starts here
+  ttUtility::ConstAK4Inputs<float> *myConstAK4Inputs = nullptr;
   
+  std::vector<TLorentzVector> *genTops;
+  std::vector<std::vector<const TLorentzVector*>> *genTopDaughters = nullptr;
+  genTops = new std::vector<TLorentzVector>(std::move(mygenTops));
+  genTopDaughters = new std::vector<std::vector<const TLorentzVector*>>(std::move(mygenTopDaughters));
+  
+  const std::vector<TLorentzVector>& jetsLVec = perJetLVec_;
+  const std::vector<float>& recoJetsBtag      = recoJetsBtag_;
+  const std::vector<float>& qgLikelihood      = qgLikelihood_;
+  myConstAK4Inputs = new ttUtility::ConstAK4Inputs<float>(jetsLVec, recoJetsBtag, qgLikelihood, *genTops, *genTopDaughters);
+  
+  myConstAK4Inputs->addSupplamentalVector("qgMult"                              , qgMult);
+  myConstAK4Inputs->addSupplamentalVector("qgPtD"                               , qgPtD);
+  myConstAK4Inputs->addSupplamentalVector("qgAxis1"                             , qgAxis1);
+  myConstAK4Inputs->addSupplamentalVector("qgAxis2"                             , qgAxis2);
+  myConstAK4Inputs->addSupplamentalVector("recoJetschargedHadronEnergyFraction" , chargedHadronEnergyFraction);
+  myConstAK4Inputs->addSupplamentalVector("recoJetschargedEmEnergyFraction"     , chargedEmEnergyFraction);
+  myConstAK4Inputs->addSupplamentalVector("recoJetsneutralEmEnergyFraction"     , neutralEmEnergyFraction);
+  myConstAK4Inputs->addSupplamentalVector("recoJetsmuonEnergyFraction"          , muonEnergyFraction);
+  myConstAK4Inputs->addSupplamentalVector("recoJetsHFHadronEnergyFraction"      , recoJetsHFHadronEnergyFraction);
+  myConstAK4Inputs->addSupplamentalVector("recoJetsHFEMEnergyFraction"          , recoJetsHFEMEnergyFraction);
+  myConstAK4Inputs->addSupplamentalVector("recoJetsneutralEnergyFraction"       , neutralHadronEnergyFraction);
+  myConstAK4Inputs->addSupplamentalVector("PhotonEnergyFraction"                , photonEnergyFraction);
+  myConstAK4Inputs->addSupplamentalVector("ElectronEnergyFraction"              , electronEnergyFraction);
+  myConstAK4Inputs->addSupplamentalVector("ChargedHadronMultiplicity"           , chargedHadronMultiplicity);
+  myConstAK4Inputs->addSupplamentalVector("NeutralHadronMultiplicity"           , neutralHadronMultiplicity);
+  myConstAK4Inputs->addSupplamentalVector("PhotonMultiplicity"                  , photonMultiplicity);
+  myConstAK4Inputs->addSupplamentalVector("ElectronMultiplicity"                , electronMultiplicity);
+  myConstAK4Inputs->addSupplamentalVector("MuonMultiplicity"                    , muonMultiplicity);
+  myConstAK4Inputs->addSupplamentalVector("DeepCSVb"                            , deepCSVb);
+  myConstAK4Inputs->addSupplamentalVector("DeepCSVc"                            , deepCSVc);
+  myConstAK4Inputs->addSupplamentalVector("DeepCSVl"                            , deepCSVl);
+  myConstAK4Inputs->addSupplamentalVector("DeepCSVbb"                           , deepCSVbb);
+  myConstAK4Inputs->addSupplamentalVector("DeepCSVcc"                           , deepCSVcc);
+  
+  constituents = ttUtility::packageConstituents(*myConstAK4Inputs);
+
   //run top tagger
   try{
     tt.runTagger(std::move(constituents));
@@ -126,13 +330,17 @@ int HOTTaggerCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * se
   std::vector<double> topDiscriminator;
   std::vector<double> topType;
   std::vector<double> topNconstituents;
-  std::vector<int>   topJet1Index;
-  std::vector<int>   topJet2Index;
-  std::vector<int>   topJet3Index;
-  std::vector<double> topBestGenPt;
-  std::vector<double> topBestGenPhi;
-  std::vector<double> topBestGenEta;
-  std::vector<double> topBestGenEnergy;
+  std::vector<int>    topJet1Index;
+  std::vector<int>    topJet2Index;
+  std::vector<int>    topJet3Index;
+  std::vector<double> topBestGen2dPt;
+  std::vector<double> topBestGen2dPhi;
+  std::vector<double> topBestGen2dEta;
+  std::vector<double> topBestGen2dEnergy;
+  std::vector<double> topBestGen3dPt;
+  std::vector<double> topBestGen3dPhi;
+  std::vector<double> topBestGen3dEta;
+  std::vector<double> topBestGen3dEnergy;
 
   int topNtops = tops.size();
   for (unsigned int itop = 0; itop < tops.size(); itop++){
@@ -153,42 +361,78 @@ int HOTTaggerCalc::AnalyzeEvent(edm::Event const & event, BaseEventSelector * se
     topJet2Index.push_back(thistopConsts.at(1)->getIndex());
     topJet3Index.push_back(thistopConsts.at(2)->getIndex());
   
-    double pt = -999;
-    double phi = -999;
-    double eta = -999;
-    double energy = -999;
-    const TLorentzVector *bestGen = thistop->getBestGenTopMatch();
-    if(bestGen){
-      pt = bestGen->Pt();
-      phi = bestGen->Phi();
-      eta = bestGen->Eta();
-      energy = bestGen->Energy();
+    double pt_2d = -999;
+    double phi_2d = -999;
+    double eta_2d = -999;
+    double energy_2d = -999;
+    double pt_3d = -999;
+    double phi_3d = -999;
+    double eta_3d = -999;
+    double energy_3d = -999;
+    const TLorentzVector *bestGen2d = thistop->getBestGenTopMatch(0.6, 2, 2);
+    if(bestGen2d){
+      pt_2d = bestGen2d->Pt();
+      phi_2d = bestGen2d->Phi();
+      eta_2d = bestGen2d->Eta();
+      energy_2d = bestGen2d->Energy();
     }
-    topBestGenPt.push_back(pt);
-    topBestGenPhi.push_back(phi);
-    topBestGenEta.push_back(eta);
-    topBestGenEnergy.push_back(energy);
+    topBestGen2dPt.push_back(pt_2d);
+    topBestGen2dPhi.push_back(phi_2d);
+    topBestGen2dEta.push_back(eta_2d);
+    topBestGen2dEnergy.push_back(energy_2d);
+    const TLorentzVector *bestGen3d = thistop->getBestGenTopMatch(0.6, 3, 3);
+    if(bestGen3d){
+      pt_3d = bestGen3d->Pt();
+      phi_3d = bestGen3d->Phi();
+      eta_3d = bestGen3d->Eta();
+      energy_3d = bestGen3d->Energy();
+    }
+    topBestGen3dPt.push_back(pt_3d);
+    topBestGen3dPhi.push_back(phi_3d);
+    topBestGen3dEta.push_back(eta_3d);
+    topBestGen3dEnergy.push_back(energy_3d);
   }
 
-  SetValue("topNAK4",     nAK4);
+  SetValue("topNAK4",         nAK4);
   SetValue("topNtops",        topNtops);
-  SetValue("topPt",		  topPt);		  
-  SetValue("topPhi",	  topPhi);	  
-  SetValue("topEta",	  topEta);	  
-  SetValue("topMass",	  topMass);	  
-  SetValue("topDRmax",	  topDRmax);	  
+  SetValue("topPt",		      topPt);		  
+  SetValue("topPhi",	      topPhi);	  
+  SetValue("topEta",	      topEta);	  
+  SetValue("topMass",	      topMass);	  
+  SetValue("topDRmax",	      topDRmax);	  
   SetValue("topDThetaMin",	  topDThetaMin);	  
   SetValue("topDThetaMax",	  topDThetaMax);	  
   SetValue("topDiscriminator",topDiscriminator);
-  SetValue("topType",	  topType);	  
+  SetValue("topType",	      topType);	  
   SetValue("topNconstituents",topNconstituents);
   SetValue("topJet1Index",	  topJet1Index);	  
   SetValue("topJet2Index",	  topJet2Index);	  
   SetValue("topJet3Index",	  topJet3Index);	  
-  SetValue("topBestGenPt",	  topBestGenPt);	  
-  SetValue("topBestGenPhi",	  topBestGenPhi);	  
-  SetValue("topBestGenEta",	  topBestGenEta);	  
-  SetValue("topBestGenEnergy",topBestGenEnergy);
+  SetValue("topBestGen2dPt",	topBestGen2dPt);	  
+  SetValue("topBestGen2dPhi",	topBestGen2dPhi);	  
+  SetValue("topBestGen2dEta",	topBestGen2dEta);	  
+  SetValue("topBestGen2dEnergy",topBestGen2dEnergy);
+  SetValue("topBestGen3dPt",	topBestGen3dPt);	  
+  SetValue("topBestGen3dPhi",	topBestGen3dPhi);	  
+  SetValue("topBestGen3dEta",	topBestGen3dEta);	  
+  SetValue("topBestGen3dEnergy",topBestGen3dEnergy);
+  
+  SetValue("topGenPt",    topGenPt);
+  SetValue("topGenPhi",   topGenPhi);
+  SetValue("topGenEta",   topGenEta);
+  SetValue("topGenMass",  topGenMass);
+  SetValue("topD1GenPt",  topD1GenPt);
+  SetValue("topD1GenPhi", topD1GenPhi);
+  SetValue("topD1GenEta", topD1GenEta);
+  SetValue("topD1GenMass",topD1GenMass);
+  SetValue("topD2GenPt",  topD2GenPt);
+  SetValue("topD2GenPhi", topD2GenPhi);
+  SetValue("topD2GenEta", topD2GenEta);
+  SetValue("topD2GenMass",topD2GenMass);
+  SetValue("topD3GenPt",  topD3GenPt);
+  SetValue("topD3GenPhi", topD3GenPhi);
+  SetValue("topD3GenEta", topD3GenEta);
+  SetValue("topD3GenMass",topD3GenMass);
   
   return 0;
 }
