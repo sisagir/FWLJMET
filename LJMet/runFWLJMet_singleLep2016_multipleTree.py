@@ -129,6 +129,8 @@ process.filter_any_explicit = hlt.hltHighLevel.clone(
                         'HLT_Ele50_CaloIdVT_GsfTrkIdT_PFJet165_v*',
                         'HLT_Ele115_CaloIdVT_GsfTrkIdT_v*',
 
+                        'HLT_Ele35_WPLoose_Gsf_v*',
+                        'HLT_Ele27_WPTight_Gsf_v*',
                         'HLT_Ele32_eta2p1_WPTight_Gsf_v*',
                         'HLT_Ele32_WPTight_Gsf_v*',
                         'HLT_Ele32_WPTight_Gsf_L1DoubleEG_v*',
@@ -366,6 +368,8 @@ hlt_path_el  = cms.vstring(
         'HLT_Ele50_CaloIdVT_GsfTrkIdT_PFJet165_v',
         'HLT_Ele115_CaloIdVT_GsfTrkIdT_v',
         
+        'HLT_Ele35_WPLoose_Gsf_v',
+        'HLT_Ele27_WPTight_Gsf_v',
         'HLT_Ele32_eta2p1_WPTight_Gsf_v',
         'HLT_Ele32_WPTight_Gsf_v',
         'HLT_Ele32_WPTight_Gsf_L1DoubleEG_v',
