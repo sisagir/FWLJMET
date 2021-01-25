@@ -21,10 +21,10 @@ options.isVLQsignal = False
 options.doGenHT = False
 options.inputFiles = [
     'root://cmsxrootd.fnal.gov//store/data/Run2016E/SingleMuon/MINIAOD/17Jul2018-v1/40000/FED4F604-668B-E811-A87D-008CFAE450CC.root',
-    #root://cmsxrootd.fnal.gov//store/mc/RunIISummer16MiniAODv3/WJetsToLNu_HT-400To600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUMoriond17_94X_mcRun2_asymptotic_v3_ext1-v2/270000/FCE968CC-5AEA-E811-A5D1-A4BF0102A4F5.root
+    #'root://cmsxrootd.fnal.gov//store/mc/RunIISummer16MiniAODv3/WJetsToLNu_HT-400To600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUMoriond17_94X_mcRun2_asymptotic_v3_ext1-v2/270000/FCE968CC-5AEA-E811-A5D1-A4BF0102A4F5.root',
     
     ]
-options.maxEvents = 100
+options.maxEvents = 300
 options.parseArguments()
 
 isMC= options.isMC
@@ -107,8 +107,8 @@ process.TFileService = cms.Service("TFileService", fileName = cms.string(OUTFILE
 process.mcweightanalyzer = cms.EDAnalyzer(
     "WeightAnalyzer",
     overrideLHEweight = cms.bool(False), ## 2016 has the NNPDF3.0 all positive
-    #basePDFname = cms.string("NNPDF31_nnlo_as_0118_nf_4"),
-    #newPDFname = cms.string("NNPDF31_nnlo_as_0118_nf_4_mc_hessian"),
+    basePDFname = cms.string("NNPDF31_nnlo_as_0118_nf_4"),
+    newPDFname = cms.string("NNPDF31_nnlo_as_0118_nf_4_mc_hessian"),
     )
 
 ################################
@@ -118,41 +118,45 @@ import HLTrigger.HLTfilters.hltHighLevel_cfi as hlt
 # accept if any path succeeds (explicit)
 process.filter_any_explicit = hlt.hltHighLevel.clone(
     HLTPaths = [
-                        'HLT_Ele35_WPTight_Gsf_v*',
-                        'HLT_Ele38_WPTight_Gsf_v*',
-                        'HLT_Ele40_WPTight_Gsf_v*',
-                        'HLT_Ele28_eta2p1_WPTight_Gsf_HT150_v*',
-                        'HLT_Ele15_IsoVVVL_PFHT450_PFMET50_v*',
-                        'HLT_Ele15_IsoVVVL_PFHT450_v*',
-                        'HLT_Ele50_IsoVVVL_PFHT450_v*',
-                        'HLT_Ele15_IsoVVVL_PFHT600_v*',
-                        'HLT_Ele50_CaloIdVT_GsfTrkIdT_PFJet165_v*',
-                        'HLT_Ele115_CaloIdVT_GsfTrkIdT_v*',
-
-                        'HLT_Ele32_WPTight_Gsf_v*',
-                        'HLT_Ele32_WPTight_Gsf_L1DoubleEG_v*',
-                        'HLT_Ele30_eta2p1_WPTight_Gsf_CentralPFJet35_EleCleaned_v*',
-
-                        'HLT_IsoMu24_v*',
-                        'HLT_IsoMu24_eta2p1_v*',
-                        'HLT_IsoMu27_v*',
-                        'HLT_IsoMu30_v*',
-                        'HLT_Mu50_v*',
-                        'HLT_TkMu50_v*',
-                        'HLT_Mu55_v*',
-                        'HLT_Mu15_IsoVVVL_PFHT450_PFMET50_v*',
-                        'HLT_Mu15_IsoVVVL_PFHT450_v*',
-                        'HLT_Mu50_IsoVVVL_PFHT450_v*',
-                        'HLT_Mu15_IsoVVVL_PFHT600_v*',
-
-                        'HLT_IsoTkMu24_v*',
-                        'HLT_IsoMu24_2p1_v*',
-                        'HLT_Mu15_IsoVVVL_PFHT450_CaloBTagCSV_4p5_v*', # Muon+HT
-
-                        'PFHT380_SixJet32_DoubleBTagCSV_p075_v*', # only data
-                        'PFHT380_SixPFJet32_DoublePFBTagDeepCSV_2p2_v*', # only MC
-                        'HLT_PFHT380_SixPFJet32_DoublePFBTagCSV_2p2_v*',
-                        'HLT_PFHT380_SixPFJet32_DoublePFBTagDeepCSV_2p2_v*',
+        'HLT_Ele35_WPTight_Gsf_v*',
+        'HLT_Ele38_WPTight_Gsf_v*',
+        'HLT_Ele40_WPTight_Gsf_v*',
+        'HLT_Ele28_eta2p1_WPTight_Gsf_HT150_v*',
+        'HLT_Ele15_IsoVVVL_PFHT450_PFMET50_v*',
+        'HLT_Ele15_IsoVVVL_PFHT350_v*',
+        'HLT_Ele15_IsoVVVL_PFHT400_v*',
+        'HLT_Ele15_IsoVVVL_PFHT450_v*',
+        'HLT_Ele50_IsoVVVL_PFHT450_v*',
+        'HLT_Ele15_IsoVVVL_PFHT600_v*',
+        'HLT_Ele50_CaloIdVT_GsfTrkIdT_PFJet165_v*',
+        'HLT_Ele115_CaloIdVT_GsfTrkIdT_v*',
+        
+        'HLT_Ele32_WPTight_Gsf_v*',
+        'HLT_Ele32_WPTight_Gsf_L1DoubleEG_v*',
+        'HLT_Ele30_eta2p1_WPTight_Gsf_CentralPFJet35_EleCleaned_v*',
+        
+        'HLT_IsoMu24_v*',
+        'HLT_IsoMu24_eta2p1_v*',
+        'HLT_IsoMu27_v*',
+        'HLT_IsoMu30_v*',
+        'HLT_Mu50_v*',
+        'HLT_TkMu50_v*',
+        'HLT_Mu55_v*',
+        'HLT_Mu15_IsoVVVL_PFHT450_PFMET50_v*',
+        'HLT_Mu15_IsoVVVL_PFHT350_v*',
+        'HLT_Mu15_IsoVVVL_PFHT400_v*',
+        'HLT_Mu15_IsoVVVL_PFHT450_v*',
+        'HLT_Mu50_IsoVVVL_PFHT450_v*',
+        'HLT_Mu15_IsoVVVL_PFHT600_v*',
+        
+        'HLT_IsoTkMu24_v*',
+        'HLT_IsoMu24_2p1_v*',
+        'HLT_Mu15_IsoVVVL_PFHT450_CaloBTagCSV_4p5_v*', # Muon+HT
+        
+        'PFHT380_SixJet32_DoubleBTagCSV_p075_v*', # only data
+        'PFHT380_SixPFJet32_DoublePFBTagDeepCSV_2p2_v*', # only MC
+        'HLT_PFHT380_SixPFJet32_DoublePFBTagCSV_2p2_v*',
+        'HLT_PFHT380_SixPFJet32_DoublePFBTagDeepCSV_2p2_v*',
 
     ],
     throw = False
@@ -351,40 +355,44 @@ UseElIDV1_ = False #False means using ElIDV2
 
 ## TriggerPaths (for ljmet): 
 hlt_path_el  = cms.vstring(
-        #'digitisation_step_v',
-        'HLT_Ele35_WPTight_Gsf_v',
-        'HLT_Ele38_WPTight_Gsf_v',
-        'HLT_Ele40_WPTight_Gsf_v',
-        'HLT_Ele28_eta2p1_WPTight_Gsf_HT150_v',
-        'HLT_Ele15_IsoVVVL_PFHT450_PFMET50_v',
-        'HLT_Ele15_IsoVVVL_PFHT450_v',
-        'HLT_Ele50_IsoVVVL_PFHT450_v',
-        'HLT_Ele15_IsoVVVL_PFHT600_v',
-        'HLT_Ele50_CaloIdVT_GsfTrkIdT_PFJet165_v',
-        'HLT_Ele115_CaloIdVT_GsfTrkIdT_v',
+    #'digitisation_step_v',
+    'HLT_Ele35_WPTight_Gsf_v',
+    'HLT_Ele38_WPTight_Gsf_v',
+    'HLT_Ele40_WPTight_Gsf_v',
+    'HLT_Ele28_eta2p1_WPTight_Gsf_HT150_v',
+    'HLT_Ele15_IsoVVVL_PFHT450_PFMET50_v',
+    'HLT_Ele15_IsoVVVL_PFHT350_v',
+    'HLT_Ele15_IsoVVVL_PFHT400_v',
+    'HLT_Ele15_IsoVVVL_PFHT450_v',
+    'HLT_Ele50_IsoVVVL_PFHT450_v',
+    'HLT_Ele15_IsoVVVL_PFHT600_v',
+    'HLT_Ele50_CaloIdVT_GsfTrkIdT_PFJet165_v',
+    'HLT_Ele115_CaloIdVT_GsfTrkIdT_v',
         
-        'HLT_Ele32_WPTight_Gsf_v',
-        'HLT_Ele32_WPTight_Gsf_L1DoubleEG_v',
-        'HLT_Ele30_eta2p1_WPTight_Gsf_CentralPFJet35_EleCleaned_v',
-        )
+    'HLT_Ele32_WPTight_Gsf_v',
+    'HLT_Ele32_WPTight_Gsf_L1DoubleEG_v',
+    'HLT_Ele30_eta2p1_WPTight_Gsf_CentralPFJet35_EleCleaned_v',
+    )
 hlt_path_mu = cms.vstring(
-        #'digitisation_step_v',
-        'HLT_IsoMu24_v',
-        'HLT_IsoMu24_eta2p1_v',
-        'HLT_IsoMu27_v',
-        'HLT_IsoMu30_v',
-        'HLT_Mu50_v',
-        'HLT_TkMu50_v',
-        'HLT_Mu55_v',
-        'HLT_Mu15_IsoVVVL_PFHT450_PFMET50_v',
-        'HLT_Mu15_IsoVVVL_PFHT450_v',
-        'HLT_Mu50_IsoVVVL_PFHT450_v',
-        'HLT_Mu15_IsoVVVL_PFHT600_v',
-        
-        'HLT_IsoTkMu24_v',
-        'HLT_IsoMu24_2p1_v',
-        'HLT_Mu15_IsoVVVL_PFHT450_CaloBTagCSV_4p5_v', # Muon+HT
-        )
+    #'digitisation_step_v',
+    'HLT_IsoMu24_v',
+    'HLT_IsoMu24_eta2p1_v',
+    'HLT_IsoMu27_v',
+    'HLT_IsoMu30_v',
+    'HLT_Mu50_v',
+    'HLT_TkMu50_v',
+    'HLT_Mu55_v',
+    'HLT_Mu15_IsoVVVL_PFHT450_PFMET50_v',
+    'HLT_Mu15_IsoVVVL_PFHT350_v',
+    'HLT_Mu15_IsoVVVL_PFHT400_v',
+    'HLT_Mu15_IsoVVVL_PFHT450_v',
+    'HLT_Mu50_IsoVVVL_PFHT450_v',
+    'HLT_Mu15_IsoVVVL_PFHT600_v',
+    
+    'HLT_IsoTkMu24_v',
+    'HLT_IsoMu24_2p1_v',
+    'HLT_Mu15_IsoVVVL_PFHT450_CaloBTagCSV_4p5_v', # Muon+HT
+    )
 
 hlt_path_hadronic = cms.vstring(
     'PFHT380_SixJet32_DoubleBTagCSV_p075_v', # only data
