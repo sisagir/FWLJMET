@@ -303,7 +303,7 @@ process.prefiringweight = l1ECALPrefiringWeightProducer.clone(
 
 from PhysicsTools.SelectorUtils.pfJetIDSelector_cfi import pfJetIDSelector
 pfJetIDSelector.version = cms.string('WINTER16')
-pfJetIDSelector.quality = cms.string('LOOSE')
+pfJetIDSelector.quality = cms.string('TIGHT')
 process.tightAK4Jets = cms.EDFilter("PFJetIDSelectionFunctorFilter",
                                     filterParams =pfJetIDSelector.clone(),
                                     src = cms.InputTag("updatedPatJets"),
