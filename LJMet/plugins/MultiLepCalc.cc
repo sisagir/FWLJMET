@@ -1041,6 +1041,7 @@ void MultiLepCalc::AnalyzeJets(edm::Event const & event, BaseEventSelector * sel
   std::vector <double> AK4JetDeepFlavg;
   std::vector <double> AK4JetDeepFlavuds;
   std::vector <int>    AK4JetFlav;
+  std::vector <int>    AK4JetPUIdFull;
   
   //std::vector <double> AK4JetRCN;
   double AK4HT =.0;
@@ -1073,6 +1074,7 @@ void MultiLepCalc::AnalyzeJets(edm::Event const & event, BaseEventSelector * sel
       AK4JetDeepFlavg   . push_back(ii->bDiscriminator( "pfDeepFlavourJetTags:probg" ));
       AK4JetDeepFlavuds . push_back(ii->bDiscriminator( "pfDeepFlavourJetTags:probuds" ));
       AK4JetFlav         . push_back(abs(ii->hadronFlavour()));
+      AK4JetPUIdFull    . push_back(ii->userInt("pileupJetId:fullId"));
 
       //HT
       AK4HT += ii->pt();
@@ -1149,6 +1151,7 @@ void MultiLepCalc::AnalyzeJets(edm::Event const & event, BaseEventSelector * sel
     SetValue("AK4JetDeepFlavg"      , AK4JetDeepFlavg);
     SetValue("AK4JetDeepFlavuds"    , AK4JetDeepFlavuds);
     SetValue("AK4JetFlav"           , AK4JetFlav);
+    SetValue("AK4JetPUIdFull"       , AK4JetPUIdFull);
 
 
 }
