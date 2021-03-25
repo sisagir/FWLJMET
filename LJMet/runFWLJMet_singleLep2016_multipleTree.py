@@ -303,7 +303,7 @@ process.prefiringweight = l1ECALPrefiringWeightProducer.clone(
 
 from PhysicsTools.SelectorUtils.pfJetIDSelector_cfi import pfJetIDSelector
 pfJetIDSelector.version = cms.string('WINTER16')
-pfJetIDSelector.quality = cms.string('LOOSE')
+pfJetIDSelector.quality = cms.string('TIGHT')
 process.tightAK4Jets = cms.EDFilter("PFJetIDSelectionFunctorFilter",
                                     filterParams =pfJetIDSelector.clone(),
                                     src = cms.InputTag("updatedPatJets"),
@@ -574,7 +574,7 @@ MultiLepCalc_cfg = cms.PSet(
             UseElMVA                 = cms.bool(True), #True means save MVA values, False means not saving.
             UseElIDV1                = cms.bool(UseElIDV1_), #False means using ElIDV2.
 
-            elTrigMatchFilters      = cms.vstring('hltEle15VVVLGsfTrackIsoFilter','hltEle38noerWPTightGsfTrackIsoFilter'), #Ele15_IsoVVVL_PFHT450, Ele38_WPTight
+            elTrigMatchFilters      = cms.vstring('hltEle15VVVLGsfTrackIsoFilter','hltEle27WPTightGsfTrackIsoFilter','hltEle32WPTightGsfTrackIsoFilter'), #Ele15_IsoVVVL_PFHT450, Ele38_WPTight
             muTrigMatchFilters      = cms.vstring('hltL3MuVVVLIsoFIlter','hltL3crIsoL1sMu22Or25L1f0L2f10QL3f27QL3trkIsoFiltered0p07','hltL3fL1sMu22Or25L1f0L2f10QL3Filtered50Q'), # Mu15_IsoVVVL_PFHT450, IsoMu27, Mu50
             triggerCollection      = cms.InputTag("TriggerResults::HLT"),
             triggerSummary         = cms.InputTag("slimmedPatTrigger"),
